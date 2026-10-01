@@ -5,7 +5,8 @@ import {
   Body,
   Param,
   Delete,
-  UseGuards
+  UseGuards,
+  Req
 } from '@nestjs/common';
 
 
@@ -21,48 +22,63 @@ import { JwtGuard } from '../auth/jwt.guard';
 export class WishlistController {
 
 
-constructor(
-private wishlistService:WishlistService
-){}
+  constructor(
+    private wishlistService: WishlistService
+  ) {}
 
 
-// Add Wishlist (USER)
 
-@Post()
-@UseGuards(JwtGuard)
-create(
-@Body() body:CreateWishlistDto
-){
+  // Add Wishlist
 
-return this.wishlistService.create(body);
+  @Post()
+  @UseGuards(JwtGuard)
+  create(
+    @Req() req: any,
+    @Body() body: CreateWishlistDto
+  ) {
 
-}
+    return this.wishlistService.create(
+      req.user,
+      body
+    );
 
-
-// User Wishlist (USER)
-
-@Get('user/:userId')
-@UseGuards(JwtGuard)
-findByUser(
-@Param('userId') userId:string
-){
-
-return this.wishlistService.findByUser(userId);
-
-}
+  }
 
 
-// Delete Wishlist (USER)
 
-@Delete(':id')
-@UseGuards(JwtGuard)
-remove(
-@Param('id') id:string
-){
+  // User Wishlist
 
-return this.wishlistService.remove(id);
+  @Get('user/:userId')
+  @UseGuards(JwtGuard)
+  findByUser(
+    @Req() req: any,
+    @Param('userId') userId: string
+  ) {
 
-}
+    return this.wishlistService.findByUser(
+      req.user,
+      userId
+    );
+
+  }
+
+
+
+  // Delete Wishlist
+
+  @Delete(':id')
+  @UseGuards(JwtGuard)
+  remove(
+    @Req() req: any,
+    @Param('id') id: string
+  ) {
+
+    return this.wishlistService.remove(
+      req.user,
+      id
+    );
+
+  }
 
 
 }

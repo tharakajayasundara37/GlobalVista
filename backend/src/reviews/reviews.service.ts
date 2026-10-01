@@ -3,183 +3,199 @@ import {
   NotFoundException
 } from '@nestjs/common';
 
+
 import { InjectModel } from '@nestjs/mongoose';
+
 import { Model } from 'mongoose';
+
 
 import {
   Review,
   ReviewDocument
 } from './schemas/review.schema';
 
+
 import { CreateReviewDto } from './dto/create-review.dto';
+
 
 
 @Injectable()
 export class ReviewsService {
 
 
-constructor(
+  constructor(
 
-@InjectModel(Review.name)
+    @InjectModel(Review.name)
+    private reviewModel: Model<ReviewDocument>
 
-private reviewModel: Model<ReviewDocument>
+  ) {}
 
-){}
 
 
 
-// Create Review
+  async create(
+    user:any,
+    data:CreateReviewDto
+  ){
 
-async create(
-data:CreateReviewDto
-){
 
-const review = new this.reviewModel({
+    const review =
+      new this.reviewModel({
 
-...data,
+        ...data,
 
-isApproved:true
+        userId:user.id,
 
-});
+        isApproved:true
 
+      });
 
-return review.save();
 
-}
+    return review.save();
 
+  }
 
 
-// Get All Reviews
 
-async findAll(){
 
-return this.reviewModel
 
-.find()
+  async findAll(){
 
-.populate(
-'userId',
-'name email'
-)
+    return this.reviewModel
 
-.populate(
-'packageId',
-'title country'
-);
+      .find()
 
-}
+      .populate(
+        'userId',
+        'name email country'
+      )
 
+      .populate(
+        'packageId',
+        'title country price'
+      );
 
+  }
 
-// Get Reviews By Package
 
-async findByPackage(
-packageId:string
-){
 
-return this.reviewModel
 
-.find({
-packageId:packageId
-})
 
-.populate(
-'userId',
-'name email'
-);
+  async findByPackage(
+    packageId:string
+  ){
 
-}
+    return this.reviewModel
 
+      .find({
+        packageId
+      })
 
+      .populate(
+        'userId',
+        'name email country'
+      );
 
-// Delete Review
+  }
 
-async remove(
-id:string
-){
 
-const review = await this.reviewModel.findByIdAndDelete(
-id
-);
 
 
 
-if(!review){
+  async remove(
+    id:string
+  ){
 
-throw new NotFoundException(
-"Review not found"
-);
 
-}
+    const review =
+      await this.reviewModel.findByIdAndDelete(
+        id
+      );
 
 
+    if(!review){
 
-return {
+      throw new NotFoundException(
+        'Review not found'
+      );
 
-message:"Review deleted successfully"
+    }
 
-};
 
-}
 
+    return {
 
+      message:
+        'Review deleted successfully'
 
-// Calculate Package Rating
+    };
 
-async getPackageRating(
-packageId:string
-){
+  }
 
-const reviews = await this.reviewModel.find({
-packageId:packageId
-});
 
 
-const totalReviews = reviews.length;
 
 
+  async getPackageRating(
+    packageId:string
+  ){
 
-if(totalReviews === 0){
 
-return {
+    const reviews =
+      await this.reviewModel.find({
+        packageId
+      });
 
-packageId,
 
-averageRating:0,
 
-totalReviews:0
+    const totalReviews =
+      reviews.length;
 
-};
 
-}
 
+    if(totalReviews === 0){
 
+      return {
 
-const totalRating = reviews.reduce(
-(sum, review)=> sum + review.rating,
-0
-);
+        packageId,
 
+        averageRating:0,
 
+        totalReviews:0
 
-const averageRating = totalRating / totalReviews;
+      };
 
+    }
 
 
-return {
 
-packageId,
+    const totalRating =
+      reviews.reduce(
+        (sum, review)=>
+          sum + review.rating,
+        0
+      );
 
-averageRating:Number(
-averageRating.toFixed(1)
-),
 
-totalReviews
 
-};
+    const averageRating =
+      totalRating / totalReviews;
 
 
-}
+
+    return {
+
+      packageId,
+
+      averageRating:Number(
+        averageRating.toFixed(1)
+      ),
+
+      totalReviews
+
+    };
+
+  }
 
 
 }

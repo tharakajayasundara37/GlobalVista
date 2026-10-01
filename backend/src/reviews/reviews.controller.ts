@@ -5,7 +5,8 @@ import {
   Body,
   Param,
   Delete,
-  UseGuards
+  UseGuards,
+  Req
 } from '@nestjs/common';
 
 
@@ -14,6 +15,7 @@ import { ReviewsService } from './reviews.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 
 import { JwtGuard } from '../auth/jwt.guard';
+
 import { AdminGuard } from '../auth/admin.guard';
 
 
@@ -22,71 +24,72 @@ import { AdminGuard } from '../auth/admin.guard';
 export class ReviewsController {
 
 
-constructor(
-private reviewsService:ReviewsService
-){}
+  constructor(
+    private reviewsService: ReviewsService
+  ) {}
 
 
-// Create Review (USER)
 
-@Post()
-@UseGuards(JwtGuard)
-create(
-@Body() body:CreateReviewDto
-){
+  @Post()
+  @UseGuards(JwtGuard)
+  create(
+    @Req() req:any,
+    @Body() body:CreateReviewDto
+  ) {
 
-return this.reviewsService.create(body);
+    return this.reviewsService.create(
+      req.user,
+      body
+    );
 
-}
-
-
-// All Reviews (PUBLIC)
-
-@Get()
-findAll(){
-
-return this.reviewsService.findAll();
-
-}
+  }
 
 
-// Package Reviews (PUBLIC)
 
-@Get('package/:packageId')
-findByPackage(
-@Param('packageId') packageId:string
-){
+  @Get()
+  findAll(){
 
-return this.reviewsService.findByPackage(packageId);
+    return this.reviewsService.findAll();
 
-}
+  }
 
 
-// Delete Review (ADMIN)
 
-@Delete(':id')
-@UseGuards(JwtGuard, AdminGuard)
-remove(
-@Param('id') id:string
-){
+  @Get('package/:packageId')
+  findByPackage(
+    @Param('packageId') packageId:string
+  ){
 
-return this.reviewsService.remove(id);
+    return this.reviewsService.findByPackage(
+      packageId
+    );
 
-}
+  }
 
 
-// Package Rating (PUBLIC)
 
-@Get('package/:packageId/rating')
-getPackageRating(
-@Param('packageId') packageId:string
-){
+  @Get('package/:packageId/rating')
+  getPackageRating(
+    @Param('packageId') packageId:string
+  ){
 
-return this.reviewsService.getPackageRating(
-packageId
-);
+    return this.reviewsService.getPackageRating(
+      packageId
+    );
 
-}
+  }
+
+
+
+  @Delete(':id')
+  @UseGuards(JwtGuard, AdminGuard)
+  remove(
+    @Param('id') id:string
+  ){
+
+    return this.reviewsService.remove(id);
+
+  }
 
 
 }

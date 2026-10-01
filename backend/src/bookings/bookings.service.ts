@@ -1,6 +1,7 @@
 import {
   Injectable,
-  NotFoundException
+  NotFoundException,
+  ForbiddenException
 } from '@nestjs/common';
 
 import { InjectModel } from '@nestjs/mongoose';
@@ -14,135 +15,198 @@ import {
 import { BookingStatus } from './enums/booking-status.enum';
 import { CreateBookingDto } from './dto/create-booking.dto';
 
+
 @Injectable()
 export class BookingsService {
 
-constructor(
-  @InjectModel(Booking.name)
-  private bookingModel: Model<BookingDocument>
-){}
+  constructor(
+    @InjectModel(Booking.name)
+    private bookingModel: Model<BookingDocument>
+  ) {}
 
 
-// Create Booking
-async create(data:CreateBookingDto){
+  async create(
+    user: any,
+    data: CreateBookingDto
+  ) {
 
-const booking = new this.bookingModel({
-  ...data,
-  status:'PENDING',
-  paymentStatus:'UNPAID'
-});
+    const booking =
+      new this.bookingModel({
 
-return booking.save();
+        ...data,
 
-}
+        userId: user.id,
 
+        status: 'PENDING',
 
-// Get All Bookings
-async findAll(){
+        paymentStatus: 'UNPAID'
 
-return this.bookingModel
-.find()
-.populate(
-  'userId',
-  'name email country'
-)
-.populate(
-  'packageId',
-  'title country price duration category'
-);
-
-}
+      });
 
 
-// Get Single Booking
-async findOne(id:string){
+    return booking.save();
 
-const booking = await this.bookingModel
-.findById(id)
-.populate(
-  'userId',
-  'name email country'
-)
-.populate(
-  'packageId',
-  'title country price duration category'
-);
-
-
-if(!booking){
-  throw new NotFoundException(
-    "Booking not found"
-  );
-}
-
-return booking;
-
-}
-
-
-// Get User Bookings
-async findUserBookings(userId:string){
-
-return this.bookingModel
-.find({
-  userId:userId
-})
-.populate(
-  'userId',
-  'name email country'
-)
-.populate(
-  'packageId',
-  'title country price duration category'
-);
-
-}
-
-
-// Update Booking Status
-async updateStatus(
-id:string,
-status:BookingStatus
-){
-
-const booking = await this.bookingModel.findByIdAndUpdate(
-  id,
-  {
-    status:status
-  },
-  {
-    new:true
   }
-);
 
 
-if(!booking){
-  throw new NotFoundException(
-    "Booking not found"
-  );
-}
 
-return booking;
+  async findAll() {
 
-}
+    return this.bookingModel
+
+      .find()
+
+      .sort({
+        createdAt: -1
+      })
+
+      .populate(
+        'userId',
+        'name email country'
+      )
+
+      .populate(
+        'packageId',
+        'title country price duration category'
+      );
+
+  }
 
 
-// Delete Booking
-async remove(id:string){
 
-const booking = await this.bookingModel.findByIdAndDelete(id);
+  async findOne(
+    id: string
+  ) {
+
+    const booking =
+      await this.bookingModel
+
+        .findById(id)
+
+        .populate(
+          'userId',
+          'name email country'
+        )
+
+        .populate(
+          'packageId',
+          'title country price duration category'
+        );
 
 
-if(!booking){
-  throw new NotFoundException(
-    "Booking not found"
-  );
-}
+    if (!booking) {
 
-return {
-  message:"Booking deleted successfully"
-};
+      throw new NotFoundException(
+        'Booking not found'
+      );
 
-}
+    }
+
+
+    return booking;
+
+  }
+
+
+
+  async findUserBookings(
+    user: any,
+    userId: string
+  ) {
+
+
+    if (
+      user.role !== 'ADMIN' &&
+      user.id !== userId
+    ) {
+
+      throw new ForbiddenException(
+        'Access denied'
+      );
+
+    }
+
+
+    return this.bookingModel
+
+      .find({
+        userId
+      })
+
+      .populate(
+        'userId',
+        'name email country'
+      )
+
+      .populate(
+        'packageId',
+        'title country price duration category'
+      );
+
+  }
+
+
+
+  async updateStatus(
+    id: string,
+    status: BookingStatus
+  ) {
+
+    const booking =
+      await this.bookingModel.findByIdAndUpdate(
+
+        id,
+
+        {
+          status
+        },
+
+        {
+          new: true
+        }
+
+      );
+
+
+    if (!booking) {
+
+      throw new NotFoundException(
+        'Booking not found'
+      );
+
+    }
+
+
+    return booking;
+
+  }
+
+
+
+  async remove(
+    id: string
+  ) {
+
+    const booking =
+      await this.bookingModel.findByIdAndDelete(id);
+
+
+    if (!booking) {
+
+      throw new NotFoundException(
+        'Booking not found'
+      );
+
+    }
+
+
+    return {
+
+      message:
+        'Booking deleted successfully'
+
+    };
+
+  }
 
 }

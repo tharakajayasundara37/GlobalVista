@@ -1,232 +1,286 @@
 import {
   Injectable,
-  NotFoundException
+  NotFoundException,
+  ForbiddenException
 } from '@nestjs/common';
 
+
 import { InjectModel } from '@nestjs/mongoose';
+
 import { Model } from 'mongoose';
+
 
 import {
   Payment,
   PaymentDocument
 } from './schemas/payment.schema';
 
+
 import {
   Booking,
   BookingDocument
 } from '../bookings/schemas/booking.schema';
 
+
 import { CreatePaymentDto } from './dto/create-payment.dto';
+
 
 
 @Injectable()
 export class PaymentsService {
 
 
-constructor(
+  constructor(
 
-@InjectModel(Payment.name)
-private paymentModel: Model<PaymentDocument>,
+    @InjectModel(Payment.name)
+    private paymentModel: Model<PaymentDocument>,
 
-@InjectModel(Booking.name)
-private bookingModel: Model<BookingDocument>
 
-){}
+    @InjectModel(Booking.name)
+    private bookingModel: Model<BookingDocument>
 
+  ) {}
 
-// Create Payment
-async create(data:CreatePaymentDto){
 
-const booking = await this.bookingModel.findById(
-  data.bookingId
-);
 
+  async create(
+    user: any,
+    data: CreatePaymentDto
+  ) {
 
-if(!booking){
 
-throw new NotFoundException(
-  "Booking not found"
-);
+    const booking =
+      await this.bookingModel.findById(
+        data.bookingId
+      );
 
-}
 
+    if (!booking) {
 
-const payment = new this.paymentModel({
+      throw new NotFoundException(
+        'Booking not found'
+      );
 
-...data,
+    }
 
-status:"SUCCESS"
 
-});
 
+    if (
+      user.role !== 'ADMIN' &&
+      booking.userId.toString() !== user.id
+    ) {
 
-const savedPayment = await payment.save();
+      throw new ForbiddenException(
+        'Access denied'
+      );
 
+    }
 
-await this.bookingModel.findByIdAndUpdate(
 
-data.bookingId,
 
-{
-paymentStatus:"PAID"
-}
+    const payment =
+      new this.paymentModel({
 
-);
+        ...data,
 
+        userId: user.id,
 
-return savedPayment;
+        status: 'SUCCESS'
 
-}
+      });
 
 
 
-// All Payments
-async findAll(){
+    const savedPayment =
+      await payment.save();
 
-return this.paymentModel
 
-.find()
 
-.populate(
-  'bookingId'
-)
+    await this.bookingModel.findByIdAndUpdate(
 
-.populate(
-  'userId'
-);
+      data.bookingId,
 
-}
+      {
+        paymentStatus: 'PAID'
+      }
 
+    );
 
 
-// Single Payment
-async findOne(id:string){
+    return savedPayment;
 
-const payment = await this.paymentModel
+  }
 
-.findById(id)
 
-.populate(
-  'bookingId'
-)
 
-.populate(
-  'userId'
-);
 
+  async findAll() {
 
+    return this.paymentModel
 
-if(!payment){
+      .find()
 
-throw new NotFoundException(
-  "Payment not found"
-);
+      .populate(
+        'bookingId',
+        'travelDate numberOfPeople totalPrice status paymentStatus'
+      )
 
-}
+      .populate(
+        'userId',
+        'name email country role'
+      );
 
+  }
 
-return payment;
 
-}
 
 
+  async findOne(
+    id: string
+  ) {
 
-// Booking Payments
-async findByBooking(bookingId:string){
 
-return this.paymentModel.find({
+    const payment =
+      await this.paymentModel
 
-bookingId
+        .findById(id)
 
-});
+        .populate(
+          'bookingId',
+          'travelDate numberOfPeople totalPrice status paymentStatus'
+        )
 
-}
+        .populate(
+          'userId',
+          'name email country role'
+        );
 
 
 
-// Update Status
-async updateStatus(
-id:string,
-status:string
-){
+    if (!payment) {
 
-const payment = await this.paymentModel.findByIdAndUpdate(
+      throw new NotFoundException(
+        'Payment not found'
+      );
 
-id,
+    }
 
-{
-status
-},
 
-{
-new:true
-}
+    return payment;
 
-);
+  }
 
 
 
-if(!payment){
 
-throw new NotFoundException(
-  "Payment not found"
-);
+  async findByBooking(
+    bookingId: string
+  ) {
 
-}
 
+    return this.paymentModel
 
+      .find({
+        bookingId
+      })
 
-if(status==="SUCCESS"){
+      .populate(
+        'userId',
+        'name email country role'
+      );
 
+  }
 
-await this.bookingModel.findByIdAndUpdate(
 
-payment.bookingId,
 
-{
-paymentStatus:"PAID"
-}
 
-);
+  async updateStatus(
+    id: string,
+    status: string
+  ) {
 
 
-}
+    const payment =
+      await this.paymentModel.findByIdAndUpdate(
 
+        id,
 
+        {
+          status
+        },
 
-return payment;
+        {
+          new: true
+        }
 
-}
+      );
 
 
 
-// Delete
-async remove(id:string){
+    if (!payment) {
 
-const payment = await this.paymentModel.findByIdAndDelete(
-id
-);
+      throw new NotFoundException(
+        'Payment not found'
+      );
 
+    }
 
 
-if(!payment){
 
-throw new NotFoundException(
-  "Payment not found"
-);
+    if (status === 'SUCCESS') {
 
-}
 
+      await this.bookingModel.findByIdAndUpdate(
 
+        payment.bookingId,
 
-return {
+        {
+          paymentStatus: 'PAID'
+        }
 
-message:"Payment deleted successfully"
+      );
 
-};
+    }
 
 
-}
+
+    return payment;
+
+  }
+
+
+
+
+  async remove(
+    id: string
+  ) {
+
+
+    const payment =
+      await this.paymentModel.findByIdAndDelete(
+        id
+      );
+
+
+
+    if (!payment) {
+
+      throw new NotFoundException(
+        'Payment not found'
+      );
+
+    }
+
+
+
+    return {
+
+      message:
+        'Payment deleted successfully'
+
+    };
+
+  }
 
 
 }

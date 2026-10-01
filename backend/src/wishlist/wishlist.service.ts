@@ -1,6 +1,7 @@
 import {
   Injectable,
-  NotFoundException
+  NotFoundException,
+  ForbiddenException
 } from '@nestjs/common';
 
 import { InjectModel } from '@nestjs/mongoose';
@@ -18,117 +19,148 @@ import { CreateWishlistDto } from './dto/create-wishlist.dto';
 export class WishlistService {
 
 
-constructor(
+  constructor(
 
-@InjectModel(Wishlist.name)
+    @InjectModel(Wishlist.name)
+    private wishlistModel: Model<WishlistDocument>
 
-private wishlistModel: Model<WishlistDocument>
-
-){}
-
-
-
-// Add Wishlist
-
-async create(
-data:CreateWishlistDto
-){
-
-
-const exists = await this.wishlistModel.findOne({
-
-userId:data.userId,
-
-packageId:data.packageId
-
-});
+  ) {}
 
 
 
-if(exists){
+  // Add Wishlist
 
-return {
-
-message:"Package already in wishlist"
-
-};
-
-}
+  async create(
+    user: any,
+    data: CreateWishlistDto
+  ) {
 
 
+    const exists =
+      await this.wishlistModel.findOne({
 
-const wishlist = new this.wishlistModel(data);
+        userId: user.id,
 
+        packageId: data.packageId
 
-return wishlist.save();
-
-
-}
+      });
 
 
 
+    if (exists) {
 
-// Get User Wishlist
+      return {
 
-async findByUser(
-userId:string
-){
+        message: 'Package already in wishlist'
 
-return this.wishlistModel
+      };
 
-.find({
-
-userId:userId
-
-})
-
-.populate(
-
-'packageId',
-
-'title country price duration category images'
-
-);
-
-
-}
+    }
 
 
 
+    const wishlist =
+      new this.wishlistModel({
 
-// Remove Wishlist
+        ...data,
 
-async remove(
-id:string
-){
+        userId: user.id
 
-
-const wishlist = await this.wishlistModel.findByIdAndDelete(
-id
-);
+      });
 
 
 
-if(!wishlist){
+    return wishlist.save();
 
-throw new NotFoundException(
-
-"Wishlist item not found"
-
-);
-
-}
+  }
 
 
 
-return {
+  // Get User Wishlist
 
-message:"Wishlist removed successfully"
+  async findByUser(
+    user: any,
+    userId: string
+  ) {
 
-};
+
+    if (
+      user.role !== 'ADMIN' &&
+      user.id !== userId
+    ) {
+
+      throw new ForbiddenException(
+        'Access denied'
+      );
+
+    }
 
 
-}
+
+    return this.wishlistModel
+
+      .find({
+        userId
+      })
+
+      .populate(
+        'packageId',
+        'title country price duration category images'
+      );
+
+  }
+
+
+
+  // Remove Wishlist
+
+  async remove(
+    user: any,
+    id: string
+  ) {
+
+
+    const wishlist =
+      await this.wishlistModel.findById(id);
+
+
+
+    if (!wishlist) {
+
+      throw new NotFoundException(
+        'Wishlist item not found'
+      );
+
+    }
+
+
+
+    if (
+      user.role !== 'ADMIN' &&
+      wishlist.userId.toString() !== user.id
+    ) {
+
+      throw new ForbiddenException(
+        'Access denied'
+      );
+
+    }
+
+
+
+    await this.wishlistModel.findByIdAndDelete(
+      id
+    );
+
+
+
+    return {
+
+      message: 'Wishlist removed successfully'
+
+    };
+
+  }
 
 
 }

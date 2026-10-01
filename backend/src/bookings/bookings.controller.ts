@@ -6,7 +6,8 @@ import {
   Param,
   Patch,
   Delete,
-  UseGuards
+  UseGuards,
+  Req
 } from '@nestjs/common';
 
 
@@ -16,9 +17,7 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 
 import { BookingStatus } from './enums/booking-status.enum';
 
-
 import { JwtGuard } from '../auth/jwt.guard';
-
 import { AdminGuard } from '../auth/admin.guard';
 
 
@@ -27,122 +26,91 @@ import { AdminGuard } from '../auth/admin.guard';
 export class BookingsController {
 
 
-constructor(
-  private bookingsService: BookingsService
-){}
+  constructor(
+    private bookingsService: BookingsService
+  ) {}
 
 
 
-// ==========================
-// Create Booking
-// USER + ADMIN
-// ==========================
+  @Post()
+  @UseGuards(JwtGuard)
+  create(
+    @Req() req: any,
+    @Body() body: CreateBookingDto
+  ) {
 
-@Post()
-@UseGuards(JwtGuard)
-create(
-  @Body() body:CreateBookingDto
-){
+    return this.bookingsService.create(
+      req.user,
+      body
+    );
 
-return this.bookingsService.create(body);
-
-}
-
+  }
 
 
 
-// ==========================
-// All Bookings
-// ADMIN ONLY
-// ==========================
+  @Get()
+  @UseGuards(JwtGuard, AdminGuard)
+  findAll() {
 
-@Get()
-@UseGuards(JwtGuard, AdminGuard)
-findAll(){
+    return this.bookingsService.findAll();
 
-return this.bookingsService.findAll();
-
-}
+  }
 
 
 
+  @Get(':id')
+  @UseGuards(JwtGuard)
+  findOne(
+    @Param('id') id: string
+  ) {
 
-// ==========================
-// Single Booking
-// USER + ADMIN
-// ==========================
+    return this.bookingsService.findOne(id);
 
-@Get(':id')
-@UseGuards(JwtGuard)
-findOne(
-  @Param('id') id:string
-){
-
-return this.bookingsService.findOne(id);
-
-}
+  }
 
 
 
+  @Get('user/:userId')
+  @UseGuards(JwtGuard)
+  findUserBookings(
+    @Param('userId') userId: string,
+    @Req() req: any
+  ) {
 
+    return this.bookingsService.findUserBookings(
+      req.user,
+      userId
+    );
 
-// ==========================
-// User Booking History
-// USER + ADMIN
-// ==========================
-
-@Get('user/:userId')
-@UseGuards(JwtGuard)
-findUserBookings(
-  @Param('userId') userId:string
-){
-
-return this.bookingsService.findUserBookings(userId);
-
-}
+  }
 
 
 
+  @Patch(':id')
+  @UseGuards(JwtGuard, AdminGuard)
+  updateStatus(
+    @Param('id') id: string,
+    @Body('status') status: BookingStatus
+  ) {
 
+    return this.bookingsService.updateStatus(
+      id,
+      status
+    );
 
-// ==========================
-// Update Booking Status
-// ADMIN ONLY
-// ==========================
-
-@Patch(':id')
-@UseGuards(JwtGuard, AdminGuard)
-updateStatus(
-  @Param('id') id:string,
-  @Body('status') status:BookingStatus
-){
-
-return this.bookingsService.updateStatus(
-  id,
-  status
-);
-
-}
+  }
 
 
 
+  @Delete(':id')
+  @UseGuards(JwtGuard, AdminGuard)
+  remove(
+    @Param('id') id: string
+  ) {
 
+    return this.bookingsService.remove(id);
 
-// ==========================
-// Delete Booking
-// ADMIN ONLY
-// ==========================
-
-@Delete(':id')
-@UseGuards(JwtGuard, AdminGuard)
-remove(
-  @Param('id') id:string
-){
-
-return this.bookingsService.remove(id);
-
-}
-
+  }
 
 
 }

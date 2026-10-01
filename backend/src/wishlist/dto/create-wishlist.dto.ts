@@ -1,10 +1,13 @@
+import {
+  IsNotEmpty,
+  IsString
+} from 'class-validator';
+
+
 export class CreateWishlistDto {
 
-
-userId:string;
-
-
-packageId:string;
-
+  @IsNotEmpty()
+  @IsString()
+  packageId: string;
 
 }
