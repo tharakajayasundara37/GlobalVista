@@ -170,7 +170,7 @@ async function bootstrap() {
       process.env.PORT,
     ) || 3001;
 
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log(
     `GlobalVista API running on http://localhost:${port}`,
