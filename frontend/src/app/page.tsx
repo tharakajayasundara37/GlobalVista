@@ -87,7 +87,7 @@ const DestinationWorldMap = dynamic(
 );
 
 const API_URL =
-  'http://localhost:3001';
+  (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 
 const HERO_SCENES = [
   {

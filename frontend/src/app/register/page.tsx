@@ -12,7 +12,7 @@ import {
 import styles from './register.module.css';
 
 // Local NestJS backend. Avoid an incorrectly configured frontend API URL.
-const API_URL = 'http://localhost:3001';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
 const LANGUAGE_OPTIONS = [

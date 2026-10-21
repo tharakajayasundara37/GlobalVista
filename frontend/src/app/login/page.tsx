@@ -38,7 +38,7 @@ import styles from './login.module.css';
 // No change to frontend/.env.local needed.
 // ==========================================
 
-const API_URL = 'http://localhost:3001';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 
 // ==========================================
 // ACCOUNT TYPES

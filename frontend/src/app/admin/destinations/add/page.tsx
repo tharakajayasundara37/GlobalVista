@@ -25,7 +25,7 @@ import styles from './page.module.css';
 
 // Only this Add Destination page uses this backend URL.
 // No changes are required in frontend/.env.local or other modules.
-const DESTINATION_API_URL = 'http://localhost:3001';
+const DESTINATION_API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 const MAX_IMAGES = 5;
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set([

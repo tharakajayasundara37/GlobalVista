@@ -11,7 +11,7 @@ import {
 import type { LatLngBoundsExpression } from 'leaflet';
 import { MapPin, Star } from 'lucide-react';
 
-const API_URL = 'http://localhost:3001';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 
 type MapDestination = {
   _id: string;

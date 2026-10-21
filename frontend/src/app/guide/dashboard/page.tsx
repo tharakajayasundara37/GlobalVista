@@ -60,7 +60,7 @@ import {
 // IMPORTANT: Guide's own CSS
 import styles from './page.module.css';
 
-const API_URL = 'http://localhost:3001';
+const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 
 type Tab = 'dashboard' | 'destinations' | 'bookings' | 'profile';
 type Dialog = 'edit' | 'password' | null;
