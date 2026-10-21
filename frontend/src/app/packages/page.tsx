@@ -20,6 +20,7 @@ import {
   Minus,
   Plane,
   Plus,
+  RefreshCw,
   RotateCcw,
   Search,
   ShieldCheck,
@@ -223,25 +224,26 @@ function PackagesContent() {
     }
   }, []);
 
-  // Fetch Packages
-  useEffect(() => {
-    const loadPackages = async () => {
-      try {
-        setPackagesLoading(true);
-        setPackagesError('');
-        const response = await fetch(`${API_URL}/packages`, { cache: 'no-store' });
-        if (!response.ok) {
-          throw new Error(`Failed to load packages: ${response.status}`);
-        }
-        const data: ApiPackage[] = await response.json();
-        setPackages(Array.isArray(data) ? data : []);
-      } catch (error) {
-        console.error('Package API error:', error);
-        setPackagesError('Unable to load packages from server. Please refresh or try again later.');
-      } finally {
-        setPackagesLoading(false);
+  // Fetch Packages (Accessible for Toolbar Refresh Button)
+  const loadPackages = async () => {
+    try {
+      setPackagesLoading(true);
+      setPackagesError('');
+      const response = await fetch(`${API_URL}/packages`, { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Failed to load packages: ${response.status}`);
       }
-    };
+      const data: ApiPackage[] = await response.json();
+      setPackages(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Package API error:', error);
+      setPackagesError('Unable to load packages from server. Please refresh or try again later.');
+    } finally {
+      setPackagesLoading(false);
+    }
+  };
+
+  useEffect(() => {
     void loadPackages();
   }, []);
 
@@ -601,118 +603,133 @@ function PackagesContent() {
       </section>
 
       {/* =====================================================================
-          MAIN CONTENT WITH FLOATING FILTER CARD & CARDS GRID
+          MAIN CONTENT WITH CLEAN TOOLBAR (MATCHING DESTINATIONS DESIGN)
           ===================================================================== */}
       <section className={styles.content}>
         <div className={styles.container}>
-          {/* Floating Luxury Filter Bar */}
-          <div className={styles.filterCard}>
-            <div className={styles.filterTopRow}>
-              {/* Live Search Input */}
-              <div className={styles.searchWrap}>
-                <Search size={18} className={styles.searchIcon} />
-                <input
-                  type="text"
-                  className={styles.searchInput}
-                  placeholder="Search by destination, country, itinerary activity..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                {search && (
-                  <button
-                    type="button"
-                    className={styles.clearSearchBtn}
-                    onClick={() => setSearch('')}
-                    aria-label="Clear search"
-                  >
-                    <X size={15} />
-                  </button>
-                )}
-              </div>
+          {/* Header Block matching Destinations */}
+          <div className={styles.heading}>
+            <div>
+              <span>CURATED EXPEDITIONS</span>
+              <h2>
+                {selectedDestinationName
+                  ? `${selectedDestinationName} Packages`
+                  : 'Popular Packages'}
+              </h2>
+              <p>Explore all handpicked luxury expeditions and tour itineraries available through GlobalVista.</p>
+            </div>
+            <button
+              type="button"
+              className={styles.refreshButton}
+              onClick={() => void loadPackages()}
+              disabled={packagesLoading}
+            >
+              <RefreshCw
+                size={16}
+                className={packagesLoading ? styles.spin : ''}
+              />
+              Refresh
+            </button>
+          </div>
 
-              {/* Action Controls: Special Offers & Sort Dropdown */}
-              <div className={styles.filterActionsRow}>
+          {/* Clean Unified Toolbar matching Destinations */}
+          <div className={styles.toolbar}>
+            <div className={styles.searchBox}>
+              <Search size={18} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search destination, country or package..."
+              />
+              {search && (
                 <button
                   type="button"
-                  className={`${styles.dealsToggleBtn} ${showDealsOnly ? styles.dealsToggleBtnActive : ''}`}
-                  onClick={() => setShowDealsOnly(!showDealsOnly)}
+                  className={styles.clearSearchBtn}
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
                 >
-                  <Tag size={15} />
-                  <span>Special Offers Only</span>
+                  <X size={15} />
                 </button>
-
-                <div className={styles.sortSelectWrap}>
-                  <span className={styles.sortLabel}>Sort:</span>
-                  <select
-                    className={styles.sortSelect}
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                  >
-                    <option value="FEATURED">Featured &amp; Recommended</option>
-                    <option value="PRICE_LOW">Price: Low to High</option>
-                    <option value="PRICE_HIGH">Price: High to Low</option>
-                    <option value="RATING_HIGH">Guest Rating (Highest)</option>
-                    <option value="DURATION_SHORT">Duration (Shortest)</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Dynamic Filter Pills: Countries & Categories */}
-            <div className={styles.filterPillsSection}>
-              {/* Countries Row */}
-              <div className={styles.pillsRow}>
-                <span className={styles.pillsLabel}>Country:</span>
-                {countriesList.map((country) => (
-                  <button
-                    type="button"
-                    key={`country-${country}`}
-                    className={`${styles.filterPill} ${selectedCountry === country ? styles.filterPillActive : ''}`}
-                    onClick={() => setSelectedCountry(country)}
-                  >
-                    {country === 'ALL' ? 'All Countries' : country}
-                  </button>
-                ))}
-              </div>
-
-              {/* Categories Row */}
-              {categoriesList.length > 2 && (
-                <div className={styles.pillsRow}>
-                  <span className={styles.pillsLabel}>Category:</span>
-                  {categoriesList.map((category) => (
-                    <button
-                      type="button"
-                      key={`cat-${category}`}
-                      className={`${styles.filterPill} ${selectedCategory === category ? styles.filterPillActive : ''}`}
-                      onClick={() => setSelectedCategory(category)}
-                    >
-                      {category === 'ALL' ? 'All Categories' : category}
-                    </button>
-                  ))}
-                </div>
               )}
             </div>
-          </div>
 
-          {/* Results Summary Bar */}
-          <div className={styles.filterSummaryBar}>
-            <span className={styles.summaryCount}>
-              Showing <strong>{filteredPackages.length}</strong> {filteredPackages.length === 1 ? 'package' : 'curated packages'}
-              {packages.length > 0 && ` (out of ${packages.length} total)`}
-              {selectedDestinationName && ` for ${selectedDestinationName}`}
-            </span>
+            <select
+              className={styles.countrySelect}
+              value={selectedCountry}
+              onChange={(e) => setSelectedCountry(e.target.value)}
+            >
+              <option value="ALL">All Countries</option>
+              {countriesList
+                .filter((c) => c !== 'ALL')
+                .map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+            </select>
 
-            {hasActiveFilters && (
-              <button
-                type="button"
-                className={styles.resetFiltersBtn}
-                onClick={resetAllFilters}
+            {categoriesList.length > 2 && (
+              <select
+                className={styles.categorySelect}
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
               >
-                <RotateCcw size={13} />
-                <span>Reset All Filters</span>
-              </button>
+                <option value="ALL">All Categories</option>
+                {categoriesList
+                  .filter((c) => c !== 'ALL')
+                  .map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+              </select>
             )}
+
+            <select
+              className={styles.sortSelect}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="FEATURED">Featured &amp; Recommended</option>
+              <option value="PRICE_LOW">Price: Low to High</option>
+              <option value="PRICE_HIGH">Price: High to Low</option>
+              <option value="RATING_HIGH">Guest Rating (Highest)</option>
+              <option value="DURATION_SHORT">Duration (Shortest)</option>
+            </select>
+
+            <button
+              type="button"
+              className={`${styles.dealsToggleBtn} ${showDealsOnly ? styles.dealsToggleBtnActive : ''}`}
+              onClick={() => setShowDealsOnly(!showDealsOnly)}
+              title="Toggle Special Offers Only"
+            >
+              <Tag size={14} />
+              <span>Special Offers</span>
+            </button>
           </div>
+
+          {/* Result Count & Reset Bar matching Destinations */}
+          {!packagesLoading && !packagesError && (
+            <div className={styles.resultBar}>
+              <div>
+                Showing <strong>{filteredPackages.length}</strong> package{filteredPackages.length !== 1 ? 's' : ''}
+                {packages.length > 0 && ` (out of ${packages.length} total)`}
+                {selectedDestinationName && ` for ${selectedDestinationName}`}
+              </div>
+
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  className={styles.resetFiltersBtn}
+                  onClick={resetAllFilters}
+                >
+                  <RotateCcw size={12} />
+                  <span>Reset filters</span>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Loading & Error States */}
           {packagesLoading && (

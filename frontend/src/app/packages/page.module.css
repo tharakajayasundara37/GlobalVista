@@ -53,238 +53,241 @@
 }
 
 /* ==========================================================================
-   MAIN CONTENT & ADVANCED FILTER CARD
+   MAIN CONTENT & DESTINATIONS-STYLE TOOLBAR
    ========================================================================== */
 .content {
-  padding: 0 0 100px;
+  padding: 48px 0 80px;
 }
 
 .container {
-  width: min(1200px, calc(100% - 40px));
+  width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
 }
 
-/* Floating Filter Card */
-.filterCard {
-  background: #ffffff;
-  border-radius: 20px;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.09), 0 2px 8px rgba(0, 0, 0, 0.04);
-  border: 1.5px solid rgba(226, 232, 240, 0.85);
-  padding: 26px 30px;
-  margin: -32px auto 42px;
-  position: relative;
-  z-index: 20;
+.heading {
+  margin-bottom: 26px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 25px;
 }
 
-.filterTopRow {
+.heading > div > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #1785f2;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.8px;
+}
+
+.heading h2 {
+  margin: 0;
+  color: #142033;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(30px, 4vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -1px;
+}
+
+.heading p {
+  max-width: 600px;
+  margin: 10px 0 0;
+  color: #74818d;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.refreshButton {
+  min-height: 42px;
+  padding: 0 15px;
+  border: 1px solid #dbe4ec;
+  border-radius: 11px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: #445365;
+  background: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.refreshButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #b8d4e8;
+  box-shadow: 0 7px 20px rgba(15, 23, 42, 0.07);
+}
+
+.refreshButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: packageSpin 0.8s linear infinite;
+}
+
+@keyframes packageSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================
+   SEARCH / FILTER TOOLBAR (MATCHING DESTINATIONS)
+========================= */
+.toolbar {
+  margin-bottom: 16px;
+  padding: 12px;
+  border: 1px solid #e2e8ef;
+  border-radius: 16px;
   display: flex;
   align-items: center;
-  gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 20px;
+  gap: 12px;
+  background: #ffffff;
+  box-shadow: 0 7px 24px rgba(15, 23, 42, 0.04);
 }
 
-.searchWrap {
-  flex: 1;
-  min-width: 280px;
+.searchBox {
+  flex: 1 1 280px;
+  height: 44px;
+  padding: 0 13px;
+  border: 1px solid #dce5ed;
+  border-radius: 11px;
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 0 16px;
-  height: 48px;
-  transition: all 0.2s ease;
+  gap: 9px;
+  color: #8391a0;
+  background: #f9fbfd;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
-.searchWrap:focus-within {
-  border-color: #0284c7;
-  background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+.searchBox:focus-within {
+  border-color: #70b9ef;
+  box-shadow: 0 0 0 3px rgba(23, 133, 242, 0.08);
 }
 
-.searchIcon {
-  color: #64748b;
-  flex-shrink: 0;
-}
-
-.searchInput {
-  flex: 1;
-  border: none;
+.searchBox input {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  border: 0;
   outline: none;
+  color: #334155;
   background: transparent;
-  font-size: 14px;
-  color: #0f172a;
+  font: inherit;
+  font-size: 12px;
+}
+
+.searchBox input::placeholder {
+  color: #9aa6b2;
 }
 
 .clearSearchBtn {
+  border: 0;
   background: transparent;
-  border: none;
   color: #94a3b8;
   cursor: pointer;
+  display: flex;
+  align-items: center;
   padding: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
 }
 
-.clearSearchBtn:hover {
-  color: #0f172a;
-  background: #e2e8f0;
+.countrySelect,
+.categorySelect,
+.sortSelect {
+  min-width: 160px;
+  height: 44px;
+  padding: 0 28px 0 13px;
+  border: 1px solid #dce5ed;
+  border-radius: 11px;
+  outline: none;
+  color: #475467;
+  background: #ffffff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
 }
 
-/* Sort & Deals Controls */
-.filterActionsRow {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+.countrySelect:focus,
+.categorySelect:focus,
+.sortSelect:focus {
+  border-color: #70b9ef;
+  box-shadow: 0 0 0 3px rgba(23, 133, 242, 0.08);
 }
 
 .dealsToggleBtn {
+  height: 44px;
+  padding: 0 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 11px;
+  background: #fff7ed;
+  color: #c2410c;
+  font-size: 11px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 0 18px;
-  height: 48px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 750;
-  border: 1.5px solid #fed7aa;
-  background: #fff7ed;
-  color: #c2410c;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
 .dealsToggleBtn:hover {
   background: #ffedd5;
-  border-color: #ea580c;
+  border-color: #fb923c;
 }
 
 .dealsToggleBtnActive {
   background: #ea580c !important;
-  color: #ffffff !important;
   border-color: #ea580c !important;
-  box-shadow: 0 4px 14px rgba(234, 88, 12, 0.3);
-}
-
-.sortSelectWrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #f8fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 12px;
-  padding: 0 14px;
-  height: 48px;
-}
-
-.sortLabel {
-  font-size: 12px;
-  font-weight: 750;
-  color: #64748b;
-  text-transform: uppercase;
-}
-
-.sortSelect {
-  border: none;
-  outline: none;
-  background: transparent;
-  color: #0f172a;
-  font-size: 13.5px;
-  font-weight: 650;
-  cursor: pointer;
-}
-
-/* Country & Category Filter Pills */
-.filterPillsSection {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
-}
-
-.pillsRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.pillsLabel {
-  font-size: 11.5px;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: #94a3b8;
-  text-transform: uppercase;
-  min-width: 90px;
-}
-
-.filterPill {
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 12.5px;
-  font-weight: 650;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.filterPill:hover {
-  background: #ffffff;
-  color: #0284c7;
-  border-color: #0284c7;
-  transform: translateY(-1px);
-}
-
-.filterPillActive {
-  background: #0284c7 !important;
   color: #ffffff !important;
-  border-color: #0284c7 !important;
-  box-shadow: 0 3px 10px rgba(2, 132, 199, 0.25);
 }
 
-/* Filter Summary Bar */
-.filterSummaryBar {
+.resultBar {
+  margin-bottom: 20px;
+  padding: 0 4px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  margin-bottom: 26px;
-  flex-wrap: wrap;
+  gap: 12px;
+  color: #8793a0;
+  font-size: 11px;
 }
 
-.summaryCount {
-  font-size: 14px;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.summaryCount strong {
-  color: #0f172a;
-  font-weight: 800;
+.resultBar strong {
+  color: #1785f2;
 }
 
 .resetFiltersBtn {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 750;
-  color: #0284c7;
-  background: transparent;
-  border: none;
+  gap: 5px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid #dce5ed;
+  background: #ffffff;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
-  text-decoration: underline;
+  transition: all 0.2s ease;
 }
 
 .resetFiltersBtn:hover {
-  color: #0369a1;
+  color: #0f172a;
+  border-color: #94a3b8;
 }
 
 /* ==========================================================================
@@ -431,18 +434,31 @@
   }
 }
 
-@media (max-width: 650px) {
+@media (max-width: 768px) {
   .hero {
     height: 240px;
     min-height: 240px;
   }
-  .filterCard {
-    padding: 20px 16px;
-    margin-top: -24px;
+  .content {
+    padding: 30px 0 60px;
   }
-  .pillsLabel {
+  .heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .searchBox {
     width: 100%;
-    margin-bottom: 4px;
+  }
+  .countrySelect,
+  .categorySelect,
+  .sortSelect,
+  .dealsToggleBtn {
+    width: 100%;
   }
   .packagesGrid {
     grid-template-columns: 1fr;
