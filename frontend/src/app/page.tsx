@@ -555,8 +555,36 @@ export default function Home() {
   }, [destinations, activeGalleryCountry]);
 
   const galleryCountries = useMemo(() => {
-    return Array.from(new Set(destinations.map((d) => d.country).filter(Boolean)));
+    const list = Array.from(new Set(destinations.map((d) => d.country).filter(Boolean)));
+    if (!list.some((c) => c.toLowerCase() === 'croatia')) {
+      list.unshift('Croatia');
+    }
+    return list;
   }, [destinations]);
+
+  const collageSlots = useMemo(() => {
+    const matching = galleryDestinations;
+    const list = [...matching];
+    if (list.length < 6) {
+      for (const d of destinations) {
+        if (!list.some((item) => item._id === d._id)) {
+          list.push(d);
+        }
+        if (list.length >= 6) break;
+      }
+    }
+    // If still under 6, create fallback slot objects from known destinations
+    if (list.length < 6 && destinations.length > 0) {
+      while (list.length < 6) {
+        const fallbackItem = destinations[list.length % destinations.length];
+        list.push({
+          ...fallbackItem,
+          _id: `${fallbackItem._id}-slot-${list.length}`,
+        });
+      }
+    }
+    return list.slice(0, 6);
+  }, [galleryDestinations, destinations]);
 
   const handleGalleryNext = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -4161,71 +4189,396 @@ export default function Home() {
             ))}
           </div>
 
-          {/* Polaroid Cards Grid */}
-          <div className="polaroidGalleryGrid">
-            {destinationsLoading && <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#64748b' }}>Curating destination gallery...</p>}
-            {!destinationsLoading && galleryDestinations.length === 0 && (
-              <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#64748b' }}>No destination snapshots found for this filter.</p>
-            )}
-            {!destinationsLoading &&
-              galleryDestinations.map((dest, idx) => {
-                const rotationAngles = [-2.2, 1.8, -1.2, 2.4, -1.8, 1.4];
-                const angle = rotationAngles[idx % rotationAngles.length];
-                const stampLabels = ['PASSPORT STAMPED', 'VERIFIED 5★', 'WANDERLUST', 'EXPEDITION', 'AUTHENTIC', 'ICONIC ESCAPE'];
-                const stampText = stampLabels[idx % stampLabels.length];
-                const isGold = idx % 2 === 0;
+          {/* Polaroid & Torn Paper Moodboard Display */}
+          {destinationsLoading && (
+            <p style={{ textAlign: 'center', color: '#64748b', padding: '40px 0' }}>
+              Curating destination moodboard...
+            </p>
+          )}
 
-                return (
-                  <motion.div
-                    key={dest._id}
-                    className="polaroidCard"
-                    style={{ transform: `rotate(${angle}deg)` }}
-                    initial={{ opacity: 0, y: 35 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, margin: '-30px' }}
-                    transition={{ duration: 0.5, delay: (idx % 6) * 0.08, ease: 'easeOut' }}
-                    onClick={() => setSelectedGalleryDestination(dest)}
+          {!destinationsLoading && (
+            <div className="tornScrapbookContainer">
+              <motion.div
+                className="tornScrapbookBoard"
+                initial={{ opacity: 0, scale: 0.96, y: 30 }}
+                whileInView={{ opacity: 1, scale: 1, y: 0 }}
+                viewport={{ once: true, margin: '-40px' }}
+                transition={{ duration: 0.65, ease: 'easeOut' }}
+              >
+                {/* Background Watercolor Washes */}
+                <div className="scrapbookWatercolorWash" />
+
+                {/* Top Right "Travel Guide" handwritten script */}
+                <div className="scrapbookTravelGuideHeading">
+                  <span className="travelGuideScript">Travel</span>
+                  <span className="travelGuideScriptSub">Guide</span>
+                  <svg className="travelGuideSwash" viewBox="0 0 160 24" fill="none">
+                    <path
+                      d="M4 14C35 4 85 4 156 16M45 18C75 12 110 12 145 20"
+                      stroke="#0f172a"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </div>
+
+                {/* Slot 1: Top-Left Cove/Azure Bay */}
+                {collageSlots[0] && (
+                  <div
+                    className="tornSlot tornSlot1"
+                    onClick={() => setSelectedGalleryDestination(collageSlots[0])}
+                    title={`View ${collageSlots[0].name}`}
                   >
-                    <div className="polaroidTape" />
-                    <div className="polaroidPhotoWrap">
+                    <div className="tornSlotInner">
                       <img
-                        src={getDestinationImage(dest)}
-                        alt={dest.name}
-                        className="polaroidPhoto"
+                        src={getDestinationImage(collageSlots[0])}
+                        alt={collageSlots[0].name}
+                        className="tornSlotImg"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
-                          e.currentTarget.src = '/images/globalvista-bg.png';
+                          e.currentTarget.src = '/images/default-travel.jpg';
                         }}
                       />
-                      <div className="polaroidHoverOverlay">
-                        <span className="polaroidHoverBtn">
-                          <Eye size={13} /> Inspect Snapshot
+                      <div className="tornSlotHoverOverlay">
+                        <span className="tornSlotHoverTitle">{collageSlots[0].name}</span>
+                        <span className="tornSlotHoverMeta">
+                          <MapPin size={10} /> {collageSlots[0].country}
+                        </span>
+                        <span className="tornSlotHoverBtn">
+                          <Eye size={11} /> Inspect
                         </span>
                       </div>
                     </div>
-                    <div className="polaroidCaption">
-                      <div className="polaroidInfo">
-                        <h4 className="polaroidTitle">{dest.name}</h4>
-                        <div className="polaroidMeta">
-                          <MapPin size={12} className="polaroidMetaPin" />
-                          <span>{dest.country}</span>
-                          {dest.bestTimeToVisit && (
-                            <>
-                              <span>·</span>
-                              <span>{dest.bestTimeToVisit}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className={`polaroidStamp ${isGold ? 'gold' : ''}`}>
-                        <Star size={10} fill="currentColor" />
-                        <span>{stampText}</span>
+                  </div>
+                )}
+
+                {/* Slot 2: Upper-Middle Coastal Town & Bay */}
+                {collageSlots[1] && (
+                  <div
+                    className="tornSlot tornSlot2"
+                    onClick={() => setSelectedGalleryDestination(collageSlots[1])}
+                    title={`View ${collageSlots[1].name}`}
+                  >
+                    <div className="tornSlotInner">
+                      <img
+                        src={getDestinationImage(collageSlots[1])}
+                        alt={collageSlots[1].name}
+                        className="tornSlotImg"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/images/default-travel.jpg';
+                        }}
+                      />
+                      <div className="tornSlotHoverOverlay">
+                        <span className="tornSlotHoverTitle">{collageSlots[1].name}</span>
+                        <span className="tornSlotHoverMeta">
+                          <MapPin size={10} /> {collageSlots[1].country}
+                        </span>
+                        <span className="tornSlotHoverBtn">
+                          <Eye size={11} /> Inspect
+                        </span>
                       </div>
                     </div>
-                  </motion.div>
-                );
-              })}
-          </div>
+                  </div>
+                )}
+
+                {/* Sticker 1: Airplane taking off with palm & sunburst */}
+                <div className="scrapbookSticker stickerPlane">
+                  <svg viewBox="0 0 120 120" className="stickerSvg">
+                    <defs>
+                      <radialGradient id="sunGrad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
+                        <stop offset="100%" stopColor="#ea580c" stopOpacity="0.95" />
+                      </radialGradient>
+                    </defs>
+                    <circle cx="48" cy="76" r="32" fill="url(#sunGrad)" />
+                    <path
+                      d="M48 38 L48 44 M48 108 L48 114 M16 76 L22 76 M74 76 L80 76 M25 53 L29 57 M67 95 L71 99 M25 99 L29 95 M67 57 L71 53"
+                      stroke="#fed7aa"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M22 92 C24 78 35 68 46 64 C38 66 30 72 26 82 C28 72 38 64 50 62 C40 62 32 68 28 76"
+                      stroke="#047857"
+                      strokeWidth="3.2"
+                      fill="none"
+                      strokeLinecap="round"
+                      opacity="0.75"
+                    />
+                    <g transform="translate(32, 22) rotate(-35 30 30)">
+                      <path
+                        d="M30 4 L34 26 L52 38 L52 44 L34 38 L34 52 L42 58 L42 62 L30 59 L18 62 L18 58 L26 52 L26 38 L8 44 L8 38 L26 26 Z"
+                        fill="rgba(0,0,0,0.22)"
+                        transform="translate(3, 4)"
+                      />
+                      <path
+                        d="M30 4 L34 26 L52 38 L52 44 L34 38 L34 52 L42 58 L42 62 L30 59 L18 62 L18 58 L26 52 L26 38 L8 44 L8 38 L26 26 Z"
+                        fill="#ffffff"
+                        stroke="#cbd5e1"
+                        strokeWidth="1"
+                      />
+                      <path d="M30 6 L30 58" stroke="#0284c7" strokeWidth="1.2" opacity="0.6" />
+                      <circle cx="30" cy="12" r="1.5" fill="#0284c7" />
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Sticker 2: Red 4x4 Overland Camper Jeep */}
+                <div className="scrapbookSticker stickerJeep">
+                  <svg viewBox="0 0 140 100" className="stickerSvg">
+                    <path
+                      d="M12 28 Q45 8 80 20 T132 40"
+                      stroke="#f97316"
+                      strokeWidth="2.5"
+                      strokeDasharray="4 4"
+                      fill="none"
+                    />
+                    <circle cx="14" cy="28" r="4" fill="#ea580c" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="132" cy="40" r="4" fill="#ea580c" stroke="#ffffff" strokeWidth="1.5" />
+                    <circle cx="75" cy="58" r="34" fill="#065f46" opacity="0.88" />
+                    <g transform="translate(35, 34)">
+                      <rect x="18" y="2" width="40" height="8" rx="2" fill="#d97706" />
+                      <rect x="22" y="6" width="32" height="4" rx="1" fill="#78350f" />
+                      <path d="M14 10 L58 10 L68 24 L72 28 L72 38 L6 38 L6 26 Z" fill="#dc2626" />
+                      <path d="M18 14 L36 14 L36 24 L16 24 Z" fill="#93c5fd" opacity="0.9" />
+                      <path d="M40 14 L56 14 L64 24 L40 24 Z" fill="#93c5fd" opacity="0.9" />
+                      <rect x="4" y="36" width="70" height="7" rx="2" fill="#1e293b" />
+                      <circle cx="72" cy="32" r="2.5" fill="#fef08a" />
+                      <circle cx="20" cy="44" r="9" fill="#0f172a" />
+                      <circle cx="20" cy="44" r="4" fill="#94a3b8" />
+                      <circle cx="58" cy="44" r="9" fill="#0f172a" />
+                      <circle cx="58" cy="44" r="4" fill="#94a3b8" />
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Slot 3: Middle-Left Fortified Coastal Town */}
+                {collageSlots[2] && (
+                  <div
+                    className="tornSlot tornSlot3"
+                    onClick={() => setSelectedGalleryDestination(collageSlots[2])}
+                    title={`View ${collageSlots[2].name}`}
+                  >
+                    <div className="tornSlotInner">
+                      <img
+                        src={getDestinationImage(collageSlots[2])}
+                        alt={collageSlots[2].name}
+                        className="tornSlotImg"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/images/default-travel.jpg';
+                        }}
+                      />
+                      <div className="tornSlotHoverOverlay">
+                        <span className="tornSlotHoverTitle">{collageSlots[2].name}</span>
+                        <span className="tornSlotHoverMeta">
+                          <MapPin size={10} /> {collageSlots[2].country}
+                        </span>
+                        <span className="tornSlotHoverBtn">
+                          <Eye size={11} /> Inspect
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sticker 3: Retro Camera with Starburst and "explore" */}
+                <div className="scrapbookSticker stickerCamera">
+                  <svg viewBox="0 0 120 100" className="stickerSvg">
+                    <path d="M25 80 Q60 55 95 80" stroke="#f59e0b" strokeWidth="5" fill="none" opacity="0.8" />
+                    <path d="M32 86 Q60 65 88 86" stroke="#fbbf24" strokeWidth="3" fill="none" opacity="0.8" />
+                    <g transform="translate(25, 20)">
+                      <rect x="0" y="10" width="70" height="46" rx="8" fill="#334155" />
+                      <rect x="4" y="14" width="62" height="38" rx="5" fill="#475569" />
+                      <rect x="10" y="4" width="16" height="8" rx="2" fill="#64748b" />
+                      <circle cx="56" cy="18" r="4" fill="#f87171" />
+                      <circle cx="35" cy="33" r="16" fill="#1e293b" stroke="#cbd5e1" strokeWidth="2.5" />
+                      <circle cx="35" cy="33" r="10" fill="#0284c7" />
+                      <circle cx="32" cy="30" r="3" fill="#ffffff" opacity="0.8" />
+                      <g transform="translate(46, 26)">
+                        <rect
+                          x="0"
+                          y="0"
+                          width="46"
+                          height="18"
+                          rx="3"
+                          fill="#f8fafc"
+                          stroke="#cbd5e1"
+                          strokeWidth="1"
+                        />
+                        <text
+                          x="23"
+                          y="13"
+                          textAnchor="middle"
+                          fontSize="9"
+                          fontWeight="800"
+                          fontStyle="italic"
+                          fill="#0f172a"
+                          letterSpacing="0.5"
+                        >
+                          explore
+                        </text>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Slot 4: Middle-Right Vertical Emerald Canyon / Adventure */}
+                {collageSlots[3] && (
+                  <div
+                    className="tornSlot tornSlot4"
+                    onClick={() => setSelectedGalleryDestination(collageSlots[3])}
+                    title={`View ${collageSlots[3].name}`}
+                  >
+                    <div className="tornSlotInner">
+                      <img
+                        src={getDestinationImage(collageSlots[3])}
+                        alt={collageSlots[3].name}
+                        className="tornSlotImg"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/images/default-travel.jpg';
+                        }}
+                      />
+                      <div className="tornSlotHoverOverlay">
+                        <span className="tornSlotHoverTitle">{collageSlots[3].name}</span>
+                        <span className="tornSlotHoverMeta">
+                          <MapPin size={10} /> {collageSlots[3].country}
+                        </span>
+                        <span className="tornSlotHoverBtn">
+                          <Eye size={11} /> Inspect
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Slot 5: Lower-Center Cascading Waterfalls */}
+                {collageSlots[4] && (
+                  <div
+                    className="tornSlot tornSlot5"
+                    onClick={() => setSelectedGalleryDestination(collageSlots[4])}
+                    title={`View ${collageSlots[4].name}`}
+                  >
+                    <div className="tornSlotInner">
+                      <img
+                        src={getDestinationImage(collageSlots[4])}
+                        alt={collageSlots[4].name}
+                        className="tornSlotImg"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/images/default-travel.jpg';
+                        }}
+                      />
+                      <div className="tornSlotHoverOverlay">
+                        <span className="tornSlotHoverTitle">{collageSlots[4].name}</span>
+                        <span className="tornSlotHoverMeta">
+                          <MapPin size={10} /> {collageSlots[4].country}
+                        </span>
+                        <span className="tornSlotHoverBtn">
+                          <Eye size={11} /> Inspect
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sticker 4: Origami Boat & Nautical Compass Stamp */}
+                <div className="scrapbookSticker stickerBoat">
+                  <svg viewBox="0 0 140 100" className="stickerSvg">
+                    <path
+                      d="M30 76 Q45 70 60 76 T90 76 T120 76"
+                      stroke="#38bdf8"
+                      strokeWidth="2"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M40 83 Q55 77 70 83 T100 83 T130 83"
+                      stroke="#0284c7"
+                      strokeWidth="1.8"
+                      fill="none"
+                      strokeLinecap="round"
+                      opacity="0.7"
+                    />
+                    <g transform="translate(74, 20) rotate(8)">
+                      <rect
+                        x="0"
+                        y="0"
+                        width="42"
+                        height="42"
+                        fill="#fffbeb"
+                        stroke="#d97706"
+                        strokeWidth="1.2"
+                        strokeDasharray="3 2"
+                      />
+                      <circle cx="21" cy="21" r="14" fill="none" stroke="#1d4ed8" strokeWidth="1.2" />
+                      <path d="M21 9 L24 21 L21 33 L18 21 Z" fill="#1d4ed8" />
+                      <path d="M9 21 L21 24 L33 21 L21 18 Z" fill="#93c5fd" />
+                      <text x="21" y="6" textAnchor="middle" fontSize="6" fontWeight="900" fill="#1d4ed8">
+                        N
+                      </text>
+                    </g>
+                    <g transform="translate(18, 28) rotate(-4)">
+                      <polygon points="10,42 22,54 58,54 70,42" fill="#334155" />
+                      <polygon points="10,42 40,46 70,42" fill="#1e293b" />
+                      <polygon points="40,12 40,46 62,42" fill="#475569" />
+                      <polygon points="40,12 18,42 40,46" fill="#64748b" />
+                    </g>
+                  </svg>
+                </div>
+
+                {/* Bottom-Left Big Country Title & Website (Matching Reference) */}
+                <div className="scrapbookHeroTitleBlock">
+                  <motion.h3
+                    key={activeGalleryCountry}
+                    className="scrapbookCountryTitle"
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                  >
+                    {activeGalleryCountry === 'ALL' ? 'Croatia' : activeGalleryCountry}
+                  </motion.h3>
+                  <span className="scrapbookCountryUrl">
+                    {activeGalleryCountry === 'ALL'
+                      ? 'www.explore-croatia.net'
+                      : `www.explore-${activeGalleryCountry.toLowerCase().replace(/[^a-z0-9]/g, '')}.net`}
+                  </span>
+                </div>
+
+                {/* Slot 6: Bottom-Right Hilltop Terracotta Village */}
+                {collageSlots[5] && (
+                  <div
+                    className="tornSlot tornSlot6"
+                    onClick={() => setSelectedGalleryDestination(collageSlots[5])}
+                    title={`View ${collageSlots[5].name}`}
+                  >
+                    <div className="tornSlotInner">
+                      <img
+                        src={getDestinationImage(collageSlots[5])}
+                        alt={collageSlots[5].name}
+                        className="tornSlotImg"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/images/default-travel.jpg';
+                        }}
+                      />
+                      <div className="tornSlotHoverOverlay">
+                        <span className="tornSlotHoverTitle">{collageSlots[5].name}</span>
+                        <span className="tornSlotHoverMeta">
+                          <MapPin size={10} /> {collageSlots[5].country}
+                        </span>
+                        <span className="tornSlotHoverBtn">
+                          <Eye size={11} /> Inspect
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            </div>
+          )}
         </div>
       </section>
 

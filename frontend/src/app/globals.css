@@ -8303,6 +8303,331 @@ footer {
   box-shadow: 0 4px 14px rgba(10, 25, 47, 0.25);
 }
 
+/* ==========================================================================
+   TORN PAPER SCRAPBOOK TRAVEL GUIDE COLLAGE (USER REFERENCE STYLE)
+   ========================================================================== */
+.tornScrapbookContainer {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  position: relative;
+  padding: 10px 0 30px;
+}
+
+.tornScrapbookBoard {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1.74;
+  min-height: 720px;
+  background: #fbf9f5;
+  border-radius: 28px;
+  box-shadow:
+    0 32px 84px rgba(15, 23, 42, 0.14),
+    0 4px 18px rgba(0, 0, 0, 0.05),
+    inset 0 0 90px rgba(230, 218, 195, 0.3);
+  border: 1.5px solid rgba(226, 218, 200, 0.9);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Watercolor washes on canvas background matching reference image */
+.scrapbookWatercolorWash {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 45% 35% at 5% 5%, rgba(13, 148, 136, 0.3) 0%, rgba(13, 148, 136, 0.08) 50%, transparent 80%),
+    radial-gradient(ellipse 42% 42% at 6% 68%, rgba(15, 118, 110, 0.38) 0%, rgba(15, 118, 110, 0.1) 45%, transparent 75%),
+    radial-gradient(ellipse 50% 30% at 90% 2%, rgba(217, 119, 6, 0.15) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 94% 98%, rgba(20, 184, 166, 0.24) 0%, transparent 65%);
+}
+
+/* Top-Right "Travel Guide" handwritten script */
+.scrapbookTravelGuideHeading {
+  position: absolute;
+  top: 4.5%;
+  right: 5%;
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.travelGuideScript {
+  font-family: 'Caveat', 'Brush Script MT', 'Dancing Script', cursive, sans-serif;
+  font-size: clamp(38px, 6.2vw, 70px);
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 0.9;
+  letter-spacing: -1px;
+  transform: rotate(-4deg);
+}
+
+.travelGuideScriptSub {
+  font-family: 'Caveat', 'Brush Script MT', 'Dancing Script', cursive, sans-serif;
+  font-size: clamp(32px, 5.2vw, 58px);
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 0.85;
+  margin-top: 4px;
+  margin-right: 12px;
+  transform: rotate(-3deg);
+}
+
+.travelGuideSwash {
+  width: clamp(100px, 16vw, 160px);
+  height: 18px;
+  margin-top: 4px;
+  margin-right: 4px;
+}
+
+/* Bottom-Left Big Country Title & URL */
+.scrapbookHeroTitleBlock {
+  position: absolute;
+  bottom: 8%;
+  left: 5%;
+  z-index: 12;
+  pointer-events: none;
+}
+
+.scrapbookCountryTitle {
+  font-size: clamp(38px, 6.5vw, 70px);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  color: #0a192f;
+  margin: 0 0 6px;
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+.scrapbookCountryUrl {
+  display: inline-block;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: clamp(10px, 1.6vw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #1e293b;
+  opacity: 0.9;
+}
+
+/* ==========================================================================
+   TORN PAPER SLOTS (6 IRREGULAR RIPPED SHAPES)
+   ========================================================================== */
+.tornSlot {
+  position: absolute;
+  background: #ffffff;
+  padding: 8px; /* white fibrous torn edge */
+  box-shadow:
+    0 16px 36px rgba(15, 23, 42, 0.16),
+    0 3px 10px rgba(0, 0, 0, 0.06);
+  cursor: pointer;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, z-index 0.4s ease;
+  z-index: 3;
+  border: 4px solid #ffffff;
+  outline: 2px dashed rgba(230, 218, 195, 0.7);
+}
+
+.tornSlot:hover {
+  transform: scale(1.04) !important;
+  box-shadow:
+    0 28px 56px rgba(15, 23, 42, 0.28),
+    0 6px 18px rgba(2, 132, 199, 0.2);
+  z-index: 25 !important;
+}
+
+.tornSlotInner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  border-radius: inherit;
+  background: #cbd5e1;
+}
+
+.tornSlotImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  display: block;
+}
+
+.tornSlot:hover .tornSlotImg {
+  transform: scale(1.08);
+}
+
+/* Slot 1: Top-Left Cove/Azure Bay */
+.tornSlot1 {
+  top: 1.5%;
+  left: 1.5%;
+  width: 44%;
+  height: 27%;
+  border-radius: 46% 54% 60% 40% / 42% 46% 54% 58%;
+  transform: rotate(-1.5deg);
+  z-index: 3;
+}
+
+/* Slot 2: Upper-Middle Coastal Town & Bay */
+.tornSlot2 {
+  top: 15%;
+  left: 32%;
+  width: 42%;
+  height: 22%;
+  border-radius: 56% 44% 45% 55% / 48% 58% 42% 52%;
+  transform: rotate(1.2deg);
+  z-index: 4;
+}
+
+/* Slot 3: Middle-Left Fortified Coastal Town */
+.tornSlot3 {
+  top: 36%;
+  left: 3.5%;
+  width: 42%;
+  height: 20%;
+  border-radius: 52% 48% 56% 44% / 46% 52% 48% 54%;
+  transform: rotate(-1.2deg);
+  z-index: 5;
+}
+
+/* Slot 4: Middle-Right Vertical Emerald Canyon / Adventure */
+.tornSlot4 {
+  top: 32%;
+  right: 2%;
+  width: 37%;
+  height: 33%;
+  border-radius: 44% 56% 58% 42% / 54% 46% 54% 46%;
+  transform: rotate(1.8deg);
+  z-index: 3;
+}
+
+/* Slot 5: Lower-Center Cascading Waterfalls */
+.tornSlot5 {
+  top: 54%;
+  left: 33%;
+  width: 35%;
+  height: 22%;
+  border-radius: 50% 50% 58% 42% / 44% 56% 44% 56%;
+  transform: rotate(-1deg);
+  z-index: 6;
+}
+
+/* Slot 6: Bottom-Right Hilltop Terracotta Village */
+.tornSlot6 {
+  bottom: 2.5%;
+  right: 2.5%;
+  width: 43%;
+  height: 27%;
+  border-radius: 54% 46% 52% 48% / 48% 52% 48% 52%;
+  transform: rotate(1deg);
+  z-index: 5;
+}
+
+/* Torn Slot Hover Overlay */
+.tornSlotHoverOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 25, 47, 0.85) 0%, rgba(10, 25, 47, 0.3) 50%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tornSlot:hover .tornSlotHoverOverlay {
+  opacity: 1;
+}
+
+.tornSlotHoverTitle {
+  font-size: clamp(12px, 1.8vw, 15px);
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 2px;
+  line-height: 1.2;
+}
+
+.tornSlotHoverMeta {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 700;
+}
+
+.tornSlotHoverBtn {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #0a192f;
+  font-size: 10.5px;
+  font-weight: 800;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+/* ==========================================================================
+   TRAVEL STICKERS & EPHEMERA (MATCHING USER REFERENCE)
+   ========================================================================== */
+.scrapbookSticker {
+  position: absolute;
+  pointer-events: none;
+  filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.16));
+}
+
+/* 1. Airplane Sticker */
+.stickerPlane {
+  top: 27%;
+  left: 5%;
+  width: clamp(75px, 11vw, 115px);
+  height: clamp(75px, 11vw, 115px);
+  z-index: 10;
+  transform: rotate(-10deg);
+}
+
+/* 2. Overland 4x4 Jeep Sticker */
+.stickerJeep {
+  top: 22%;
+  right: 6%;
+  width: clamp(90px, 14vw, 135px);
+  height: clamp(65px, 10vw, 95px);
+  z-index: 10;
+  transform: rotate(4deg);
+}
+
+/* 3. Retro Camera Sticker */
+.stickerCamera {
+  top: 45%;
+  left: 41%;
+  width: clamp(80px, 12vw, 115px);
+  height: clamp(65px, 10vw, 95px);
+  z-index: 11;
+  transform: rotate(-3deg);
+}
+
+/* 4. Origami Boat & Stamp Sticker */
+.stickerBoat {
+  top: 61%;
+  right: 8%;
+  width: clamp(95px, 14vw, 135px);
+  height: clamp(70px, 10vw, 100px);
+  z-index: 10;
+  transform: rotate(2deg);
+}
+
+.stickerSvg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 /* Polaroid Grid */
 .polaroidGalleryGrid {
   display: grid;
