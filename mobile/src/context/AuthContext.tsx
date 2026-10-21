@@ -9,6 +9,7 @@ interface AuthContextType {
   login: (email: string, pass: string) => Promise<ApiUser | null>;
   register: (data: { name: string; email: string; password: string; mobile?: string; country?: string }) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updatedUser: Partial<ApiUser>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType>({
   login: async () => null,
   register: async () => {},
   logout: async () => {},
+  updateUser: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -79,8 +81,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await AsyncStorage.removeItem('globalvista_mobile_user');
   };
 
+  const updateUser = async (updated: Partial<ApiUser>) => {
+    setUser((prev) => {
+      if (!prev) return null;
+      const merged = { ...prev, ...updated };
+      AsyncStorage.setItem('globalvista_mobile_user', JSON.stringify(merged)).catch(() => {});
+      return merged;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -47,6 +47,9 @@ import {
   Compass,
   Bell,
   Trash,
+  Pencil,
+  KeyRound,
+  ChevronDown,
 } from 'lucide-react-native';
 import { MobileInvoiceModal } from './MobileInvoiceModal';
 import { COLORS, SHADOWS } from '../constants/theme';
@@ -79,7 +82,7 @@ type TabType =
   | 'PLANS';
 
 export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
-  const { token, user } = useAuth();
+  const { token, user, updateUser } = useAuth();
   const { formatPrice } = useCurrency();
 
   // Navigation State (Matching Web Sidebar/TopNav)
@@ -104,6 +107,21 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
   const [userRoleFilter, setUserRoleFilter] = useState<'ALL' | 'USER' | 'GUIDE' | 'ADMIN'>('ALL');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'COMPLETED' | 'PENDING' | 'FAILED'>('ALL');
   const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState<ApiBooking | null>(null);
+
+  // Admin Profile Modals & Form State (Matching Web)
+  const [showProfileActionsModal, setShowProfileActionsModal] = useState(false);
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
+  const [profileName, setProfileName] = useState(user?.name || '');
+  const [profileMobile, setProfileMobile] = useState(user?.mobile || '');
+  const [profileCountry, setProfileCountry] = useState(user?.country || 'Sri Lanka');
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSaving, setPasswordSaving] = useState(false);
 
   // Sub-modal creation sheets (100% Preserved)
   const [showNewPackageModal, setShowNewPackageModal] = useState(false);
@@ -448,6 +466,88 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
   };
 
   // ==========================================
+  // ACTIONS: ADMIN PROFILE & SECURITY (Matching Web)
+  // ==========================================
+  const handleOpenEditProfile = () => {
+    setProfileName(user?.name || '');
+    setProfileMobile(user?.mobile || '');
+    setProfileCountry(user?.country || 'Sri Lanka');
+    setShowProfileActionsModal(false);
+    setShowEditProfileModal(true);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!token) return;
+    if (!profileName.trim()) {
+      Alert.alert('Required', 'Please enter your administrator name.');
+      return;
+    }
+    setProfileSaving(true);
+    try {
+      const res = await api.updateMyProfile(
+        {
+          name: profileName.trim(),
+          mobile: profileMobile.trim(),
+          country: profileCountry.trim(),
+        },
+        token
+      );
+      if (res.user) {
+        await updateUser(res.user);
+      } else {
+        await updateUser({
+          name: profileName.trim(),
+          mobile: profileMobile.trim(),
+          country: profileCountry.trim(),
+        });
+      }
+      setShowEditProfileModal(false);
+      Alert.alert('Success! 🎉', 'Administrator profile updated successfully.');
+    } catch (err: any) {
+      Alert.alert('Update Failed', err.message || 'Could not update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+
+  const handleOpenChangePassword = () => {
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setShowProfileActionsModal(false);
+    setShowChangePasswordModal(true);
+  };
+
+  const handleChangePassword = async () => {
+    if (!token) return;
+    if (!currentPassword) {
+      Alert.alert('Required', 'Please enter your current administrator password.');
+      return;
+    }
+    if (newPassword.length < 8) {
+      Alert.alert('Password Length', 'New password must have at least 8 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Mismatch', 'New password and confirmation password do not match.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      await api.changeMyPassword({ currentPassword, newPassword }, token);
+      setShowChangePasswordModal(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      Alert.alert('Security Updated! 🔒', 'Administrator password has been successfully changed.');
+    } catch (err: any) {
+      Alert.alert('Change Failed', err.message || 'Could not change password');
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  // ==========================================
   // FILTERED DATASETS (100% Preserved Logic)
   // ==========================================
   const filteredBookings = useMemo(() => {
@@ -668,7 +768,11 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
             </View>
 
             <View style={styles.topbarRight}>
-              <View style={styles.adminUserPill}>
+              <TouchableOpacity
+                style={styles.adminUserPill}
+                onPress={() => setShowProfileActionsModal(true)}
+                activeOpacity={0.8}
+              >
                 <View style={styles.adminAvatar}>
                   <Text style={styles.adminAvatarText}>
                     {(user?.name || 'A').charAt(0).toUpperCase()}
@@ -680,7 +784,8 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
                   </Text>
                   <Text style={styles.adminUserRole}>Administrator</Text>
                 </View>
-              </View>
+                <ChevronDown size={12} color="#64748b" style={{ marginLeft: 2 }} />
+              </TouchableOpacity>
 
               <TouchableOpacity style={styles.closeCircleBtn} onPress={onClose} activeOpacity={0.7}>
                 <X size={18} color="#475569" />
@@ -1722,6 +1827,214 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
           booking={selectedInvoiceBooking}
           onClose={() => setSelectedInvoiceBooking(null)}
         />
+
+        {/* ========================================================
+           ADMIN PROFILE MODAL 1: ACTIONS SHEET (Web Menu Replica)
+           ======================================================== */}
+        <Modal
+          visible={showProfileActionsModal}
+          animationType="fade"
+          transparent
+          onRequestClose={() => setShowProfileActionsModal(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.profileActionSheet}>
+              <View style={styles.profileSheetHeader}>
+                <View style={styles.sheetAvatar}>
+                  <Text style={styles.sheetAvatarText}>
+                    {(user?.name || 'A').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetName}>{user?.name || 'Administrator'}</Text>
+                  <Text style={styles.sheetEmail}>{user?.email || 'admin@globalvista.com'}</Text>
+                  <View style={styles.sheetRoleTag}>
+                    <Text style={styles.sheetRoleText}>MASTER ADMINISTRATOR</Text>
+                  </View>
+                </View>
+                <TouchableOpacity onPress={() => setShowProfileActionsModal(false)}>
+                  <X size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.sheetDivider} />
+
+              <TouchableOpacity
+                style={styles.sheetActionItem}
+                onPress={handleOpenEditProfile}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.sheetActionIcon, { backgroundColor: '#ecfdf5' }]}>
+                  <Pencil size={18} color="#059669" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetActionTitle}>Edit Profile Information</Text>
+                  <Text style={styles.sheetActionSub}>Update your name, phone number, and country</Text>
+                </View>
+                <ChevronRight size={16} color="#94a3b8" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sheetActionItem}
+                onPress={handleOpenChangePassword}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.sheetActionIcon, { backgroundColor: '#eff6ff' }]}>
+                  <KeyRound size={18} color="#2563eb" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetActionTitle}>Change Password</Text>
+                  <Text style={styles.sheetActionSub}>Enhance administrator account security</Text>
+                </View>
+                <ChevronRight size={16} color="#94a3b8" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sheetCloseBtn}
+                onPress={() => setShowProfileActionsModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.sheetCloseBtnText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ========================================================
+           ADMIN PROFILE MODAL 2: EDIT PROFILE FORM
+           ======================================================== */}
+        <Modal
+          visible={showEditProfileModal}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowEditProfileModal(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <View>
+                  <Text style={styles.modalTitle}>Edit Administrator Profile</Text>
+                  <Text style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    Update your official GlobalVista identity details
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowEditProfileModal(false)}>
+                  <X size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+                <Text style={styles.inputLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Administrator Name"
+                  placeholderTextColor="#94a3b8"
+                  value={profileName}
+                  onChangeText={setProfileName}
+                />
+
+                <Text style={styles.inputLabel}>Contact Mobile</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="+94 77 123 4567"
+                  placeholderTextColor="#94a3b8"
+                  keyboardType="phone-pad"
+                  value={profileMobile}
+                  onChangeText={setProfileMobile}
+                />
+
+                <Text style={styles.inputLabel}>Country of Residence</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Sri Lanka"
+                  placeholderTextColor="#94a3b8"
+                  value={profileCountry}
+                  onChangeText={setProfileCountry}
+                />
+              </ScrollView>
+
+              <TouchableOpacity
+                style={[styles.modalSubmitBtn, profileSaving && { opacity: 0.7 }]}
+                onPress={handleSaveProfile}
+                disabled={profileSaving}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalSubmitBtnText}>
+                  {profileSaving ? 'Saving Changes...' : 'Save Profile Changes'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+        {/* ========================================================
+           ADMIN PROFILE MODAL 3: CHANGE PASSWORD FORM
+           ======================================================== */}
+        <Modal
+          visible={showChangePasswordModal}
+          animationType="slide"
+          transparent
+          onRequestClose={() => setShowChangePasswordModal(false)}
+        >
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <View>
+                  <Text style={styles.modalTitle}>Change Admin Password</Text>
+                  <Text style={{ fontSize: 11, color: '#64748b', marginTop: 2 }}>
+                    Enter current password and set a secure new password
+                  </Text>
+                </View>
+                <TouchableOpacity onPress={() => setShowChangePasswordModal(false)}>
+                  <X size={20} color="#64748b" />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+                <Text style={styles.inputLabel}>Current Password *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter current password"
+                  placeholderTextColor="#94a3b8"
+                  secureTextEntry
+                  value={currentPassword}
+                  onChangeText={setCurrentPassword}
+                />
+
+                <Text style={styles.inputLabel}>New Password (Min. 8 characters) *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Enter at least 8 characters"
+                  placeholderTextColor="#94a3b8"
+                  secureTextEntry
+                  value={newPassword}
+                  onChangeText={setNewPassword}
+                />
+
+                <Text style={styles.inputLabel}>Confirm New Password *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="Confirm matching new password"
+                  placeholderTextColor="#94a3b8"
+                  secureTextEntry
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
+              </ScrollView>
+
+              <TouchableOpacity
+                style={[styles.modalSubmitBtn, passwordSaving && { opacity: 0.7 }]}
+                onPress={handleChangePassword}
+                disabled={passwordSaving}
+                activeOpacity={0.85}
+              >
+                <Text style={styles.modalSubmitBtnText}>
+                  {passwordSaving ? 'Updating Password...' : 'Update Password'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       </View>
     </Modal>
   );
@@ -2540,5 +2853,101 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13,
     fontWeight: '800',
+  },
+
+  /* ========================================================
+     PROFILE ACTION SHEET STYLES
+     ======================================================== */
+  profileActionSheet: {
+    backgroundColor: '#ffffff',
+    borderRadius: 22,
+    padding: 20,
+    ...SHADOWS.large,
+  },
+  profileSheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  sheetAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetAvatarText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#ffffff',
+  },
+  sheetName: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#18212f',
+  },
+  sheetEmail: {
+    fontSize: 12,
+    color: '#64748b',
+    marginTop: 1,
+  },
+  sheetRoleTag: {
+    backgroundColor: '#ecfdf5',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+  },
+  sheetRoleText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#059669',
+    letterSpacing: 0.5,
+  },
+  sheetDivider: {
+    height: 1,
+    backgroundColor: '#edf0f4',
+    marginVertical: 14,
+  },
+  sheetActionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f8fafc',
+  },
+  sheetActionIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sheetActionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#18212f',
+  },
+  sheetActionSub: {
+    fontSize: 11,
+    color: '#94a3b8',
+    marginTop: 1,
+  },
+  sheetCloseBtn: {
+    backgroundColor: '#f1f5f9',
+    borderRadius: 12,
+    paddingVertical: 11,
+    alignItems: 'center',
+    marginTop: 14,
+  },
+  sheetCloseBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
   },
 });

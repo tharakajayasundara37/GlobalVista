@@ -34,8 +34,15 @@ export interface ApiDestination {
   images?: string[];
   rating?: number;
   bestTimeToVisit?: string;
+  activities?: string[];
+  budget?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string;
   isActive?: boolean;
   description?: string;
+  createdAt?: string;
 }
 
 export interface ApiTravelPlan {
@@ -64,6 +71,7 @@ export interface ApiUser {
   guideStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null;
   profileImage?: string;
   about?: string;
+  createdAt?: string;
 }
 
 export interface ApiBooking {
@@ -744,6 +752,145 @@ export const api = {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) throw new Error('Failed to delete travel plan');
+    return await res.json();
+  },
+
+  async updateMyProfile(
+    payload: {
+      name?: string;
+      mobile?: string;
+      country?: string;
+      city?: string;
+      about?: string;
+      languages?: string[];
+      experienceYears?: number;
+    },
+    token: string
+  ): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/users/me/profile`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || 'Failed to update profile');
+      throw new Error(msg);
+    }
+    return await res.json();
+  },
+
+  async changeMyPassword(
+    payload: { currentPassword: string; newPassword: string },
+    token: string
+  ): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/users/me/password`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || 'Failed to change password');
+      throw new Error(msg);
+    }
+    return await res.json();
+  },
+
+  async getGuideDestinations(token: string): Promise<ApiDestination[]> {
+    try {
+      let res = await fetch(`${API_BASE_URL}/destinations/guide/mine`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        res = await fetch(`${API_BASE_URL}/destinations`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
+      if (!res.ok) throw new Error('Failed to fetch guide destinations');
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.destinations)) return data.destinations;
+      if (Array.isArray(data.data)) return data.data;
+      return [];
+    } catch (err) {
+      console.warn('API getGuideDestinations error:', err);
+      return [];
+    }
+  },
+
+  async createGuideDestination(data: any, token: string): Promise<any> {
+    let res = await fetch(`${API_BASE_URL}/destinations/guide`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      res = await fetch(`${API_BASE_URL}/destinations`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || 'Failed to submit destination');
+      throw new Error(msg);
+    }
+    return await res.json();
+  },
+
+  async updateGuideDestination(id: string, data: any, token: string): Promise<any> {
+    let res = await fetch(`${API_BASE_URL}/destinations/guide/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      res = await fetch(`${API_BASE_URL}/destinations/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      });
+    }
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || 'Failed to update destination');
+      throw new Error(msg);
+    }
+    return await res.json();
+  },
+
+  async deleteGuideDestination(id: string, token: string): Promise<any> {
+    let res = await fetch(`${API_BASE_URL}/destinations/guide/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      res = await fetch(`${API_BASE_URL}/destinations/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    }
+    if (!res.ok) throw new Error('Failed to delete destination');
     return await res.json();
   },
 };
