@@ -1953,6 +1953,7 @@ export default function Home() {
                     element;
                 }}
                 className="heroVideo"
+                autoPlay={index === 0}
                 muted
                 playsInline
                 preload="auto"

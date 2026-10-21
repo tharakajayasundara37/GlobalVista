@@ -26,8 +26,3 @@ backend/*.zip
 # Uploaded assets & private sensitive documents
 backend/uploads/
 backend/private-data/
-
-# Large videos (>100MB exceed GitHub file limit)
-frontend/public/videos/*.mp4
-*.mp4
-*.webm
