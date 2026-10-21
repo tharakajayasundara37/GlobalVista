@@ -446,11 +446,12 @@ export default function LoginPage() {
       // Confirm the account returned by
       // /users/me matches the login response.
 
+      const loginId = result.user.id || result.user._id;
+      const verifiedId = currentUser._id || currentUser.id;
       if (
-        result.user.id &&
-        currentUser._id &&
-        String(result.user.id) !==
-          String(currentUser._id)
+        loginId &&
+        verifiedId &&
+        String(loginId) !== String(verifiedId)
       ) {
         throw new Error(
           'Authenticated account does not match the login response.',

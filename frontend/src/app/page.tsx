@@ -3957,11 +3957,11 @@ export default function Home() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
             <span>
-              {t.plans.eyebrow}
+              {t?.plans?.eyebrow || 'CONCIERGE MEMBERSHIPS'}
             </span>
 
             <h2>
-              {t.plans.title}
+              {t?.plans?.title || 'Tiered Travel Memberships'}
             </h2>
           </motion.div>
 
@@ -4040,7 +4040,7 @@ export default function Home() {
                         <div
                           className="popularBadge"
                         >
-                          {t.plans.popular}
+                          {t?.plans?.popular || 'MOST POPULAR'}
                         </div>
                       )}
 

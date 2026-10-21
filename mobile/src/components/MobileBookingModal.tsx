@@ -99,7 +99,7 @@ export const MobileBookingModal: React.FC<Props> = ({
       return;
     }
 
-    const planIdToSubmit = selectedPlanId || '6ac9cbea9a0ec138e6e680df';
+    const planIdToSubmit = selectedPlanId || plans[0]?._id || '';
 
     try {
       setSubmitting(true);

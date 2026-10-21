@@ -121,6 +121,17 @@ export const ProfileScreen: React.FC = () => {
               },
             ]
           );
+        } else if (loggedInUser?.role === 'GUIDE') {
+          Alert.alert(
+            'Guide Portal 🧭',
+            'Tour Guide credentials verified. Welcome back!',
+            [
+              {
+                text: 'Launch Guide Suite',
+                onPress: () => setGuidePortalOpen(true),
+              },
+            ]
+          );
         } else {
           Alert.alert('Welcome Back! 👋', `Signed in successfully as ${loggedInUser?.name || 'Explorer'}.`);
         }
