@@ -5506,17 +5506,17 @@ footer {
 .hero > .navbar {
   position: relative;
   z-index: 50;
-  width: min(1340px, calc(100% - 48px));
+  width: min(1540px, calc(100% - 32px));
   height: 72px;
   min-height: 72px;
   margin: 0 auto;
-  padding: 0 14px 0 26px;
+  padding: 0 16px 0 24px;
+  box-sizing: border-box;
 
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
   align-items: center;
-  justify-content: initial;
-  gap: 16px;
+  justify-content: space-between;
+  gap: 12px;
 
   border: 1.5px solid rgba(255, 255, 255, 0.88);
   border-radius: 999px;
@@ -5752,19 +5752,20 @@ footer {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  height: 46px;
-  padding: 0 20px;
+  gap: 7px;
+  height: 42px;
+  padding: 0 16px;
   border: 1.5px solid rgba(238, 254, 255, 0.95);
   border-radius: 999px;
   color: #ffffff;
   background: linear-gradient(112deg, #14c8f1 0%, #079be8 52%, #0762d9 100%);
   box-shadow: 0 8px 20px rgba(11, 151, 230, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 750;
   white-space: nowrap;
   line-height: 1;
   text-decoration: none;
+  flex-shrink: 0;
   transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
 }
 
@@ -5778,13 +5779,14 @@ footer {
 .hero > .navbar .profileNav {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  height: 42px;
-  padding: 0 12px 0 4px;
+  gap: 6px;
+  height: 40px;
+  padding: 0 8px 0 2px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   cursor: pointer;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -5832,16 +5834,38 @@ footer {
    RESPONSIVE NAVBAR
    ============================================================ */
 
-@media (max-width: 1240px) {
+@media (max-width: 1380px) {
   .hero > .navbar {
-    width: min(1180px, calc(100% - 36px));
-    padding: 0 12px 0 20px;
-    gap: 10px;
+    width: min(1360px, calc(100% - 28px));
+    padding: 0 12px 0 18px;
+    gap: 8px;
   }
   .hero > .navbar .navLinks .navItem {
-    gap: 6px;
-    padding: 0 11px;
+    gap: 5px;
+    padding: 0 10px;
     font-size: 13px;
+  }
+  .hero > .navbar .profileGreeting {
+    display: none;
+  }
+}
+
+@media (max-width: 1200px) {
+  .hero > .navbar {
+    width: min(1180px, calc(100% - 24px));
+    padding: 0 10px 0 16px;
+    gap: 6px;
+  }
+  .hero > .navbar .navLinks .navItem {
+    gap: 4px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+  .hero > .navbar .navLinks .navItem svg {
+    display: none;
+  }
+  .hero > .navbar .navDivider {
+    display: none;
   }
 }
 
