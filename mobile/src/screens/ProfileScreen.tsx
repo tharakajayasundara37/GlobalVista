@@ -109,7 +109,7 @@ export const ProfileScreen: React.FC = () => {
       setSubmitting(true);
       if (authTab === 'LOGIN') {
         const loggedInUser = await login(email.trim(), password);
-        if (loggedInUser?.role === 'ADMIN' && loggedInUser?.email === 'admin@globalvista.com') {
+        if (loggedInUser?.role === 'ADMIN') {
           Alert.alert(
             'Admin Authenticated 🛡️',
             'Master Administrator credentials verified. Opening Command Center...',
@@ -289,23 +289,23 @@ export const ProfileScreen: React.FC = () => {
               </View>
             </View>
 
-            {/* Admin Command Center Launcher (STRICTLY FOR admin@globalvista.com) */}
-            {user.role === 'ADMIN' && user.email === 'admin@globalvista.com' && (
+            {/* Admin Command Center Launcher (For all ADMIN role accounts) */}
+            {user.role === 'ADMIN' && (
               <TouchableOpacity
                 style={styles.adminBanner}
                 onPress={() => setAdminPortalOpen(true)}
                 activeOpacity={0.85}
               >
                 <View style={styles.adminBannerIcon}>
-                  <ShieldAlert size={22} color="#ffffff" />
+                  <ShieldCheck size={22} color="#ffffff" />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.adminBannerTitle}>GLOBALVISTA ADMIN SUITE</Text>
                   <Text style={styles.adminBannerSub}>
-                    Full Platform Suite · Bookings, Packages, Guides, Users & Payments
+                    Executive Dashboard · Bookings, Packages, Guides, Users & Payments
                   </Text>
                 </View>
-                <ChevronRight size={18} color="#ffffff" />
+                <ChevronRight size={18} color="#10b981" />
               </TouchableOpacity>
             )}
 
@@ -1093,31 +1093,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 16,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#334155',
+    borderWidth: 1.5,
+    borderColor: '#a7f3d0',
     ...SHADOWS.medium,
   },
   adminBannerIcon: {
     width: 44,
     height: 44,
     borderRadius: 12,
-    backgroundColor: '#e11d48',
+    backgroundColor: '#10b981',
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
   adminBannerTitle: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#ffffff',
+    color: '#18212f',
     letterSpacing: 0.5,
   },
   adminBannerSub: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: '#64748b',
     marginTop: 2,
   },
   guideBanner: {
