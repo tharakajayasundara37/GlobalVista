@@ -11,8 +11,10 @@ import {
   Alert,
   RefreshControl,
   Switch,
+  Platform,
+  StatusBar,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Globe2,
   Users,
@@ -639,44 +641,51 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
     { id: 'PLANS', label: 'Travel Plans', icon: BadgeDollarSign, count: travelPlans.length },
   ];
 
+  const insets = useSafeAreaInsets();
+  const topSafeArea = Math.max(insets.top, Platform.OS === 'ios' ? 54 : (StatusBar.currentHeight || 24));
+  const bottomSafeArea = Math.max(insets.bottom, 16);
+
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <View style={[styles.container, { paddingBottom: bottomSafeArea }]}>
         {/* ========================================================
-            TOP BAR (Matching Web Topbar with Wordmark & Profile Pill)
+            TOP BAR (Safe Inset Padded - Well Clear of Status Bar Icons)
             ======================================================== */}
-        <View style={styles.topbar}>
-          <View style={styles.topbarLeft}>
-            <View style={styles.logoBadge}>
-              <Globe2 size={18} color="#ffffff" />
-            </View>
-            <View>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Text style={styles.brandTitle}>Global</Text>
-                <Text style={[styles.brandTitle, { color: '#10b981' }]}>Vista</Text>
-              </View>
-              <Text style={styles.brandSub}>ADMIN COMMAND CENTER</Text>
-            </View>
-          </View>
-
-          <View style={styles.topbarRight}>
-            <View style={styles.adminUserPill}>
-              <View style={styles.adminAvatar}>
-                <Text style={styles.adminAvatarText}>
-                  {(user?.name || 'A').charAt(0).toUpperCase()}
-                </Text>
+        <View style={[styles.topbarWrapper, { paddingTop: topSafeArea }]}>
+          <View style={styles.topbar}>
+            <View style={styles.topbarLeft}>
+              <View style={styles.logoBadge}>
+                <Globe2 size={18} color="#ffffff" />
               </View>
               <View>
-                <Text style={styles.adminUserName} numberOfLines={1}>
-                  {user?.name || 'Admin'}
-                </Text>
-                <Text style={styles.adminUserRole}>Administrator</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <Text style={styles.brandTitle}>Global</Text>
+                  <Text style={[styles.brandTitle, { color: '#10b981' }]}>Vista</Text>
+                </View>
+                <Text style={styles.brandSub}>ADMIN COMMAND CENTER</Text>
               </View>
             </View>
 
-            <TouchableOpacity style={styles.closeCircleBtn} onPress={onClose} activeOpacity={0.7}>
-              <X size={18} color="#475569" />
-            </TouchableOpacity>
+            <View style={styles.topbarRight}>
+              <View style={styles.adminUserPill}>
+                <View style={styles.adminAvatar}>
+                  <Text style={styles.adminAvatarText}>
+                    {(user?.name || 'A').charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styles.adminUserName} numberOfLines={1}>
+                    {user?.name || 'Admin'}
+                  </Text>
+                  <Text style={styles.adminUserRole}>Administrator</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.closeCircleBtn} onPress={onClose} activeOpacity={0.7}>
+                <X size={18} color="#475569" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -1713,7 +1722,7 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
           booking={selectedInvoiceBooking}
           onClose={() => setSelectedInvoiceBooking(null)}
         />
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 };
@@ -1724,18 +1733,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#f7f8fa', // Executive Web Shell Background
   },
   /* ========================================================
-     TOP BAR (Exact Web Topbar Match)
+     TOP BAR (Safe Inset Padded - Exact Web Topbar Match)
      ======================================================== */
-  topbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+  topbarWrapper: {
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#edf0f4',
     ...SHADOWS.small,
+  },
+  topbar: {
+    height: 60,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
   },
   topbarLeft: {
     flexDirection: 'row',
