@@ -43,13 +43,15 @@ import {
   Volume2,
   VolumeX,
   Briefcase,
+  Camera,
 } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
 import { ApiPackage, ApiDestination, api, getPackageImage, getDestinationImage } from '../services/api';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL, WHATSAPP_NUMBER, WHATSAPP_DEFAULT_MSG } from '../constants/config';
+import { API_BASE_URL, WEB_BASE_URL, WHATSAPP_NUMBER, WHATSAPP_DEFAULT_MSG } from '../constants/config';
+import { SafeImage } from '../components/SafeImage';
 import { MobileItineraryModal } from '../components/MobileItineraryModal';
 import { MobileBookingModal } from '../components/MobileBookingModal';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
@@ -203,8 +205,14 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedSceneIdx, setSelectedSceneIdx] = useState(0);
   const [isHeroMuted, setIsHeroMuted] = useState(true);
 
-  // Cinematic Modal State
-  const heroScenes = getHeroScenes(API_BASE_URL);
+  // Filter States for Country Pills
+  const [destCountryFilter, setDestCountryFilter] = useState<string>('ALL');
+  const [pkgCountryFilter, setPkgCountryFilter] = useState<string>('ALL');
+  const [galleryCountryFilter, setGalleryCountryFilter] = useState<string>('ALL');
+  const [selectedGalleryDest, setSelectedGalleryDest] = useState<ApiDestination | null>(null);
+
+  // Cinematic Modal State (Served directly from high-speed Vercel CDN)
+  const heroScenes = getHeroScenes(WEB_BASE_URL);
   const currentScene = heroScenes[selectedSceneIdx] || heroScenes[0];
   const [cinematicModalScene, setCinematicModalScene] = useState<typeof heroScenes[0] | null>(null);
 
@@ -255,9 +263,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
     });
   };
 
+  const COUNTRY_OPTIONS = ['ALL', 'Maldives', 'Switzerland', 'Japan', 'Sri Lanka', 'Bali', 'Thailand'];
+
   const featuredEscape = packages.find((p) => p.isSpecialOffer) || packages[0];
 
-  // Filter packages based on activeCategory or search
+  // Filter destinations based on destCountryFilter
+  const filteredDestinations = destinations.filter((dest) => {
+    if (destCountryFilter === 'ALL') return true;
+    const combined = `${dest.name} ${dest.country}`.toLowerCase();
+    return combined.includes(destCountryFilter.toLowerCase());
+  });
+
+  // Filter packages based on activeCategory, country filter, or search
   const filteredPackages = packages.filter((pkg) => {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -267,8 +284,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         pkg.country.toLowerCase().includes(q);
       if (!match) return false;
     }
-    if (activeCategory === 'OFFERS') return Boolean(pkg.isSpecialOffer);
+    if (activeCategory === 'OFFERS' && !pkg.isSpecialOffer) return false;
+    if (pkgCountryFilter !== 'ALL') {
+      const combined = `${pkg.title} ${pkg.destination} ${pkg.country}`.toLowerCase();
+      if (!combined.includes(pkgCountryFilter.toLowerCase())) return false;
+    }
     return true;
+  });
+
+  // Filter destinations for aesthetic moodboard
+  const filteredGalleryDestinations = destinations.filter((dest) => {
+    if (galleryCountryFilter === 'ALL') return true;
+    const combined = `${dest.name} ${dest.country}`.toLowerCase();
+    return combined.includes(galleryCountryFilter.toLowerCase());
   });
 
   return (
@@ -780,7 +808,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               </View>
 
               <View style={styles.dealMediaWrap}>
-                <Image source={{ uri: getPackageImage(featuredEscape) }} style={styles.dealImg} />
+                <SafeImage
+                  uri={getPackageImage(featuredEscape)}
+                  keywords={`${featuredEscape.title} ${featuredEscape.destination} ${featuredEscape.country}`}
+                  style={styles.dealImg}
+                />
                 <View style={styles.dealImgOverlay} />
                 <View style={styles.dealLocationBadge}>
                   <MapPin size={11} color="#ffffff" />
@@ -827,27 +859,56 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         )}
 
         {/* ========================================================
-            POPULAR DESTINATIONS SHOWCASE (Web Destinations)
+            CURATED SANCTUARIES - SIGNATURE LUXURY EXPEDITIONS
             ======================================================== */}
-        <View style={styles.sectionHeader}>
-          <View>
-            <Text style={styles.sectionBadge}>EXPLORE THE GLOBE</Text>
-            <Text style={styles.sectionTitle}>{t.popularDestinations || 'Popular Destinations'}</Text>
+        <View style={styles.luxurySectionHeader}>
+          <View style={styles.luxuryEyebrowRow}>
+            <View style={styles.luxuryBadgePill}>
+              <Compass size={12} color="#d97706" />
+              <Text style={styles.luxuryBadgeText}>CURATED SANCTUARIES</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Explore')}>
+              <Text style={styles.viewAllText}>{t.viewAll || 'View All'} ({destinations.length})</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Explore')}>
-            <Text style={styles.viewAllText}>{t.viewAll || 'View All'}</Text>
-          </TouchableOpacity>
+          <Text style={styles.luxurySectionTitle}>Signature Luxury Expeditions</Text>
+          <Text style={styles.luxurySectionSubtitle}>
+            Handpicked ultra-luxury retreats and bespoke private escapes across the globe.
+          </Text>
         </View>
 
+        {/* Dynamic Country Filter Pills for Destinations */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsScroll}>
+          {COUNTRY_OPTIONS.map((c) => {
+            const isActive = destCountryFilter === c;
+            return (
+              <TouchableOpacity
+                key={c}
+                style={[styles.filterPill, isActive && styles.filterPillActive]}
+                onPress={() => setDestCountryFilter(c)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                  {c === 'ALL' ? 'All Havens' : c}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.destList}>
-          {destinations.slice(0, 8).map((dest) => (
+          {filteredDestinations.slice(0, 10).map((dest) => (
             <TouchableOpacity
               key={dest._id}
               style={styles.destCard}
               onPress={() => navigation.navigate('Explore', { query: dest.name })}
               activeOpacity={0.85}
             >
-              <Image source={{ uri: getDestinationImage(dest) }} style={styles.destImage} />
+              <SafeImage
+                uri={getDestinationImage(dest)}
+                keywords={`${dest.name} ${dest.country}`}
+                style={styles.destImage}
+              />
               <View style={styles.destGradient} />
               <View style={styles.destInfo}>
                 <Text style={styles.destName}>{dest.name}</Text>
@@ -861,19 +922,42 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         </ScrollView>
 
         {/* ========================================================
-            HANDCRAFTED PACKAGES & EXPERIENCES (Web Experiences)
+            EXPLORE TRAVEL PACKAGES - DISCOVER YOUR PERFECT JOURNEY
             ======================================================== */}
-        <View style={[styles.sectionHeader, { marginTop: 24 }]}>
-          <View>
-            <Text style={styles.sectionBadge}>CURATED ITINERARIES</Text>
-            <Text style={styles.sectionTitle}>
-              {activeCategory === 'OFFERS' ? 'Special Offers & Packages' : t.explorePackages || 'Handcrafted Packages'}
-            </Text>
+        <View style={[styles.luxurySectionHeader, { marginTop: 28 }]}>
+          <View style={styles.luxuryEyebrowRow}>
+            <View style={styles.luxuryBadgePill}>
+              <Sparkles size={12} color="#d97706" />
+              <Text style={styles.luxuryBadgeText}>EXPLORE TRAVEL PACKAGES</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Explore')}>
+              <Text style={styles.viewAllText}>{t.viewAll || 'View All'} ({packages.length})</Text>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Explore')}>
-            <Text style={styles.viewAllText}>{t.viewAll || 'View All'}</Text>
-          </TouchableOpacity>
+          <Text style={styles.luxurySectionTitle}>Discover your perfect journey</Text>
+          <Text style={styles.luxurySectionSubtitle}>
+            Immersive private itineraries crafted with five-star hospitality and seamless chauffeured discovery.
+          </Text>
         </View>
+
+        {/* Dynamic Country Filter Pills for Packages */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsScroll}>
+          {COUNTRY_OPTIONS.map((c) => {
+            const isActive = pkgCountryFilter === c;
+            return (
+              <TouchableOpacity
+                key={c}
+                style={[styles.filterPill, isActive && styles.filterPillActive]}
+                onPress={() => setPkgCountryFilter(c)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.filterPillText, isActive && styles.filterPillTextActive]}>
+                  {c === 'ALL' ? 'All Packages' : c}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
 
         {loading ? (
           <ActivityIndicator size="large" color={COLORS.accent} style={{ marginVertical: 30 }} />
@@ -885,7 +969,11 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               return (
                 <View key={pkg._id} style={styles.pkgCard}>
                   <View style={styles.pkgImgWrap}>
-                    <Image source={{ uri: getPackageImage(pkg) }} style={styles.pkgImg} />
+                    <SafeImage
+                      uri={getPackageImage(pkg)}
+                      keywords={`${pkg.title} ${pkg.destination} ${pkg.country}`}
+                      style={styles.pkgImg}
+                    />
                     <TouchableOpacity
                       style={styles.pkgHeart}
                       onPress={() => toggleSave(pkg._id)}
@@ -949,6 +1037,76 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             })}
           </View>
         )}
+
+        {/* ========================================================
+            AESTHETIC DESTINATION SCRAPBOOK MOODBOARD (User Reference Collage)
+            ======================================================== */}
+        <View style={styles.scrapbookContainer}>
+          {/* Top Scrapbook Header */}
+          <View style={styles.scrapbookHeaderRow}>
+            <View style={styles.scrapbookTicket}>
+              <Text style={styles.scrapbookTicketNo}>№ 146017</Text>
+              <Text style={styles.scrapbookTicketSub}>BOARDING PASS</Text>
+            </View>
+            <View style={styles.scrapbookTravelGuide}>
+              <Text style={styles.scrapbookTravelText}>Travel</Text>
+              <Text style={styles.scrapbookGuideText}>GUIDE</Text>
+            </View>
+          </View>
+
+          <Text style={styles.scrapbookQuote}>
+            “Travel is the only thing you buy that makes you richer.”
+          </Text>
+
+          {/* Dynamic Country Filter Pills for Moodboard */}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsScrollInScrapbook}>
+            {COUNTRY_OPTIONS.map((c) => {
+              const isActive = galleryCountryFilter === c;
+              return (
+                <TouchableOpacity
+                  key={c}
+                  style={[styles.scrapbookFilterPill, isActive && styles.scrapbookFilterPillActive]}
+                  onPress={() => setGalleryCountryFilter(c)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.scrapbookFilterPillText, isActive && styles.scrapbookFilterPillTextActive]}>
+                    {c === 'ALL' ? 'All Snapshots' : c}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+
+          {/* Collage Slots Grid */}
+          <View style={styles.scrapbookGrid}>
+            {filteredGalleryDestinations.slice(0, 6).map((dest, idx) => {
+              const rotations = ['-2deg', '2deg', '-1.5deg', '2.5deg', '-2deg', '1deg'];
+              const rot = rotations[idx % rotations.length];
+              return (
+                <TouchableOpacity
+                  key={dest._id || idx}
+                  style={[styles.scrapbookItem, { transform: [{ rotate: rot }] }]}
+                  onPress={() => navigation.navigate('Explore', { query: dest.name })}
+                  activeOpacity={0.85}
+                >
+                  <View style={styles.scrapbookTape} />
+                  <SafeImage
+                    uri={getDestinationImage(dest)}
+                    keywords={`${dest.name} ${dest.country}`}
+                    style={styles.scrapbookItemImg}
+                  />
+                  <View style={styles.scrapbookItemMeta}>
+                    <Text style={styles.scrapbookItemTitle} numberOfLines={1}>{dest.name}</Text>
+                    <View style={styles.scrapbookItemLocationRow}>
+                      <MapPin size={9} color="#d97706" />
+                      <Text style={styles.scrapbookItemCountry}>{dest.country}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
 
         {/* ========================================================
             VERIFIED GUEST REFLECTIONS (Web Reflections Section)
@@ -1802,6 +1960,212 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#ffffff',
+  },
+  /* Luxury Section Header */
+  luxurySectionHeader: {
+    paddingHorizontal: 16,
+    marginTop: 26,
+    marginBottom: 6,
+  },
+  luxuryEyebrowRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  luxuryBadgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(217, 119, 6, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(217, 119, 6, 0.3)',
+    gap: 5,
+  },
+  luxuryBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#d97706',
+    letterSpacing: 1.1,
+  },
+  luxurySectionTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: COLORS.primary,
+    letterSpacing: -0.3,
+  },
+  luxurySectionSubtitle: {
+    fontSize: 12.5,
+    color: COLORS.textMuted,
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  /* Country Filter Pills */
+  filterPillsScroll: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 8,
+  },
+  filterPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  filterPillActive: {
+    backgroundColor: COLORS.primary,
+    borderColor: COLORS.primary,
+  },
+  filterPillText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#475569',
+  },
+  filterPillTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  /* Aesthetic Scrapbook Moodboard Section */
+  scrapbookContainer: {
+    marginHorizontal: 16,
+    marginTop: 32,
+    marginBottom: 16,
+    backgroundColor: '#fcfbf8',
+    borderRadius: 24,
+    borderWidth: 1.5,
+    borderColor: '#ede7df',
+    padding: 16,
+    ...SHADOWS.medium,
+  },
+  scrapbookHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scrapbookTicket: {
+    borderWidth: 1,
+    borderColor: '#b45309',
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    backgroundColor: 'rgba(217, 119, 6, 0.08)',
+  },
+  scrapbookTicketNo: {
+    fontSize: 8.5,
+    fontWeight: '900',
+    color: '#b45309',
+    letterSpacing: 1.2,
+  },
+  scrapbookTicketSub: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#78350f',
+  },
+  scrapbookTravelGuide: {
+    alignItems: 'flex-end',
+  },
+  scrapbookTravelText: {
+    fontSize: 22,
+    fontStyle: 'italic',
+    fontWeight: '900',
+    color: '#0f172a',
+  },
+  scrapbookGuideText: {
+    fontSize: 10,
+    fontWeight: '900',
+    letterSpacing: 2.5,
+    color: '#d97706',
+    marginTop: -4,
+  },
+  scrapbookQuote: {
+    fontSize: 11.5,
+    fontStyle: 'italic',
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  filterPillsScrollInScrapbook: {
+    paddingVertical: 8,
+    gap: 7,
+    marginBottom: 12,
+  },
+  scrapbookFilterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  scrapbookFilterPillActive: {
+    backgroundColor: '#b45309',
+    borderColor: '#b45309',
+  },
+  scrapbookFilterPillText: {
+    fontSize: 11.5,
+    fontWeight: '600',
+    color: '#64748b',
+  },
+  scrapbookFilterPillTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  scrapbookGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  scrapbookItem: {
+    width: '48%',
+    backgroundColor: '#ffffff',
+    borderRadius: 14,
+    padding: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...SHADOWS.small,
+  },
+  scrapbookTape: {
+    position: 'absolute',
+    top: -6,
+    alignSelf: 'center',
+    width: 42,
+    height: 12,
+    backgroundColor: 'rgba(254, 240, 138, 0.85)',
+    transform: [{ rotate: '-3deg' }],
+    borderRadius: 2,
+    zIndex: 10,
+  },
+  scrapbookItemImg: {
+    width: '100%',
+    height: 120,
+    borderRadius: 10,
+  },
+  scrapbookItemMeta: {
+    paddingTop: 6,
+    paddingHorizontal: 2,
+  },
+  scrapbookItemTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#0f172a',
+  },
+  scrapbookItemLocationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginTop: 2,
+  },
+  scrapbookItemCountry: {
+    fontSize: 10,
+    color: '#64748b',
+    fontWeight: '500',
   },
   /* Section Header */
   sectionHeader: {

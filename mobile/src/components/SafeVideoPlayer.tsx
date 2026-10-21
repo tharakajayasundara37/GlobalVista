@@ -34,7 +34,13 @@ export const SafeVideoPlayer: React.FC<SafeVideoPlayerProps> = ({
     if (player && sourceUrl) {
       try {
         setHasError(false);
-        player.replace(sourceUrl);
+        if (typeof (player as any).replaceAsync === 'function') {
+          (player as any).replaceAsync(sourceUrl).catch((err: any) => {
+            console.warn('Async video source replace error:', err);
+          });
+        } else {
+          player.replace(sourceUrl);
+        }
         player.muted = isMuted;
         if (autoPlay) {
           player.play();
@@ -44,7 +50,7 @@ export const SafeVideoPlayer: React.FC<SafeVideoPlayerProps> = ({
         setHasError(true);
       }
     }
-  }, [sourceUrl, player]);
+  }, [sourceUrl, player, isMuted, autoPlay]);
 
   // Handle mute changes
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { API_BASE_URL } from '../constants/config';
+import { API_BASE_URL, WEB_BASE_URL } from '../constants/config';
 
 export interface ApiPackage {
   _id: string;
@@ -142,6 +142,20 @@ const LUXURY_FALLBACKS: Record<string, string> = {
   phuket: 'https://images.unsplash.com/photo-1589394815804-964ed0be2eb5?auto=format&fit=crop&w=1200&q=80',
 };
 
+const KNOWN_STATIC_IMAGES = new Set([
+  'bali-honeymoon-1.jpg',
+  'default-travel.jpg',
+  'globalvista-bg.png',
+  'globalvista-cta-collage.png',
+  'japan-tour-1.jpg',
+  'maldives-package-1.jpg',
+  'maldives-package-2.jpg',
+  'sri lanka tours.jpg',
+  'sri-lanka-tour-1.jpg',
+  'switzerland-tour-1.jpg',
+  'thailand-tour.jpg',
+]);
+
 export const normalizeMediaUrl = (
   rawUrl: string | null | undefined,
   contextKeywords?: string
@@ -158,32 +172,74 @@ export const normalizeMediaUrl = (
 
   let url = rawUrl.trim();
 
-  // If URL points to localhost/127.0.0.1, rewrite to API_BASE_URL (LAN IP for real devices)
-  url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1):3001/, API_BASE_URL);
-  url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, API_BASE_URL);
+  // Rewrite localhost / LAN IP to WEB_BASE_URL (CDN-backed static & upload assets)
+  url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):(3000|3001)/, WEB_BASE_URL);
 
+  // Rewrite any Render backend video or image requests directly to Vercel CDN where they live
+  url = url.replace(/^https:\/\/globalvista-d7uz\.onrender\.com\/(videos|images|uploads)\//, `${WEB_BASE_URL}/$1/`);
+
+  // If already an external full URL (e.g. Unsplash, Vercel CDN, Cloudinary), return directly
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
 
-  // Handle /images/... or images/... (public static)
+  // Handle /images/... or images/... (public static assets)
   if (url.startsWith('/images/')) {
-    return `${API_BASE_URL}/uploads${url.replace('/images', '')}`;
+    return `${WEB_BASE_URL}${url}`;
   }
   if (url.startsWith('images/')) {
-    return `${API_BASE_URL}/uploads/${url.replace('images/', '')}`;
+    return `${WEB_BASE_URL}/${url}`;
   }
 
-  // Handle /uploads/... or uploads/...
+  // Handle /uploads/... or uploads/... (user uploaded files)
   if (url.startsWith('/uploads/')) {
-    return `${API_BASE_URL}${url}`;
+    return `${WEB_BASE_URL}${url}`;
   }
   if (url.startsWith('uploads/')) {
-    return `${API_BASE_URL}/${url}`;
+    return `${WEB_BASE_URL}/${url}`;
   }
 
-  // Raw filename (e.g., 'japan-tour-1.jpg')
-  return `${API_BASE_URL}/uploads/${url}`;
+  // Handle /videos/... or videos/...
+  if (url.startsWith('/videos/')) {
+    return `${WEB_BASE_URL}${url}`;
+  }
+  if (url.startsWith('videos/')) {
+    return `${WEB_BASE_URL}/${url}`;
+  }
+
+  // Check if raw filename matches known static images in /images
+  const lowerName = url.toLowerCase();
+  if (KNOWN_STATIC_IMAGES.has(lowerName)) {
+    return `${WEB_BASE_URL}/images/${url}`;
+  }
+
+  // Uploaded destination files (e.g. destination-139726b4...jpg)
+  if (lowerName.startsWith('destination-')) {
+    return `${WEB_BASE_URL}/uploads/destinations/${url}`;
+  }
+
+  // Uploaded package timestamp files (e.g. 1791641817826-281193496.jpg)
+  if (/^\d+-\d+\.(jpg|jpeg|png|webp)$/i.test(url)) {
+    return `${WEB_BASE_URL}/uploads/packages/${url}`;
+  }
+
+  // Uploaded user avatars
+  if (lowerName.endsWith('.png') || lowerName.endsWith('.jpg')) {
+    if (url.length > 30) {
+      return `${WEB_BASE_URL}/uploads/users/${url}`;
+    }
+  }
+
+  // Fallback to matching Unsplash luxury image if context matches
+  if (contextKeywords) {
+    const lower = contextKeywords.toLowerCase();
+    for (const [key, fallback] of Object.entries(LUXURY_FALLBACKS)) {
+      if (lower.includes(key)) return fallback;
+    }
+  }
+
+  // Default fallback to public images path
+  return `${WEB_BASE_URL}/images/${url}`;
 };
 
 export const getPackageImage = (pkg: ApiPackage | null | undefined): string => {

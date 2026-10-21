@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Search, MapPin, Clock, Star, Compass, Heart, X } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
 import { ApiPackage, api, getPackageImage } from '../services/api';
+import { SafeImage } from '../components/SafeImage';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { MobileItineraryModal } from '../components/MobileItineraryModal';
@@ -158,7 +159,11 @@ export const ExploreScreen: React.FC<Props> = ({ route, navigation }) => {
             return (
               <View style={styles.card}>
                 <View style={styles.imgWrap}>
-                  <Image source={{ uri: getPackageImage(item) }} style={styles.image} />
+                  <SafeImage
+                    uri={getPackageImage(item)}
+                    keywords={`${item.title} ${item.destination} ${item.country}`}
+                    style={styles.image}
+                  />
                   <TouchableOpacity
                     style={styles.heartBtn}
                     onPress={() => toggleSave(item._id)}

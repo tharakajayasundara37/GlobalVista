@@ -25,6 +25,7 @@ import {
 } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
 import { ApiBooking, api, getPackageImage, ApiPackage } from '../services/api';
+import { SafeImage } from '../components/SafeImage';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -142,7 +143,11 @@ export const MyTripsScreen: React.FC<Props> = ({ navigation }) => {
             return (
               <View style={styles.card}>
                 {pkg && (
-                  <Image source={{ uri: getPackageImage(pkg) }} style={styles.cardImg} />
+                  <SafeImage
+                    uri={getPackageImage(pkg)}
+                    keywords={`${pkg.title} ${pkg.destination} ${pkg.country}`}
+                    style={styles.cardImg}
+                  />
                 )}
 
                 <View style={styles.cardBody}>
