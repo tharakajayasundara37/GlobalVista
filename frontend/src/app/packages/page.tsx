@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -105,6 +105,13 @@ const fallbackImages: Record<string, string> = {
 };
 const defaultFallbackImage = '/images/default-travel.jpg';
 
+const HERO_VIDEOS = [
+  '/videos/globalvista-hero-2.mp4',
+  '/videos/globalvista-hero-3.mp4',
+  '/videos/globalvista-hero-4.mp4',
+  '/videos/globalvista-hero-5.mp4',
+] as const;
+
 function getPackageImage(pkg: ApiPackage) {
   const image = pkg.images?.[0];
   if (!image) return fallbackImages[pkg.destination] || defaultFallbackImage;
@@ -145,6 +152,20 @@ function PackagesContent() {
   const [travelPlansLoading, setTravelPlansLoading] = useState(true);
   const [travelPlansError, setTravelPlansError] = useState('');
   const [selectedTravelPlanId, setSelectedTravelPlanId] = useState('');
+
+  // Video cycle state (matches home hero videos 2, 3, 4, 5)
+  const [activeHeroVideo, setActiveHeroVideo] = useState(0);
+  const heroVideoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  const handleHeroVideoEnded = (finishedIndex: number) => {
+    const nextIndex = (finishedIndex + 1) % HERO_VIDEOS.length;
+    const nextElement = heroVideoRefs.current[nextIndex];
+    if (nextElement) {
+      nextElement.currentTime = 0;
+      nextElement.play().catch(() => {});
+    }
+    setActiveHeroVideo(nextIndex);
+  };
 
   // Modals state
   const [selectedPackage, setSelectedPackage] = useState<ApiPackage | null>(null);
@@ -544,90 +565,38 @@ function PackagesContent() {
   return (
     <main className={styles.page}>
       {/* =====================================================================
-          LUXURY HERO SECTION & TOP BAR
+          CINEMATIC HERO VIDEO BANNER (VIDEOS 2, 3, 4, 5)
           ===================================================================== */}
       <section className={styles.hero}>
-        <div className={styles.heroNav}>
-          <Link href="/" className={styles.logo}>
-            Global<span>Vista</span>
-          </Link>
-
-          <nav className={styles.navLinks}>
-            <Link href="/" className={styles.navLink}>
-              Home
-            </Link>
-            <Link href="/packages" className={`${styles.navLink} ${styles.navLinkActive}`}>
-              Packages
-            </Link>
-            <Link href="/#destinations" className={styles.navLink}>
-              Destinations
-            </Link>
-            <Link href="/#experiences" className={styles.navLink}>
-              Experiences
-            </Link>
-            <Link href="/#planner" className={styles.navLink}>
-              Trip Planner
-            </Link>
-          </nav>
-
-          <div className={styles.navActions}>
-            <CurrencySelector />
-
-            {currentUser ? (
-              <Link
-                href={currentUser.role === 'ADMIN' ? '/admin' : '/traveller'}
-                className={styles.userBadge}
-                title={`Signed in as ${currentUser.name || currentUser.email}`}
-              >
-                <span className={styles.userAvatar}>
-                  {(currentUser.name || currentUser.email || 'U')[0].toUpperCase()}
-                </span>
-                <span>{currentUser.name ? currentUser.name.split(' ')[0] : 'My Account'}</span>
-              </Link>
-            ) : (
-              <Link href="/login" className={styles.signInBtn}>
-                <UserRound size={15} />
-                <span>Sign In</span>
-              </Link>
-            )}
-          </div>
-        </div>
-
-        <div className={styles.heroContent}>
-          <span className={styles.heroEyebrow}>
-            <Sparkles size={14} />
-            HANDPICKED LUXURY COLLECTION
-          </span>
-
-          <h1 className={styles.heroTitle}>
-            {selectedDestinationId
-              ? `Exclusive ${selectedDestinationName || 'Destination'} Expeditions`
-              : 'Discover Your Next Unforgettable Journey'}
-          </h1>
-
-          <p className={styles.heroSubtitle}>
-            Indulge in tailor-made itineraries, 5-star handpicked sanctuaries, and private
-            white-glove chauffeur expeditions curated for discerning travellers.
-          </p>
-
-          <div className={styles.heroTrustStrip}>
-            <span className={styles.trustPill}>
-              <ShieldCheck size={14} />
-              100% Handpicked Sanctuaries
-            </span>
-            <span className={styles.trustPill}>
-              <Star size={14} fill="currentColor" />
-              4.9 / 5 Guest Satisfaction
-            </span>
-            <span className={styles.trustPill}>
-              <Headphones size={14} />
-              24/7 VIP Concierge & Chauffeur
-            </span>
-            <span className={styles.trustPill}>
-              <CheckCircle2 size={14} />
-              Flexible Rescheduling
-            </span>
-          </div>
+        <div className={styles.heroMediaBg} aria-hidden="true">
+          {HERO_VIDEOS.map((video, index) => (
+            <video
+              key={video}
+              ref={(element) => {
+                heroVideoRefs.current[index] = element;
+              }}
+              className={styles.heroVideo}
+              autoPlay={index === 0}
+              muted
+              playsInline
+              preload="auto"
+              onEnded={() => handleHeroVideoEnded(index)}
+              style={{
+                opacity: activeHeroVideo === index ? 1 : 0,
+                transition: 'opacity 1.2s ease-in-out',
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                zIndex: activeHeroVideo === index ? 1 : 0,
+                pointerEvents: 'none',
+              }}
+            >
+              <source src={video} type="video/mp4" />
+            </video>
+          ))}
+          <div className={styles.heroOverlay} />
         </div>
       </section>
 

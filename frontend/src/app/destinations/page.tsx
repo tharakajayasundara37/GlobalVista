@@ -2,6 +2,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import Link from 'next/link';
@@ -20,6 +21,7 @@ import styles from './page.module.css';
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 
 const HERO_VIDEOS = [
+  '/videos/globalvista-hero-2.mp4',
   '/videos/globalvista-hero-3.mp4',
   '/videos/globalvista-hero-4.mp4',
   '/videos/globalvista-hero-5.mp4',
@@ -104,7 +106,18 @@ function hasCoordinates(
   );
 }
 export default function DestinationsPage() {
-  const [heroVideoIndex, setHeroVideoIndex] = useState(0);
+  const [activeHeroVideo, setActiveHeroVideo] = useState(0);
+  const heroVideoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+
+  const handleHeroVideoEnded = (finishedIndex: number) => {
+    const nextIndex = (finishedIndex + 1) % HERO_VIDEOS.length;
+    const nextElement = heroVideoRefs.current[nextIndex];
+    if (nextElement) {
+      nextElement.currentTime = 0;
+      nextElement.play().catch(() => {});
+    }
+    setActiveHeroVideo(nextIndex);
+  };
 
   const [
     destinations,
@@ -243,119 +256,36 @@ export default function DestinationsPage() {
     <main
       className={styles.page}
     >
-      <section
-        className={styles.hero}
-        style={{ position: 'relative', overflow: 'hidden' }}
-      >
-        <video
-          key={heroVideoIndex}
-          src={HERO_VIDEOS[heroVideoIndex]}
-          autoPlay
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-          onEnded={() =>
-            setHeroVideoIndex((current) =>
-              (current + 1) % HERO_VIDEOS.length,
-            )
-          }
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            zIndex: 0,
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          className={
-            styles.heroOverlay
-          }
-          style={{ zIndex: 1 }}
-        />
-        <div
-          className={
-            styles.heroContent
-          }
-          style={{ position: 'relative', zIndex: 2 }}
-        >
-          <Link
-            href="/"
-            className={
-              styles.backLink
-            }
-          >
-            <ArrowLeft
-              size={16}
-            />
-            Back to Home
-          </Link>
-          <span
-            className={
-              styles.eyebrow
-            }
-          >
-            GLOBALVISTA
-            DESTINATIONS
-          </span>
-          <h1>
-            Discover your next
-            unforgettable journey
-          </h1>
-          <p>
-            Explore beautiful
-            destinations around the
-            world and find the
-            perfect place for your
-            next adventure.
-          </p>
-          <div
-            className={
-              styles.heroStats
-            }
-          >
-            <div
-              className={
-                styles.heroStat
-              }
+      <section className={styles.hero}>
+        <div className={styles.heroMediaBg} aria-hidden="true">
+          {HERO_VIDEOS.map((video, index) => (
+            <video
+              key={video}
+              ref={(element) => {
+                heroVideoRefs.current[index] = element;
+              }}
+              className={styles.heroVideo}
+              autoPlay={index === 0}
+              muted
+              playsInline
+              preload="auto"
+              onEnded={() => handleHeroVideoEnded(index)}
+              style={{
+                opacity: activeHeroVideo === index ? 1 : 0,
+                transition: 'opacity 1.2s ease-in-out',
+                position: 'absolute',
+                inset: 0,
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                zIndex: activeHeroVideo === index ? 1 : 0,
+                pointerEvents: 'none',
+              }}
             >
-              <Globe2
-                size={21}
-              />
-              <div>
-                <strong>
-                  {
-                    destinations.length
-                  }
-                </strong>
-                <span>
-                  Destinations
-                </span>
-              </div>
-            </div>
-            <div
-              className={
-                styles.heroStat
-              }
-            >
-              <MapPin
-                size={21}
-              />
-              <div>
-                <strong>
-                  {
-                    countries.length
-                  }
-                </strong>
-                <span>
-                  Countries
-                </span>
-              </div>
-            </div>
-          </div>
+              <source src={video} type="video/mp4" />
+            </video>
+          ))}
+          <div className={styles.heroOverlay} />
         </div>
       </section>
       <section

@@ -5,163 +5,45 @@
 }
 
 /* =========================
-   HERO
+   HERO - CINEMATIC FULL-WIDTH VIDEO BANNER
 ========================= */
-
 .hero {
   position: relative;
-  min-height: 430px;
+  height: 380px;
+  min-height: 380px;
   overflow: hidden;
+  background: #000000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
 
-  display: flex;
-  align-items: center;
+.heroMediaBg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
 
-  background:
-    linear-gradient(
-      120deg,
-      rgba(4, 28, 50, 0.96),
-      rgba(7, 68, 105, 0.82)
-    ),
-    url('/images/globalvista-bg.png')
-      center / cover no-repeat;
+.heroVideo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .heroOverlay {
   position: absolute;
   inset: 0;
-
-  background:
-    radial-gradient(
-      circle at 80% 20%,
-      rgba(67, 185, 232, 0.2),
-      transparent 30%
-    ),
-    linear-gradient(
-      90deg,
-      rgba(3, 25, 43, 0.78),
-      rgba(3, 25, 43, 0.28)
-    );
-
-  pointer-events: none;
-}
-
-.heroContent {
-  position: relative;
   z-index: 2;
-
-  width: min(1180px, calc(100% - 40px));
-  margin: 0 auto;
-  padding: 70px 0;
-}
-
-.backLink {
-  width: fit-content;
-  margin-bottom: 32px;
-
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-
-  color: rgba(255, 255, 255, 0.82);
-
-  font-size: 13px;
-  font-weight: 700;
-  text-decoration: none;
-
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.backLink:hover {
-  color: #ffffff;
-  transform: translateX(-2px);
-}
-
-.eyebrow {
-  display: block;
-  margin-bottom: 12px;
-
-  color: #69c7f0;
-
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 2px;
-}
-
-.heroContent h1 {
-  max-width: 720px;
-  margin: 0;
-
-  color: #ffffff;
-
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(40px, 5vw, 66px);
-  font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -2px;
-}
-
-.heroContent > p {
-  max-width: 590px;
-  margin: 20px 0 0;
-
-  color: rgba(255, 255, 255, 0.76);
-
-  font-size: 15px;
-  line-height: 1.75;
-}
-
-.heroStats {
-  margin-top: 32px;
-
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.heroStat {
-  min-width: 155px;
-  padding: 12px 16px;
-
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 14px;
-
-  display: flex;
-  align-items: center;
-  gap: 11px;
-
-  color: #ffffff;
-
-  background: rgba(255, 255, 255, 0.09);
-
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.heroStat > svg {
-  color: #6bd1f8;
-}
-
-.heroStat > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.heroStat strong {
-  color: #ffffff;
-
-  font-size: 20px;
-  line-height: 1;
-}
-
-.heroStat span {
-  color: rgba(255, 255, 255, 0.7);
-
-  font-size: 10px;
-  font-weight: 600;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.40) 0%,
+    rgba(0, 0, 0, 0.15) 45%,
+    rgba(0, 0, 0, 0.65) 100%
+  );
 }
 
 /* =========================
