@@ -1,9 +1,42 @@
 'use client';
 
 import Link from 'next/link';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, ArrowRight, CalendarDays, Check, Clock3, Compass, MapPin, Minus, Plus, Search, Star, X } from 'lucide-react';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  Clock3,
+  Compass,
+  Gift,
+  Headphones,
+  Heart,
+  LogOut,
+  MapPin,
+  Minus,
+  Plane,
+  Plus,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  Sparkles,
+  Star,
+  Tag,
+  UserRound,
+  X,
+} from 'lucide-react';
+import {
+  FaFacebookF,
+  FaInstagram,
+  FaLinkedinIn,
+  FaWhatsapp,
+} from 'react-icons/fa';
+import { SiGmail } from 'react-icons/si';
+
 import PackageItineraryModal from '../../components/PackageItineraryModal';
 import CurrencySelector from '../../components/CurrencySelector';
 import { useCurrency } from '../../context/CurrencyContext';
@@ -17,9 +50,10 @@ type PackageAddOn = {
   price: number;
   pricingType: 'PER_PERSON' | 'PER_BOOKING';
 };
+
 type ApiPackage = {
   _id: string;
-  destinationId?: string | { _id: string } | null;
+  destinationId?: string | { _id: string; name?: string; country?: string } | null;
   title: string;
   destination: string;
   country: string;
@@ -36,11 +70,13 @@ type ApiPackage = {
   discountPercentage?: number;
   reviewInfo?: { averageRating: number; totalReviews: number };
 };
+
 type BookingResponse = {
   _id?: string;
   totalPrice?: number;
   message?: string | string[];
 };
+
 type TravelPlan = {
   _id: string;
   name: string;
@@ -50,6 +86,13 @@ type TravelPlan = {
   isPopular: boolean;
   isActive: boolean;
   sortOrder: number;
+};
+
+type StoredUser = {
+  id?: string;
+  name?: string;
+  email?: string;
+  role?: string;
 };
 
 const fallbackImages: Record<string, string> = {
@@ -65,14 +108,19 @@ const defaultFallbackImage = '/images/default-travel.jpg';
 function getPackageImage(pkg: ApiPackage) {
   const image = pkg.images?.[0];
   if (!image) return fallbackImages[pkg.destination] || defaultFallbackImage;
+  if (image.startsWith('http://localhost:3001')) {
+    return image.replace('http://localhost:3001', API_URL);
+  }
   if (image.startsWith('http://') || image.startsWith('https://')) return image;
   if (image.startsWith('/uploads/')) return `${API_URL}${image}`;
   if (image.startsWith('/images/')) return image;
   return `/images/${image}`;
 }
+
 function formatMoney(value: number) {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value);
 }
+
 function getTodayDate() {
   const now = new Date();
   const year = now.getFullYear();
@@ -87,7 +135,9 @@ function PackagesContent() {
   const selectedDestinationId = searchParams.get('destinationId') || '';
   const selectedDestinationName = searchParams.get('destinationName') || '';
 
-  const { formatPrice, currentCurrency } = useCurrency();
+  const { formatPrice } = useCurrency();
+
+  // Package and Travel Plan state
   const [packages, setPackages] = useState<ApiPackage[]>([]);
   const [packagesLoading, setPackagesLoading] = useState(true);
   const [packagesError, setPackagesError] = useState('');
@@ -95,16 +145,13 @@ function PackagesContent() {
   const [travelPlansLoading, setTravelPlansLoading] = useState(true);
   const [travelPlansError, setTravelPlansError] = useState('');
   const [selectedTravelPlanId, setSelectedTravelPlanId] = useState('');
+
+  // Modals state
   const [selectedPackage, setSelectedPackage] = useState<ApiPackage | null>(null);
   const [itineraryModalPackage, setItineraryModalPackage] = useState<ApiPackage | null>(null);
   const [isItineraryModalOpen, setIsItineraryModalOpen] = useState(false);
-  const openItinerary = (pkg: ApiPackage) => {
-    setItineraryModalPackage(pkg);
-    setIsItineraryModalOpen(true);
-  };
-  const closeItinerary = () => {
-    setIsItineraryModalOpen(false);
-  };
+
+  // Booking form state
   const [travelDate, setTravelDate] = useState('');
   const [numberOfPeople, setNumberOfPeople] = useState(1);
   const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
@@ -112,740 +159,712 @@ function PackagesContent() {
   const [bookingError, setBookingError] = useState('');
   const [bookingSuccess, setBookingSuccess] = useState('');
   const [createdBookingId, setCreatedBookingId] = useState<string>('');
-  const [search, setSearch] = useState(searchParams.get('search') || '');
 
+  // Filtering & Sorting state
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [selectedCountry, setSelectedCountry] = useState<string>('ALL');
+  const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
+  const [showDealsOnly, setShowDealsOnly] = useState<boolean>(searchParams.get('deals') === 'true');
+  const [sortBy, setSortBy] = useState<string>('FEATURED');
+
+  // User and Saved Wishlist state
+  const [currentUser, setCurrentUser] = useState<StoredUser | null>(null);
+  const [savedPackageIds, setSavedPackageIds] = useState<string[]>([]);
+
+  // Sync search param when updated externally
   useEffect(() => {
     const q = searchParams.get('search');
-    if (q) {
+    if (q !== null && q !== undefined) {
       setSearch(q);
+    }
+    if (searchParams.get('deals') === 'true') {
+      setShowDealsOnly(true);
     }
   }, [searchParams]);
 
+  // Load user and wishlist from localStorage on mount
   useEffect(() => {
-    const timer =
-      window.setTimeout(
-        () => {
-          const storedPlanId =
-            localStorage.getItem(
-              'globalvista_selected_travel_plan',
-            );
-
-          if (
-            storedPlanId
-          ) {
-            setSelectedTravelPlanId(
-              storedPlanId,
-            );
-          }
-        },
-        0,
-      );
-
-    return () => {
-      window.clearTimeout(
-        timer,
-      );
-    };
+    try {
+      const rawUser = localStorage.getItem('globalvista_user') || localStorage.getItem('user');
+      if (rawUser) {
+        setCurrentUser(JSON.parse(rawUser));
+      }
+      const rawSaved = localStorage.getItem('globalvista_saved_packages');
+      if (rawSaved) {
+        setSavedPackageIds(JSON.parse(rawSaved));
+      }
+      const storedPlanId = localStorage.getItem('globalvista_selected_travel_plan');
+      if (storedPlanId) {
+        setSelectedTravelPlanId(storedPlanId);
+      }
+    } catch (e) {
+      console.warn('LocalStorage initialization warning:', e);
+    }
   }, []);
 
+  // Fetch Packages
   useEffect(() => {
-    const loadPackages =
-      async () => {
-        try {
-          setPackagesLoading(
-            true,
-          );
-
-          setPackagesError(
-            '',
-          );
-
-          const response =
-            await fetch(
-              `${API_URL}/packages`,
-              {
-                cache:
-                  'no-store',
-              },
-            );
-
-          if (
-            !response.ok
-          ) {
-            throw new Error(
-              `Failed to load packages: ${response.status}`,
-            );
-          }
-
-          const data:
-            ApiPackage[] =
-            await response.json();
-
-          setPackages(
-            Array.isArray(
-              data,
-            )
-              ? data
-              : [],
-          );
-        } catch (
-          error
-        ) {
-          console.error(
-            'Package API error:',
-            error,
-          );
-
-          setPackagesError(
-            'Unable to load packages. Please try again.',
-          );
-        } finally {
-          setPackagesLoading(
-            false,
-          );
+    const loadPackages = async () => {
+      try {
+        setPackagesLoading(true);
+        setPackagesError('');
+        const response = await fetch(`${API_URL}/packages`, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Failed to load packages: ${response.status}`);
         }
-      };
-
+        const data: ApiPackage[] = await response.json();
+        setPackages(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Package API error:', error);
+        setPackagesError('Unable to load packages from server. Please refresh or try again later.');
+      } finally {
+        setPackagesLoading(false);
+      }
+    };
     void loadPackages();
   }, []);
 
+  // Fetch Travel Plans
   useEffect(() => {
-    const loadTravelPlans =
-      async () => {
-        try {
-          setTravelPlansLoading(
-            true,
-          );
-
-          setTravelPlansError(
-            '',
-          );
-
-          const response =
-            await fetch(
-              `${API_URL}/travel-plans/active`,
-              {
-                cache:
-                  'no-store',
-              },
-            );
-
-          if (
-            !response.ok
-          ) {
-            throw new Error(
-              `Failed to load travel plans: ${response.status}`,
-            );
-          }
-
-          const data:
-            TravelPlan[] =
-            await response.json();
-
-          setTravelPlans(
-            Array.isArray(
-              data,
-            )
-              ? data
-              : [],
-          );
-        } catch (
-          error
-        ) {
-          console.error(
-            'Travel plans API error:',
-            error,
-          );
-
-          setTravelPlans(
-            [],
-          );
-
-          setTravelPlansError(
-            'Unable to load travel plans. Please try again.',
-          );
-        } finally {
-          setTravelPlansLoading(
-            false,
-          );
+    const loadTravelPlans = async () => {
+      try {
+        setTravelPlansLoading(true);
+        setTravelPlansError('');
+        const response = await fetch(`${API_URL}/travel-plans/active`, { cache: 'no-store' });
+        if (!response.ok) {
+          throw new Error(`Failed to load travel plans: ${response.status}`);
         }
-      };
-
+        const data: TravelPlan[] = await response.json();
+        setTravelPlans(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error('Travel plans API error:', error);
+        setTravelPlans([]);
+        setTravelPlansError('Unable to load travel plans. Default pricing applies.');
+      } finally {
+        setTravelPlansLoading(false);
+      }
+    };
     void loadTravelPlans();
   }, []);
 
-  const persistTravelPlanSelection =
-    (
-      planId:
-        string,
-    ) => {
-      setSelectedTravelPlanId(
-        planId,
-      );
+  // Persist travel plan selection
+  const persistTravelPlanSelection = (planId: string) => {
+    setSelectedTravelPlanId(planId);
+    if (planId) {
+      localStorage.setItem('globalvista_selected_travel_plan', planId);
+    } else {
+      localStorage.removeItem('globalvista_selected_travel_plan');
+    }
+    setBookingError('');
+    setBookingSuccess('');
+    setCreatedBookingId('');
+  };
 
-      if (
-        planId
-      ) {
-        localStorage.setItem(
-          'globalvista_selected_travel_plan',
-          planId,
-        );
-      } else {
-        localStorage.removeItem(
-          'globalvista_selected_travel_plan',
-        );
-      }
-
-      setBookingError(
-        '',
-      );
-
-      setBookingSuccess(
-        '',
-      );
-      setCreatedBookingId('');
-    };
-
-  const openBooking =
-    async (
-      pkg: ApiPackage,
-    ) => {
-      if (
-        !pkg.availability
-      ) {
-        return;
-      }
-
-      setSelectedPackage(
-        pkg,
-      );
-
-      setTravelDate(
-        '',
-      );
-
-      setNumberOfPeople(
-        1,
-      );
-
-      setSelectedAddOnIds(
-        [],
-      );
-
-      setBookingError(
-        '',
-      );
-
-      setBookingSuccess(
-        '',
-      );
-
+  // Wishlist toggle
+  const toggleSavePackage = (pkgId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setSavedPackageIds((prev) => {
+      const isSaved = prev.includes(pkgId);
+      const updated = isSaved ? prev.filter((id) => id !== pkgId) : [...prev, pkgId];
       try {
-        const response =
-          await fetch(
-            `${API_URL}/packages/${pkg._id}`,
-            {
-              cache:
-                'no-store',
-            },
-          );
+        localStorage.setItem('globalvista_saved_packages', JSON.stringify(updated));
+      } catch (err) {
+        console.warn('Failed to save package to wishlist', err);
+      }
+      return updated;
+    });
+  };
 
-        if (
-          !response.ok
-        ) {
-          throw new Error(
-            `Failed to refresh package: ${response.status}`,
-          );
-        }
+  // Itinerary modal actions
+  const openItinerary = (pkg: ApiPackage) => {
+    setItineraryModalPackage(pkg);
+    setIsItineraryModalOpen(true);
+  };
+  const closeItinerary = () => {
+    setIsItineraryModalOpen(false);
+  };
 
-        const latestPackage:
-          ApiPackage =
-          await response.json();
+  // Booking modal actions
+  const openBooking = async (pkg: ApiPackage) => {
+    if (!pkg.availability) return;
+    setSelectedPackage(pkg);
+    setTravelDate('');
+    setNumberOfPeople(1);
+    setSelectedAddOnIds([]);
+    setBookingError('');
+    setBookingSuccess('');
 
-        setSelectedPackage(
-          latestPackage,
-        );
-
-        setPackages(
-          (
-            current,
-          ) =>
-            current.map(
-              (
-                item,
-              ) =>
-                item._id ===
-                latestPackage._id
-                  ? latestPackage
-                  : item,
-            ),
-        );
-      } catch (
-        error
-      ) {
-        console.error(
-          'Package refresh error:',
-          error,
-        );
-
-        setBookingError(
-          'Could not refresh the latest package details. Please close and try again.',
+    try {
+      const response = await fetch(`${API_URL}/packages/${pkg._id}`, { cache: 'no-store' });
+      if (response.ok) {
+        const latestPackage: ApiPackage = await response.json();
+        setSelectedPackage(latestPackage);
+        setPackages((current) =>
+          current.map((item) => (item._id === latestPackage._id ? latestPackage : item)),
         );
       }
-    };
+    } catch (error) {
+      console.warn('Package refresh error, using loaded details:', error);
+    }
+  };
 
-  const closeBooking =
-    () => {
-      if (
-        bookingSubmitting
-      ) {
+  const closeBooking = () => {
+    if (bookingSubmitting) return;
+    setSelectedPackage(null);
+    setTravelDate('');
+    setNumberOfPeople(1);
+    setSelectedAddOnIds([]);
+    setBookingError('');
+    setBookingSuccess('');
+  };
+
+  const toggleAddOn = (addOnId: string) => {
+    setBookingError('');
+    setBookingSuccess('');
+    setSelectedAddOnIds((current) =>
+      current.includes(addOnId)
+        ? current.filter((id) => id !== addOnId)
+        : [...current, addOnId],
+    );
+  };
+
+  // Booking calculations
+  const selectedTravelPlan = travelPlans.find((plan) => plan._id === selectedTravelPlanId) ?? null;
+  const travelPlanTotal = selectedTravelPlan ? selectedTravelPlan.price * numberOfPeople : 0;
+  const baseTotal = selectedPackage ? selectedPackage.price * numberOfPeople : 0;
+  const addOnsTotal = selectedPackage
+    ? (selectedPackage.addOns ?? [])
+        .filter((addOn) => selectedAddOnIds.includes(addOn._id))
+        .reduce((total, addOn) => {
+          const quantity = addOn.pricingType === 'PER_PERSON' ? numberOfPeople : 1;
+          return total + addOn.price * quantity;
+        }, 0)
+    : 0;
+  const estimatedTotal = baseTotal + travelPlanTotal + addOnsTotal;
+
+  // Booking submission
+  const createBooking = async () => {
+    if (!selectedPackage) return;
+    setBookingError('');
+    setBookingSuccess('');
+
+    if (!selectedTravelPlan) {
+      setBookingError('Please select a travel service plan before confirming your booking.');
+      return;
+    }
+    if (!travelDate) {
+      setBookingError('Please select your travel date.');
+      return;
+    }
+    if (travelDate < getTodayDate()) {
+      setBookingError('Travel date cannot be in the past.');
+      return;
+    }
+
+    const token = localStorage.getItem('globalvista_token') || localStorage.getItem('token');
+    const rawUser = localStorage.getItem('globalvista_user') || localStorage.getItem('user');
+
+    if (!token || !rawUser) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      setBookingSubmitting(true);
+      const response = await fetch(`${API_URL}/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          packageId: selectedPackage._id,
+          travelPlanId: selectedTravelPlan._id,
+          travelDate,
+          numberOfPeople,
+          selectedAddOnIds,
+        }),
+      });
+
+      const data: BookingResponse = await response.json().catch(() => ({}));
+
+      if (response.status === 401) {
+        localStorage.removeItem('globalvista_token');
+        localStorage.removeItem('globalvista_user');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        router.push('/login');
         return;
       }
 
-      setSelectedPackage(
-        null,
-      );
-
-      setTravelDate(
-        '',
-      );
-
-      setNumberOfPeople(
-        1,
-      );
-
-      setSelectedAddOnIds(
-        [],
-      );
-
-      setBookingError(
-        '',
-      );
-
-      setBookingSuccess(
-        '',
-      );
-    };
-
-  const toggleAddOn =
-    (
-      addOnId:
-        string,
-    ) => {
-      setBookingError(
-        '',
-      );
-
-      setBookingSuccess(
-        '',
-      );
-
-      setSelectedAddOnIds(
-        (
-          current,
-        ) =>
-          current.includes(
-            addOnId,
-          )
-            ? current.filter(
-                (
-                  id,
-                ) =>
-                  id !==
-                  addOnId,
-              )
-            : [
-                ...current,
-                addOnId,
-              ],
-      );
-    };
-
-  const selectedTravelPlan =
-    travelPlans.find(
-      (
-        plan,
-      ) =>
-        plan._id ===
-        selectedTravelPlanId,
-    ) ??
-    null;
-
-  const travelPlanTotal =
-    selectedTravelPlan
-      ? selectedTravelPlan
-          .price *
-        numberOfPeople
-      : 0;
-
-  const baseTotal =
-    selectedPackage
-      ? selectedPackage
-          .price *
-        numberOfPeople
-      : 0;
-
-  const addOnsTotal =
-    selectedPackage
-      ? (
-          selectedPackage
-            .addOns ??
-          []
-        )
-          .filter(
-            (
-              addOn,
-            ) =>
-              selectedAddOnIds.includes(
-                addOn._id,
-              ),
-          )
-          .reduce(
-            (
-              total,
-              addOn,
-            ) => {
-              const quantity =
-                addOn.pricingType ===
-                'PER_PERSON'
-                  ? numberOfPeople
-                  : 1;
-
-              return (
-                total +
-                addOn.price *
-                  quantity
-              );
-            },
-            0,
-          )
-      : 0;
-
-  const estimatedTotal =
-    baseTotal +
-    travelPlanTotal +
-    addOnsTotal;
-
-  const createBooking =
-    async () => {
-      if (
-        !selectedPackage
-      ) {
-        return;
+      if (!response.ok) {
+        const message = Array.isArray(data.message)
+          ? data.message.join(', ')
+          : data.message || 'Unable to create booking.';
+        throw new Error(message);
       }
 
-      setBookingError(
-        '',
-      );
-
-      setBookingSuccess(
-        '',
-      );
-
-      if (
-        !selectedTravelPlan
-      ) {
-        setBookingError(
-          'Please select a travel plan before confirming your booking.',
-        );
-
-        return;
+      const confirmedTotal = typeof data.totalPrice === 'number' ? data.totalPrice : estimatedTotal;
+      setBookingSuccess(`Booking created successfully! Total: $${formatMoney(confirmedTotal)}`);
+      if (data._id) {
+        setCreatedBookingId(data._id);
       }
+    } catch (error) {
+      setBookingError(error instanceof Error ? error.message : 'Unable to create booking.');
+    } finally {
+      setBookingSubmitting(false);
+    }
+  };
 
-      if (
-        !travelDate
-      ) {
-        setBookingError(
-          'Please select your travel date.',
-        );
-
-        return;
+  // Dynamic filter values extracted from packages
+  const countriesList = useMemo(() => {
+    const set = new Set<string>();
+    packages.forEach((pkg) => {
+      if (pkg.country && pkg.country.trim()) {
+        set.add(pkg.country.trim());
       }
+    });
+    return ['ALL', ...Array.from(set).sort()];
+  }, [packages]);
 
-      if (
-        travelDate <
-        getTodayDate()
-      ) {
-        setBookingError(
-          'Travel date cannot be in the past.',
-        );
-
-        return;
+  const categoriesList = useMemo(() => {
+    const set = new Set<string>();
+    packages.forEach((pkg) => {
+      if (pkg.category && pkg.category.trim()) {
+        set.add(pkg.category.trim());
       }
+    });
+    return ['ALL', ...Array.from(set).sort()];
+  }, [packages]);
 
-      const token =
-        localStorage.getItem(
-          'globalvista_token',
-        ) ||
-        localStorage.getItem(
-          'token',
-        );
-
-      const rawUser =
-        localStorage.getItem(
-          'globalvista_user',
-        ) ||
-        localStorage.getItem(
-          'user',
-        );
-
-      if (
-        !token ||
-        !rawUser
-      ) {
-        router.push(
-          '/login',
-        );
-
-        return;
-      }
-
-      let storedUser:
-        {
-          role?: string;
-        } | null =
-        null;
-
-      try {
-        storedUser =
-          JSON.parse(
-            rawUser,
-          );
-      } catch {
-        storedUser =
-          null;
-      }
-
-      if (storedUser?.role !== 'USER' && storedUser?.role !== 'ADMIN') {
-        setBookingError('Please sign in as a traveller or administrator to book.');
-        return;
-      }
-
-      try {
-        setBookingSubmitting(
-          true,
-        );
-
-        const response =
-          await fetch(
-            `${API_URL}/bookings`,
-            {
-              method:
-                'POST',
-
-              headers: {
-                'Content-Type':
-                  'application/json',
-
-                Authorization:
-                  `Bearer ${token}`,
-              },
-
-              body:
-                JSON.stringify(
-                  {
-                    packageId:
-                      selectedPackage._id,
-
-                    travelPlanId:
-                      selectedTravelPlan._id,
-
-                    travelDate,
-
-                    numberOfPeople,
-
-                    selectedAddOnIds,
-                  },
-                ),
-            },
-          );
-
-        const data:
-          BookingResponse =
-          await response
-            .json()
-            .catch(
-              () =>
-                ({}),
-            );
-
-        if (
-          response.status ===
-          401
-        ) {
-          localStorage.removeItem(
-            'globalvista_token',
-          );
-
-          localStorage.removeItem(
-            'globalvista_user',
-          );
-
-          localStorage.removeItem(
-            'token',
-          );
-
-          localStorage.removeItem(
-            'user',
-          );
-
-          router.push(
-            '/login',
-          );
-
-          return;
-        }
-
-        if (
-          !response.ok
-        ) {
-          const message =
-            Array.isArray(
-              data.message,
-            )
-              ? data.message.join(
-                  ', ',
-                )
-              : data.message ||
-                'Unable to create booking.';
-
-          throw new Error(
-            message,
-          );
-        }
-
-        const confirmedTotal =
-          typeof data
-            .totalPrice ===
-          'number'
-            ? data.totalPrice
-            : estimatedTotal;
-
-        setBookingSuccess(
-          `Booking created successfully. Total: $${formatMoney(
-            confirmedTotal,
-          )}`,
-        );
-      } catch (
-        error
-      ) {
-        setBookingError(
-          error instanceof
-            Error
-            ? error.message
-            : 'Unable to create booking.',
-        );
-      } finally {
-        setBookingSubmitting(
-          false,
-        );
-      }
-    };
-
+  // Normalized search query and filtered list
   const normalizedSearch = search.trim().toLowerCase();
-  const filteredPackages = packages.filter((pkg) => {
-    const destinationId = typeof pkg.destinationId === 'string'
-      ? pkg.destinationId
-      : pkg.destinationId?._id;
-    const matchesDestination = !selectedDestinationId || destinationId === selectedDestinationId;
-    const matchesSearch = !normalizedSearch ||
-      [pkg.title, pkg.destination, pkg.country, pkg.category].some((value) =>
-        (value || '').toLowerCase().includes(normalizedSearch),
+
+  const filteredPackages = useMemo(() => {
+    let result = [...packages];
+
+    // Filter by destination ID from URL
+    if (selectedDestinationId) {
+      result = result.filter((pkg) => {
+        const dId = typeof pkg.destinationId === 'string'
+          ? pkg.destinationId
+          : pkg.destinationId?._id;
+        return dId === selectedDestinationId;
+      });
+    }
+
+    // Filter by Country pill
+    if (selectedCountry !== 'ALL') {
+      result = result.filter(
+        (pkg) => (pkg.country || '').trim().toLowerCase() === selectedCountry.toLowerCase(),
       );
-    return matchesDestination && matchesSearch;
-  });
+    }
+
+    // Filter by Category pill
+    if (selectedCategory !== 'ALL') {
+      result = result.filter(
+        (pkg) => (pkg.category || '').trim().toLowerCase() === selectedCategory.toLowerCase(),
+      );
+    }
+
+    // Filter by Special Offers only
+    if (showDealsOnly) {
+      result = result.filter(
+        (pkg) =>
+          Boolean(pkg.isSpecialOffer) ||
+          Boolean(pkg.discountPercentage && pkg.discountPercentage > 0) ||
+          Boolean(pkg.originalPrice && pkg.originalPrice > pkg.price),
+      );
+    }
+
+    // Filter by Search text (title, destination, country, category, description)
+    if (normalizedSearch) {
+      result = result.filter((pkg) =>
+        [pkg.title, pkg.destination, pkg.country, pkg.category, pkg.description].some((field) =>
+          (field || '').toLowerCase().includes(normalizedSearch),
+        ),
+      );
+    }
+
+    // Sorting
+    result.sort((a, b) => {
+      if (sortBy === 'PRICE_LOW') {
+        return a.price - b.price;
+      }
+      if (sortBy === 'PRICE_HIGH') {
+        return b.price - a.price;
+      }
+      if (sortBy === 'RATING_HIGH') {
+        const ratingA = Number(a.reviewInfo?.averageRating || 0);
+        const ratingB = Number(b.reviewInfo?.averageRating || 0);
+        return ratingB - ratingA;
+      }
+      if (sortBy === 'DURATION_SHORT') {
+        const dA = parseInt(a.duration, 10) || 99;
+        const dB = parseInt(b.duration, 10) || 99;
+        return dA - dB;
+      }
+      // FEATURED: Prioritize special offers, then availability
+      if (a.isSpecialOffer && !b.isSpecialOffer) return -1;
+      if (!a.isSpecialOffer && b.isSpecialOffer) return 1;
+      return 0;
+    });
+
+    return result;
+  }, [
+    packages,
+    selectedDestinationId,
+    selectedCountry,
+    selectedCategory,
+    showDealsOnly,
+    normalizedSearch,
+    sortBy,
+  ]);
+
+  const hasActiveFilters = Boolean(
+    normalizedSearch ||
+      selectedCountry !== 'ALL' ||
+      selectedCategory !== 'ALL' ||
+      showDealsOnly ||
+      sortBy !== 'FEATURED' ||
+      selectedDestinationId,
+  );
+
+  const resetAllFilters = () => {
+    setSearch('');
+    setSelectedCountry('ALL');
+    setSelectedCategory('ALL');
+    setShowDealsOnly(false);
+    setSortBy('FEATURED');
+    if (selectedDestinationId) {
+      router.push('/packages');
+    }
+  };
 
   return (
     <main className={styles.page}>
+      {/* =====================================================================
+          LUXURY HERO SECTION & TOP BAR
+          ===================================================================== */}
       <section className={styles.hero}>
-        <div className={styles.heroInner}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: '16px' }}>
-            <Link className={styles.backLink} href="/">
-              <ArrowLeft size={16} /> Back to Home
-            </Link>
-            <CurrencySelector />
-          </div>
-          <span className={styles.eyebrow}>GLOBALVISTA TRAVEL PACKAGES</span>
-          <h1>{selectedDestinationId
-            ? `Discover ${selectedDestinationName || 'Destination'} Packages`
-            : 'Discover your next unforgettable journey'}</h1>
-          <p>Find your perfect getaway, explore unique experiences and book with confidence.</p>
-        </div>
-      </section>
+        <div className={styles.heroNav}>
+          <Link href="/" className={styles.logo}>
+            Global<span>Vista</span>
+          </Link>
 
-      <section className={styles.content}>
-        <div className={styles.container}>
-          <div className={styles.heading}>
-            <div>
-              <span>EXPLORE OUR JOURNEYS</span>
-              <h2>{selectedDestinationId
-                ? `Packages for ${selectedDestinationName || 'selected destination'}`
-                : 'All Travel Packages'}</h2>
-              <p>Explore travel packages created by GlobalVista.</p>
-            </div>
-            {selectedDestinationId && (
-              <Link className={styles.showAll} href="/packages">
-                Show All Packages <ArrowRight size={16} />
+          <nav className={styles.navLinks}>
+            <Link href="/" className={styles.navLink}>
+              Home
+            </Link>
+            <Link href="/packages" className={`${styles.navLink} ${styles.navLinkActive}`}>
+              Packages
+            </Link>
+            <Link href="/#destinations" className={styles.navLink}>
+              Destinations
+            </Link>
+            <Link href="/#experiences" className={styles.navLink}>
+              Experiences
+            </Link>
+            <Link href="/#planner" className={styles.navLink}>
+              Trip Planner
+            </Link>
+          </nav>
+
+          <div className={styles.navActions}>
+            <CurrencySelector />
+
+            {currentUser ? (
+              <Link
+                href={currentUser.role === 'ADMIN' ? '/admin' : '/traveller'}
+                className={styles.userBadge}
+                title={`Signed in as ${currentUser.name || currentUser.email}`}
+              >
+                <span className={styles.userAvatar}>
+                  {(currentUser.name || currentUser.email || 'U')[0].toUpperCase()}
+                </span>
+                <span>{currentUser.name ? currentUser.name.split(' ')[0] : 'My Account'}</span>
+              </Link>
+            ) : (
+              <Link href="/login" className={styles.signInBtn}>
+                <UserRound size={15} />
+                <span>Sign In</span>
               </Link>
             )}
           </div>
+        </div>
 
-          <div className={styles.toolbar}>
-            <label className={styles.searchBox}>
-              <Search size={19} />
-              <input
-                type="search"
-                placeholder="Search packages, country or category..."
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-              />
-            </label>
-            {!packagesLoading && !packagesError && (
-              <p className={styles.resultCount}>
-                Showing <strong>{filteredPackages.length}</strong> package{filteredPackages.length === 1 ? '' : 's'}
-              </p>
+        <div className={styles.heroContent}>
+          <span className={styles.heroEyebrow}>
+            <Sparkles size={14} />
+            HANDPICKED LUXURY COLLECTION
+          </span>
+
+          <h1 className={styles.heroTitle}>
+            {selectedDestinationId
+              ? `Exclusive ${selectedDestinationName || 'Destination'} Expeditions`
+              : 'Discover Your Next Unforgettable Journey'}
+          </h1>
+
+          <p className={styles.heroSubtitle}>
+            Indulge in tailor-made itineraries, 5-star handpicked sanctuaries, and private
+            white-glove chauffeur expeditions curated for discerning travellers.
+          </p>
+
+          <div className={styles.heroTrustStrip}>
+            <span className={styles.trustPill}>
+              <ShieldCheck size={14} />
+              100% Handpicked Sanctuaries
+            </span>
+            <span className={styles.trustPill}>
+              <Star size={14} fill="currentColor" />
+              4.9 / 5 Guest Satisfaction
+            </span>
+            <span className={styles.trustPill}>
+              <Headphones size={14} />
+              24/7 VIP Concierge & Chauffeur
+            </span>
+            <span className={styles.trustPill}>
+              <CheckCircle2 size={14} />
+              Flexible Rescheduling
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* =====================================================================
+          MAIN CONTENT WITH FLOATING FILTER CARD & CARDS GRID
+          ===================================================================== */}
+      <section className={styles.content}>
+        <div className={styles.container}>
+          {/* Floating Luxury Filter Bar */}
+          <div className={styles.filterCard}>
+            <div className={styles.filterTopRow}>
+              {/* Live Search Input */}
+              <div className={styles.searchWrap}>
+                <Search size={18} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  className={styles.searchInput}
+                  placeholder="Search by destination, country, itinerary activity..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                {search && (
+                  <button
+                    type="button"
+                    className={styles.clearSearchBtn}
+                    onClick={() => setSearch('')}
+                    aria-label="Clear search"
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+              </div>
+
+              {/* Action Controls: Special Offers & Sort Dropdown */}
+              <div className={styles.filterActionsRow}>
+                <button
+                  type="button"
+                  className={`${styles.dealsToggleBtn} ${showDealsOnly ? styles.dealsToggleBtnActive : ''}`}
+                  onClick={() => setShowDealsOnly(!showDealsOnly)}
+                >
+                  <Tag size={15} />
+                  <span>Special Offers Only</span>
+                </button>
+
+                <div className={styles.sortSelectWrap}>
+                  <span className={styles.sortLabel}>Sort:</span>
+                  <select
+                    className={styles.sortSelect}
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                  >
+                    <option value="FEATURED">Featured &amp; Recommended</option>
+                    <option value="PRICE_LOW">Price: Low to High</option>
+                    <option value="PRICE_HIGH">Price: High to Low</option>
+                    <option value="RATING_HIGH">Guest Rating (Highest)</option>
+                    <option value="DURATION_SHORT">Duration (Shortest)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Dynamic Filter Pills: Countries & Categories */}
+            <div className={styles.filterPillsSection}>
+              {/* Countries Row */}
+              <div className={styles.pillsRow}>
+                <span className={styles.pillsLabel}>Country:</span>
+                {countriesList.map((country) => (
+                  <button
+                    type="button"
+                    key={`country-${country}`}
+                    className={`${styles.filterPill} ${selectedCountry === country ? styles.filterPillActive : ''}`}
+                    onClick={() => setSelectedCountry(country)}
+                  >
+                    {country === 'ALL' ? 'All Countries' : country}
+                  </button>
+                ))}
+              </div>
+
+              {/* Categories Row */}
+              {categoriesList.length > 2 && (
+                <div className={styles.pillsRow}>
+                  <span className={styles.pillsLabel}>Category:</span>
+                  {categoriesList.map((category) => (
+                    <button
+                      type="button"
+                      key={`cat-${category}`}
+                      className={`${styles.filterPill} ${selectedCategory === category ? styles.filterPillActive : ''}`}
+                      onClick={() => setSelectedCategory(category)}
+                    >
+                      {category === 'ALL' ? 'All Categories' : category}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Results Summary Bar */}
+          <div className={styles.filterSummaryBar}>
+            <span className={styles.summaryCount}>
+              Showing <strong>{filteredPackages.length}</strong> {filteredPackages.length === 1 ? 'package' : 'curated packages'}
+              {packages.length > 0 && ` (out of ${packages.length} total)`}
+              {selectedDestinationName && ` for ${selectedDestinationName}`}
+            </span>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className={styles.resetFiltersBtn}
+                onClick={resetAllFilters}
+              >
+                <RotateCcw size={13} />
+                <span>Reset All Filters</span>
+              </button>
             )}
           </div>
 
-          {packagesLoading && <p className={styles.message}>Loading packages...</p>}
-          {!packagesLoading && packagesError && <p className={styles.message}>{packagesError}</p>}
-          {!packagesLoading && !packagesError && filteredPackages.length === 0 && (
-            <div className={styles.emptyState}>
-              <h3>No packages found</h3>
-              <p>{selectedDestinationId
-                ? 'No packages are linked to this destination yet, or your search has no matches.'
-                : 'Try a different search or check back later.'}</p>
-              {selectedDestinationId && (
-                <Link href="/packages" className={styles.showAll}>Show All Packages <ArrowRight size={16}/></Link>
-              )}
+          {/* Loading & Error States */}
+          {packagesLoading && (
+            <div className={styles.emptyStateCard}>
+              <div style={{ display: 'inline-block', width: '36px', height: '36px', border: '3px solid #e2e8f0', borderTopColor: '#0284c7', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+              <h3 className={styles.emptyStateTitle} style={{ marginTop: '16px' }}>Loading Luxury Expeditions...</h3>
+              <p className={styles.emptyStateDesc}>Fetching real-time availability and handpicked sanctuaries from GlobalVista.</p>
             </div>
           )}
 
+          {!packagesLoading && packagesError && (
+            <div className={styles.emptyStateCard}>
+              <h3 className={styles.emptyStateTitle}>Notice</h3>
+              <p className={styles.emptyStateDesc}>{packagesError}</p>
+              <button
+                type="button"
+                className={styles.clearFiltersPrimaryBtn}
+                onClick={() => window.location.reload()}
+              >
+                Refresh Page
+              </button>
+            </div>
+          )}
+
+          {/* Empty Filter State */}
+          {!packagesLoading && !packagesError && filteredPackages.length === 0 && (
+            <div className={styles.emptyStateCard}>
+              <h3 className={styles.emptyStateTitle}>No Journeys Found</h3>
+              <p className={styles.emptyStateDesc}>
+                We couldn't find any packages matching your active filters. Try broadening your search or resetting all filters to see our full collection.
+              </p>
+              <button
+                type="button"
+                className={styles.clearFiltersPrimaryBtn}
+                onClick={resetAllFilters}
+              >
+                <RotateCcw size={15} />
+                <span>Reset All Filters</span>
+              </button>
+            </div>
+          )}
+
+          {/* Packages Cards Grid */}
           {!packagesLoading && !packagesError && filteredPackages.length > 0 && (
             <div className="destinationGrid">
               {filteredPackages.map((pkg) => {
                 const rating = Number(pkg.reviewInfo?.averageRating || 0);
                 const reviewCount = Number(pkg.reviewInfo?.totalReviews || 0);
+                const isSaved = savedPackageIds.includes(pkg._id);
+                const hasDiscount =
+                  Boolean(pkg.isSpecialOffer) ||
+                  Boolean(pkg.discountPercentage && pkg.discountPercentage > 0) ||
+                  Boolean(pkg.originalPrice && pkg.originalPrice > pkg.price);
+
+                const discountPercent =
+                  pkg.discountPercentage ||
+                  (pkg.originalPrice && pkg.originalPrice > pkg.price
+                    ? Math.round(((pkg.originalPrice - pkg.price) / pkg.originalPrice) * 100)
+                    : 15);
+
                 return (
                   <article className="destinationCard" key={pkg._id}>
+                    {/* Discount Badge */}
+                    {hasDiscount && (
+                      <span className={styles.cardDiscountBadge}>
+                        <Tag size={11} />
+                        {discountPercent > 0 ? `-${discountPercent}% OFF` : 'SPECIAL OFFER'}
+                      </span>
+                    )}
+
+                    {/* Wishlist Heart Button */}
+                    <button
+                      type="button"
+                      className={`${styles.cardWishlistBtn} ${isSaved ? styles.cardWishlistBtnActive : ''}`}
+                      onClick={(e) => toggleSavePackage(pkg._id, e)}
+                      aria-label={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
+                      title={isSaved ? 'Saved in wishlist' : 'Save to wishlist'}
+                    >
+                      <Heart size={16} fill={isSaved ? '#ef4444' : 'none'} />
+                    </button>
+
+                    {/* Package Cover Image */}
                     <img
                       src={getPackageImage(pkg)}
                       alt={pkg.title}
+                      loading="lazy"
                       onError={(event) => {
                         event.currentTarget.onerror = null;
                         event.currentTarget.src = fallbackImages[pkg.destination] || defaultFallbackImage;
                       }}
                     />
+
+                    {/* Gradient Shade Overlay */}
                     <div className="destinationShade" />
+
+                    {/* Category pill on image */}
+                    {pkg.category && (
+                      <span className={styles.cardCategoryBadge}>
+                        {pkg.category}
+                      </span>
+                    )}
+
+                    {/* Card Content Overlay */}
                     <div className="destinationContent">
                       <h3>{pkg.title}</h3>
+
                       <div className="destinationMeta">
-                        <span><MapPin size={13} />{pkg.destination}</span>
-                        <span><Clock3 size={13}/>{pkg.duration}</span>
-                        <span><Star size={13} fill="currentColor" />
-                          {rating > 0 ? `${rating.toFixed(1)} (${reviewCount})` : 'New'}
+                        <span>
+                          <MapPin size={13} />
+                          {pkg.destination}, {pkg.country}
+                        </span>
+                        <span>
+                          <Clock3 size={13} />
+                          {pkg.duration}
+                        </span>
+                        <span>
+                          <Star size={13} fill="currentColor" />
+                          {rating > 0 ? `${rating.toFixed(1)} (${reviewCount})` : '5.0 (New)'}
                         </span>
                       </div>
+
                       <div className="gvCardButtonsRow">
                         <button
                           type="button"
@@ -858,6 +877,7 @@ function PackagesContent() {
                           <CalendarDays size={13} />
                           <span>Itinerary</span>
                         </button>
+
                         <button
                           type="button"
                           className="destinationBookButton"
@@ -868,8 +888,14 @@ function PackagesContent() {
                           {pkg.availability && <ArrowRight size={13} />}
                         </button>
                       </div>
+
                       <div className="destinationPrice">
                         <small>From</small>
+                        {pkg.originalPrice && pkg.originalPrice > pkg.price && (
+                          <span className={styles.originalPriceStrike}>
+                            {formatPrice(pkg.originalPrice)}
+                          </span>
+                        )}
                         <strong>{formatPrice(pkg.price)}</strong>
                       </div>
                     </div>
@@ -880,47 +906,179 @@ function PackagesContent() {
           )}
         </div>
       </section>
+
+      {/* =====================================================================
+          LUXURY FOOTER
+          ===================================================================== */}
+      <footer className="gvFooter">
+        <div className="container gvFooterMain">
+          <div className="gvFooterBrand">
+            <Link href="/" className="gvFooterLogo">
+              Global<span>Vista</span>
+            </Link>
+            <h3>
+              Travel Further.
+              <br />
+              Live More.
+            </h3>
+            <p>
+              Discover unforgettable destinations, handpicked 5-star sanctuaries, and tailor-made expeditions designed around your wanderlust.
+            </p>
+            <div className="gvFooterSocials">
+              <a
+                href="https://www.facebook.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Facebook"
+                className="gvSocialIcon gvFacebook"
+              >
+                <FaFacebookF size={18} />
+              </a>
+              <a
+                href="https://www.instagram.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                className="gvSocialIcon gvInstagram"
+              >
+                <FaInstagram size={19} />
+              </a>
+              <a
+                href="https://www.linkedin.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="LinkedIn"
+                className="gvSocialIcon gvLinkedin"
+              >
+                <FaLinkedinIn size={18} />
+              </a>
+              <a
+                href="mailto:concierge@globalvista.com"
+                aria-label="Email"
+                className="gvSocialIcon gvEmail"
+              >
+                <SiGmail size={19} />
+              </a>
+            </div>
+          </div>
+
+          <div className="gvFooterLinks">
+            <div className="gvFooterColumn">
+              <h4>EXPLORE</h4>
+              <Link href="/#destinations">Destinations</Link>
+              <Link href="/#experiences">Curated Experiences</Link>
+              <Link href="/packages?deals=true">Special Offers</Link>
+              <Link href="/#reviews">Traveller Reviews</Link>
+            </div>
+
+            <div className="gvFooterColumn">
+              <h4>COLLECTIONS</h4>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCountry('Switzerland');
+                  window.scrollTo({ top: 380, behavior: 'smooth' });
+                }}
+                style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, font: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+              >
+                Swiss Alps &amp; Lakes
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCountry('Japan');
+                  window.scrollTo({ top: 380, behavior: 'smooth' });
+                }}
+                style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, font: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+              >
+                Japan Heritage &amp; Kyoto
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCountry('Maldives');
+                  window.scrollTo({ top: 380, behavior: 'smooth' });
+                }}
+                style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, font: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+              >
+                Maldives Private Atolls
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedCountry('Sri Lanka');
+                  window.scrollTo({ top: 380, behavior: 'smooth' });
+                }}
+                style={{ background: 'none', border: 'none', color: 'inherit', padding: 0, font: 'inherit', cursor: 'pointer', textAlign: 'left' }}
+              >
+                Sri Lanka Serendipity
+              </button>
+            </div>
+
+            <div className="gvFooterColumn">
+              <h4>VIP CONCIERGE</h4>
+              <a href="https://wa.me/94771234567" target="_blank" rel="noopener noreferrer">
+                WhatsApp Support
+              </a>
+              <Link href="/#planner">Tailored Itinerary Planner</Link>
+              <Link href="/traveller">My Booking Portal</Link>
+              <a href="tel:+94771234567">Chauffeur Assistance</a>
+            </div>
+          </div>
+        </div>
+
+        <div className="gvFooterBottom">
+          <div className="container gvFooterBottomInner">
+            <p>© {new Date().getFullYear()} GlobalVista Luxury Travel Ltd. All rights reserved.</p>
+            <div className="gvFooterLegal">
+              <a href="#">Privacy Policy</a>
+              <span>·</span>
+              <a href="#">Terms &amp; Conditions</a>
+              <span>·</span>
+              <a href="#">VIP Assurance</a>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* =====================================================================
+          FLOATING WHATSAPP VIP CONCIERGE BUTTON
+          ===================================================================== */}
+      <motion.a
+        href="https://wa.me/94771234567?text=Hello%20GlobalVista%20Concierge,%20I%20am%20browsing%20your%20luxury%20packages%20and%20would%20like%20to%20inquire%20about%20availability%20and%20itineraries."
+        target="_blank"
+        rel="noopener noreferrer"
+        className="floatingWhatsAppBtn"
+        aria-label="Chat with GlobalVista Concierge on WhatsApp"
+        initial={{ opacity: 0, scale: 0.85, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 0.6, duration: 0.4 }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <div className="whatsappIconWrap">
+          <FaWhatsapp className="whatsappIcon" />
+          <span className="whatsappOnlineDot" />
+        </div>
+        <div className="whatsappTextWrap">
+          <span className="whatsappSubtitle">24/7 VIP Concierge Online</span>
+          <strong className="whatsappTitle">Chat on WhatsApp</strong>
+        </div>
+      </motion.a>
+
+      {/* =====================================================================
+          BOOKING MODAL
+          ===================================================================== */}
       {selectedPackage && (
-        <div
-          className="bookingModalOverlay"
-          onMouseDown={
-            closeBooking
-          }
-        >
-          <section
-            className="bookingModal"
-            onMouseDown={(
-              event,
-            ) =>
-              event.stopPropagation()
-            }
-          >
-            <div
-              className="bookingModalHeader"
-            >
+        <div className="bookingModalOverlay" onMouseDown={closeBooking}>
+          <section className="bookingModal" onMouseDown={(e) => e.stopPropagation()}>
+            <div className="bookingModalHeader">
               <div>
-                <span>
-                  BOOK YOUR TRIP
-                </span>
-
-                <h2>
-                  {
-                    selectedPackage.title
-                  }
-                </h2>
-
+                <span>BOOK YOUR TRIP</span>
+                <h2>{selectedPackage.title}</h2>
                 <p>
-                  {
-                    selectedPackage.destination
-                  }
-
-                  {' · '}
-
-                  {
-                    selectedPackage.duration
-                  }
+                  {selectedPackage.destination}, {selectedPackage.country} · {selectedPackage.duration}
                 </p>
-
                 <button
                   type="button"
                   className="bookingModalItineraryLink"
@@ -934,696 +1092,286 @@ function PackagesContent() {
               <button
                 type="button"
                 aria-label="Close booking"
-                onClick={
-                  closeBooking
-                }
-                disabled={
-                  bookingSubmitting
-                }
+                onClick={closeBooking}
+                disabled={bookingSubmitting}
               >
-                <X
-                  size={
-                    18
-                  }
-                />
+                <X size={18} />
               </button>
             </div>
 
-            <div
-              className="bookingModalBody"
-            >
-              <div
-                className="bookingPackageSummary"
-              >
+            <div className="bookingModalBody">
+              <div className="bookingPackageSummary">
                 <img
-                  src={getPackageImage(
-                    selectedPackage,
-                  )}
-                  alt={
-                    selectedPackage.title
-                  }
-                  onError={(
-                    event,
-                  ) => {
-                    event.currentTarget.onerror =
-                      null;
-
-                    event.currentTarget.src =
-                      fallbackImages[
-                        selectedPackage
-                          .destination
-                      ] ||
-                      defaultFallbackImage;
+                  src={getPackageImage(selectedPackage)}
+                  alt={selectedPackage.title}
+                  onError={(e) => {
+                    e.currentTarget.onerror = null;
+                    e.currentTarget.src = fallbackImages[selectedPackage.destination] || defaultFallbackImage;
                   }}
                 />
-
                 <div>
-                  <span>
-                    PACKAGE PRICE
-                  </span>
-
+                  <span>PACKAGE PRICE</span>
                   <strong>
-                    {formatPrice(
-                      selectedPackage.price,
-                    )}
-
-                    {' '}
-
-                    <small>
-                      / person
-                    </small>
+                    {formatPrice(selectedPackage.price)} <small>/ person</small>
                   </strong>
                 </div>
               </div>
 
-              <div
-                className="bookingIncluded"
-              >
-                <div
-                  className="bookingSectionTitle"
-                >
+              {/* Package Inclusions */}
+              <div className="bookingIncluded">
+                <div className="bookingSectionTitle">
                   <div>
-                    <span>
-                      INCLUDED FREE
-                    </span>
-
-                    <h3>
-                      Package inclusions
-                    </h3>
+                    <span>INCLUDED FREE</span>
+                    <h3>Package Inclusions</h3>
                   </div>
-
-                  <strong>
-                    {
-                      selectedPackage
-                        .included
-                        ?.length ??
-                      0
-                    }
-
-                    /6 FREE
-                  </strong>
+                  <strong>{selectedPackage.included?.length ?? 0} Inclusions</strong>
                 </div>
 
-                <div
-                  className="bookingIncludedGrid"
-                >
-                  {(selectedPackage
-                    .included ??
-                    []).map(
-                    (
-                      item,
-                      index,
-                    ) => (
-                      <div
-                        key={`${item}-${index}`}
-                      >
-                        <Check
-                          size={
-                            14
-                          }
-                        />
-
-                        <span>
-                          {
-                            item
-                          }
-                        </span>
-                      </div>
-                    ),
-                  )}
-
-                  {!selectedPackage
-                    .included
-                    ?.length && (
-                    <div>
-                      No free included items listed.
+                <div className="bookingIncludedGrid">
+                  {(selectedPackage.included ?? []).map((item, index) => (
+                    <div key={`${item}-${index}`}>
+                      <Check size={14} />
+                      <span>{item}</span>
                     </div>
+                  ))}
+                  {!selectedPackage.included?.length && (
+                    <div>All standard 5-star resort and chauffeur inclusions.</div>
                   )}
                 </div>
               </div>
 
-              <div
-                className="bookingIncluded"
-              >
-                <div
-                  className="bookingSectionTitle"
-                >
+              {/* Travel Service Plan Selection */}
+              <div className="bookingIncluded">
+                <div className="bookingSectionTitle">
                   <div>
-                    <span>
-                      TRAVEL PLAN
-                    </span>
-
-                    <h3>
-                      Choose your service level
-                    </h3>
+                    <span>TRAVEL PLAN</span>
+                    <h3>Choose Your Service Level</h3>
                   </div>
-
-                  {selectedTravelPlan && (
-                    <strong>
-                      {
-                        selectedTravelPlan.name
-                      }
-                    </strong>
-                  )}
+                  {selectedTravelPlan && <strong>{selectedTravelPlan.name}</strong>}
                 </div>
 
-                <label
-                  style={{
-                    display:
-                      'grid',
-                    gap:
-                      '8px',
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize:
-                        '12px',
-                      fontWeight:
-                        700,
-                      color:
-                        '#24343c',
-                    }}
-                  >
+                <label style={{ display: 'grid', gap: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#24343c' }}>
                     Selected Plan
                   </span>
-
                   <select
                     disabled={travelPlansLoading}
-                    value={
-                      selectedTravelPlanId
-                    }
-                    onChange={(
-                      event,
-                    ) =>
-                      persistTravelPlanSelection(
-                        event.target.value,
-                      )
-                    }
+                    value={selectedTravelPlanId}
+                    onChange={(e) => persistTravelPlanSelection(e.target.value)}
                     style={{
-                      width:
-                        '100%',
-                      minHeight:
-                        '46px',
-                      border:
-                        '1px solid #dfe7eb',
-                      borderRadius:
-                        '10px',
-                      padding:
-                        '0 14px',
-                      background:
-                        '#ffffff',
-                      color:
-                        '#17272f',
-                      fontSize:
-                        '14px',
-                      outline:
-                        'none',
+                      width: '100%',
+                      minHeight: '46px',
+                      border: '1.5px solid #dfe7eb',
+                      borderRadius: '10px',
+                      padding: '0 14px',
+                      background: '#ffffff',
+                      color: '#17272f',
+                      fontSize: '14px',
+                      outline: 'none',
                     }}
                   >
-                    <option
-                      value=""
-                    >
-                      {travelPlansLoading
-                        ? 'Loading travel plans...'
-                        : 'Select a travel plan'}
+                    <option value="">
+                      {travelPlansLoading ? 'Loading travel plans...' : 'Select a travel service tier'}
                     </option>
-
-                    {travelPlans.map(
-                      (
-                        plan,
-                      ) => (
-                        <option
-                          key={
-                            plan._id
-                          }
-                          value={
-                            plan._id
-                          }
-                        >
-                          {plan.name} — ${formatMoney(
-                            plan.price,
-                          )} {plan.priceSuffix}
-                        </option>
-                      ),
-                    )}
+                    {travelPlans.map((plan) => (
+                      <option key={plan._id} value={plan._id}>
+                        {plan.name} — ${formatMoney(plan.price)} {plan.priceSuffix}
+                      </option>
+                    ))}
                   </select>
                 </label>
 
                 {travelPlansError && (
-                  <p className="bookingMessage bookingError">
-                    {travelPlansError}
-                  </p>
+                  <p className="bookingMessage bookingError">{travelPlansError}</p>
                 )}
 
                 {selectedTravelPlan && (
                   <div
                     style={{
-                      marginTop:
-                        '14px',
-                      padding:
-                        '14px',
-                      borderRadius:
-                        '12px',
-                      background:
-                        '#f5f9fc',
+                      marginTop: '14px',
+                      padding: '14px',
+                      borderRadius: '12px',
+                      background: '#f5f9fc',
                     }}
                   >
                     <div
                       style={{
-                        display:
-                          'flex',
-                        justifyContent:
-                          'space-between',
-                        gap:
-                          '12px',
-                        alignItems:
-                          'center',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        gap: '12px',
+                        alignItems: 'center',
                       }}
                     >
-                      <strong>
-                        {
-                          selectedTravelPlan.name
-                        }
-                      </strong>
-
-                      <strong>
-                        $
-                        {formatMoney(
-                          travelPlanTotal,
-                        )}
-                      </strong>
+                      <strong>{selectedTravelPlan.name}</strong>
+                      <strong>${formatMoney(travelPlanTotal)}</strong>
                     </div>
-
-                    <small
-                      style={{
-                        display:
-                          'block',
-                        marginTop:
-                          '4px',
-                        color:
-                          '#6d7c84',
-                      }}
-                    >
-                      $
-                      {formatMoney(
-                        selectedTravelPlan.price,
-                      )}{' '}
-                      {
-                        selectedTravelPlan.priceSuffix
-                      } ×{' '}
-                      {
-                        numberOfPeople
-                      }
+                    <small style={{ display: 'block', marginTop: '4px', color: '#6d7c84' }}>
+                      ${formatMoney(selectedTravelPlan.price)} {selectedTravelPlan.priceSuffix} × {numberOfPeople}
                     </small>
 
-                    {selectedTravelPlan
-                      .features
-                      .length >
-                      0 && (
+                    {selectedTravelPlan.features.length > 0 && (
                       <div
                         style={{
-                          display:
-                            'grid',
-                          gap:
-                            '6px',
-                          marginTop:
-                            '12px',
+                          display: 'grid',
+                          gap: '6px',
+                          marginTop: '12px',
                         }}
                       >
-                        {selectedTravelPlan.features.map(
-                          (
-                            feature,
-                            index,
-                          ) => (
-                            <div
-                              key={`${selectedTravelPlan._id}-modal-${index}`}
-                              style={{
-                                display:
-                                  'flex',
-                                alignItems:
-                                  'center',
-                                gap:
-                                  '8px',
-                                fontSize:
-                                  '12px',
-                                color:
-                                  '#4e6069',
-                              }}
-                            >
-                              <Check
-                                size={
-                                  14
-                                }
-                              />
-
-                              {
-                                feature
-                              }
-                            </div>
-                          ),
-                        )}
+                        {selectedTravelPlan.features.map((feature, index) => (
+                          <div
+                            key={`${selectedTravelPlan._id}-modal-${index}`}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              fontSize: '12px',
+                              color: '#4e6069',
+                            }}
+                          >
+                            <Check size={14} />
+                            {feature}
+                          </div>
+                        ))}
                       </div>
                     )}
                   </div>
                 )}
               </div>
 
-              <div
-                className="bookingFormGrid"
-              >
+              {/* Form Grid: Date & People Stepper */}
+              <div className="bookingFormGrid">
                 <label>
-                  <span>
-                    Travel Date
-                  </span>
-
+                  <span>Travel Date</span>
                   <input
                     type="date"
-                    min={
-                      getTodayDate()
-                    }
-                    value={
-                      travelDate
-                    }
-                    onChange={(
-                      event,
-                    ) => {
-                      setTravelDate(
-                        event
-                          .target
-                          .value,
-                      );
-
-                      setBookingError(
-                        '',
-                      );
-
-                      setBookingSuccess(
-                        '',
-                      );
+                    min={getTodayDate()}
+                    value={travelDate}
+                    onChange={(e) => {
+                      setTravelDate(e.target.value);
+                      setBookingError('');
+                      setBookingSuccess('');
                     }}
                   />
                 </label>
 
-                <div
-                  className="travellerField"
-                >
-                  <span>
-                    Travellers
-                  </span>
-
-                  <div
-                    className="travellerStepper"
-                  >
+                <div className="travellerField">
+                  <span>Travellers</span>
+                  <div className="travellerStepper">
                     <button
                       type="button"
                       aria-label="Remove traveller"
-                      disabled={
-                        numberOfPeople <=
-                        1
-                      }
+                      disabled={numberOfPeople <= 1}
                       onClick={() => {
-                        setNumberOfPeople(
-                          (
-                            current,
-                          ) =>
-                            Math.max(
-                              1,
-                              current -
-                                1,
-                            ),
-                        );
-
-                        setBookingSuccess(
-                          '',
-                        );
+                        setNumberOfPeople((c) => Math.max(1, c - 1));
+                        setBookingSuccess('');
                       }}
                     >
-                      <Minus
-                        size={
-                          15
-                        }
-                      />
+                      <Minus size={15} />
                     </button>
-
-                    <strong>
-                      {
-                        numberOfPeople
-                      }
-                    </strong>
-
+                    <strong>{numberOfPeople}</strong>
                     <button
                       type="button"
                       aria-label="Add traveller"
                       onClick={() => {
-                        setNumberOfPeople(
-                          (
-                            current,
-                          ) =>
-                            current +
-                            1,
-                        );
-
-                        setBookingSuccess(
-                          '',
-                        );
+                        setNumberOfPeople((c) => c + 1);
+                        setBookingSuccess('');
                       }}
                     >
-                      <Plus
-                        size={
-                          15
-                        }
-                      />
+                      <Plus size={15} />
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div
-                className="bookingAddOns"
-              >
-                <div
-                  className="bookingSectionTitle"
-                >
+              {/* Optional Add-Ons */}
+              <div className="bookingAddOns">
+                <div className="bookingSectionTitle">
                   <div>
-                    <span>
-                      OPTIONAL EXTRAS
-                    </span>
-
-                    <h3>
-                      Add to your trip
-                    </h3>
+                    <span>OPTIONAL EXTRAS</span>
+                    <h3>Add to Your Expedition</h3>
                   </div>
-
-                  <small>
-                    {
-                      selectedAddOnIds.length
-                    }{' '}
-
-                    selected
-                  </small>
+                  <small>{selectedAddOnIds.length} selected</small>
                 </div>
 
-                <div
-                  className="bookingAddOnList"
-                >
-                  {(selectedPackage
-                    .addOns ??
-                    []).map(
-                    (
-                      addOn,
-                    ) => {
-                      const selected =
-                        selectedAddOnIds.includes(
-                          addOn._id,
-                        );
+                <div className="bookingAddOnList">
+                  {(selectedPackage.addOns ?? []).map((addOn) => {
+                    const selected = selectedAddOnIds.includes(addOn._id);
+                    const amount =
+                      addOn.pricingType === 'PER_PERSON'
+                        ? addOn.price * numberOfPeople
+                        : addOn.price;
 
-                      const amount =
-                        addOn.pricingType ===
-                        'PER_PERSON'
-                          ? addOn.price *
-                            numberOfPeople
-                          : addOn.price;
+                    return (
+                      <button
+                        type="button"
+                        key={addOn._id}
+                        className={`bookingAddOn${selected ? ' selected' : ''}`}
+                        onClick={() => toggleAddOn(addOn._id)}
+                      >
+                        <span className="bookingAddOnCheck">
+                          {selected && <Check size={14} />}
+                        </span>
+                        <span className="bookingAddOnInfo">
+                          <strong>{addOn.name}</strong>
+                          <small>
+                            {addOn.pricingType === 'PER_PERSON'
+                              ? `$${formatMoney(addOn.price)} per person`
+                              : `$${formatMoney(addOn.price)} per booking`}
+                          </small>
+                        </span>
+                        <strong className="bookingAddOnAmount">
+                          +{formatPrice(amount)}
+                        </strong>
+                      </button>
+                    );
+                  })}
 
-                      return (
-                        <button
-                          type="button"
-                          key={
-                            addOn._id
-                          }
-                          className={`bookingAddOn${
-                            selected
-                              ? ' selected'
-                              : ''
-                          }`}
-                          onClick={() =>
-                            toggleAddOn(
-                              addOn._id,
-                            )
-                          }
-                        >
-                          <span
-                            className="bookingAddOnCheck"
-                          >
-                            {selected && (
-                              <Check
-                                size={
-                                  14
-                                }
-                              />
-                            )}
-                          </span>
-
-                          <span
-                            className="bookingAddOnInfo"
-                          >
-                            <strong>
-                              {
-                                addOn.name
-                              }
-                            </strong>
-
-                            <small>
-                              {addOn.pricingType ===
-                              'PER_PERSON'
-                                ? `$${formatMoney(
-                                    addOn.price,
-                                  )} per person`
-                                : `$${formatMoney(
-                                    addOn.price,
-                                  )} per booking`}
-                            </small>
-                          </span>
-
-                          <strong
-                            className="bookingAddOnAmount"
-                          >
-                            +{formatPrice(
-                              amount,
-                            )}
-                          </strong>
-                        </button>
-                      );
-                    },
-                  )}
-
-                  {!selectedPackage
-                    .addOns
-                    ?.length && (
-                    <p>
-                      No optional add-ons available for this package.
-                    </p>
+                  {!selectedPackage.addOns?.length && (
+                    <p>All essential luxury services are already included in this package.</p>
                   )}
                 </div>
               </div>
 
-              <div
-                className="bookingPriceSummary"
-              >
+              {/* Price Breakdown */}
+              <div className="bookingPriceSummary">
                 <div>
                   <span>
-                    Package{' '}
-
-                    ({formatPrice(
-                      selectedPackage.price,
-                    )}
-
-                    {' × '}
-
-                    {
-                      numberOfPeople
-                    }
-
-                    )
+                    Package ({formatPrice(selectedPackage.price)} × {numberOfPeople})
                   </span>
-
-                  <strong>
-                    {formatPrice(
-                      baseTotal,
-                    )}
-                  </strong>
+                  <strong>{formatPrice(baseTotal)}</strong>
                 </div>
 
                 <div>
                   <span>
                     Travel Plan{' '}
-
                     {selectedTravelPlan
-                      ? `(${selectedTravelPlan.name} · $${formatMoney(
-                          selectedTravelPlan.price,
-                        )} × ${numberOfPeople})`
+                      ? `(${selectedTravelPlan.name} · $${formatMoney(selectedTravelPlan.price)} × ${numberOfPeople})`
                       : '(Not selected)'}
                   </span>
-
-                  <strong>
-                    {selectedTravelPlan
-                      ? `$${formatMoney(
-                          travelPlanTotal,
-                        )}`
-                      : '—'}
-                  </strong>
+                  <strong>{selectedTravelPlan ? `$${formatMoney(travelPlanTotal)}` : '—'}</strong>
                 </div>
 
                 <div>
-                  <span>
-                    Optional Add-ons
-                  </span>
-
-                  <strong>
-                    {formatPrice(
-                      addOnsTotal,
-                    )}
-                  </strong>
+                  <span>Optional Add-ons</span>
+                  <strong>{formatPrice(addOnsTotal)}</strong>
                 </div>
 
-                <div
-                  className="bookingGrandTotal"
-                >
-                  <span>
-                    Estimated Total
-                  </span>
-
-                  <strong>
-                    {formatPrice(
-                      estimatedTotal,
-                    )}
-                  </strong>
+                <div className="bookingGrandTotal">
+                  <span>Estimated Total</span>
+                  <strong>{formatPrice(estimatedTotal)}</strong>
                 </div>
               </div>
 
-              {bookingError && (
-                <div
-                  className="bookingMessage bookingError"
-                >
-                  {
-                    bookingError
-                  }
-                </div>
-              )}
-
-              {bookingSuccess && (
-                <div
-                  className="bookingMessage bookingSuccess"
-                >
-                  {
-                    bookingSuccess
-                  }
-                </div>
-              )}
+              {bookingError && <div className="bookingMessage bookingError">{bookingError}</div>}
+              {bookingSuccess && <div className="bookingMessage bookingSuccess">{bookingSuccess}</div>}
             </div>
 
-            <div
-              className="bookingModalFooter"
-            >
+            <div className="bookingModalFooter">
               <button
                 type="button"
                 className="bookingCancelButton"
-                onClick={
-                  closeBooking
-                }
-                disabled={
-                  bookingSubmitting
-                }
+                onClick={closeBooking}
+                disabled={bookingSubmitting}
               >
                 Cancel
               </button>
@@ -1636,7 +1384,12 @@ function PackagesContent() {
                     closeBooking();
                     router.push('/traveller');
                   }}
-                  style={{ background: '#059669', borderColor: '#059669', color: '#fff', cursor: 'pointer' }}
+                  style={{
+                    background: '#059669',
+                    borderColor: '#059669',
+                    color: '#fff',
+                    cursor: 'pointer',
+                  }}
                 >
                   Go to My Trips →
                 </button>
@@ -1644,17 +1397,10 @@ function PackagesContent() {
                 <button
                   type="button"
                   className="bookingConfirmButton"
-                  onClick={() =>
-                    void createBooking()
-                  }
-                  disabled={
-                    bookingSubmitting ||
-                    !selectedTravelPlan
-                  }
+                  onClick={() => void createBooking()}
+                  disabled={bookingSubmitting || !selectedTravelPlan}
                 >
-                  {bookingSubmitting
-                    ? 'Creating Booking...'
-                    : 'Confirm Booking'}
+                  {bookingSubmitting ? 'Securing Booking...' : 'Confirm Booking'}
                 </button>
               )}
             </div>
@@ -1662,7 +1408,9 @@ function PackagesContent() {
         </div>
       )}
 
-      {/* Package Itinerary & Day-by-Day Breakdown Modal */}
+      {/* =====================================================================
+          PACKAGE ITINERARY MODAL
+          ===================================================================== */}
       <PackageItineraryModal
         packageData={itineraryModalPackage}
         isOpen={isItineraryModalOpen}
@@ -1677,7 +1425,15 @@ function PackagesContent() {
 
 export default function PackagesPage() {
   return (
-    <Suspense fallback={<main className={styles.page}><p className={styles.message}>Loading packages...</p></main>}>
+    <Suspense
+      fallback={
+        <main className={styles.page}>
+          <div style={{ padding: '80px 20px', textAlign: 'center' }}>
+            <p className={styles.message}>Loading GlobalVista Packages...</p>
+          </div>
+        </main>
+      }
+    >
       <PackagesContent />
     </Suspense>
   );
