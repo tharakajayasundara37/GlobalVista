@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -31,7 +31,10 @@ import {
   X,
   UserRound,
   Check,
+  CircleCheck,
+  ChevronLeft,
   ChevronRight,
+  Send,
   Play,
   Gift,
   CreditCard,
@@ -147,30 +150,69 @@ const getHeroScenes = (baseUrl: string) => [
   },
 ];
 
-const GUEST_REFLECTIONS = [
+export interface GuestReview {
+  _id: string;
+  name: string;
+  country: string;
+  packageTitle: string;
+  rating: number;
+  comment: string;
+}
+
+const DEFAULT_REVIEWS: GuestReview[] = [
   {
-    id: '1',
-    author: 'Dr. Julian Mercier',
-    origin: 'Zurich, Switzerland',
-    quote: 'The private Swiss chalet in Zermatt and helicopter flight over the Matterhorn was beyond perfection. Pure bespoke luxury.',
-    rating: 5.0,
-    tour: 'Matterhorn & Alpine Summits',
+    _id: 'rev-1',
+    name: 'Elena Rostova',
+    country: 'Geneva, Switzerland',
+    packageTitle: 'Maldives Luxury Escape',
+    rating: 5,
+    comment:
+      'Our private overwater villa in the Maldives arranged through GlobalVista was sheer perfection. From the private seaplane escort to the bespoke coral reef safari, every detail was executed with white-glove precision. Truly an unforgettable luxury holiday!',
   },
   {
-    id: '2',
-    author: 'Elena & Marcus Vance',
-    origin: 'London, United Kingdom',
-    quote: 'From our Sigiriya private chauffeur to the tea plantation bungalow, GlobalVista delivered flawless concierge service.',
-    rating: 5.0,
-    tour: 'Sri Lanka Royal Citadel Tour',
+    _id: 'rev-2',
+    name: 'Alexander Wright',
+    country: 'London, United Kingdom',
+    packageTitle: 'Switzerland Alpine Experience',
+    rating: 5,
+    comment:
+      'The scenic helicopter tour over the Matterhorn and our stay in Interlaken exceeded every expectation. The first-class Glacier Express tickets and luxury heated chalet made our 10th anniversary vacation breathtaking. GlobalVista is our definitive choice for world travel.',
   },
   {
-    id: '3',
-    author: 'Kenji & Aoi Takahashi',
-    origin: 'Tokyo, Japan',
-    quote: 'Our private overwater villa in Maldives exceeded all expectations. The seamless flight transfers and marine safari were unforgettable.',
-    rating: 5.0,
-    tour: 'Maldives Luxury Sanctuary',
+    _id: 'rev-3',
+    name: 'Dr. Sarah Jenkins',
+    country: 'Boston, United States',
+    packageTitle: 'Japan Culture Experience',
+    rating: 5,
+    comment:
+      'Experiencing an after-hours Zen garden tour in Kyoto and staying at a 300-year-old hot spring ryokan was pure magic. The Michelin-starred Kaiseki dining arrangements and private chauffeur made navigating Japan completely seamless and stress-free.',
+  },
+  {
+    _id: 'rev-4',
+    name: 'Tharindu Jayasundara',
+    country: 'Colombo, Sri Lanka',
+    packageTitle: 'Bali Romantic Honeymoon',
+    rating: 5,
+    comment:
+      'Our romantic honeymoon in Ubud and Uluwatu was deeply restorative. The private cliffside infinity villa, floating champagne breakfast, and flower-bath spa treatments were sublime. The concierge team kept in touch throughout our stay to ensure everything went smoothly.',
+  },
+  {
+    _id: 'rev-5',
+    name: 'Lord Arthur Sterling',
+    country: 'Edinburgh, Scotland',
+    packageTitle: 'Sri Lanka Adventure Tour',
+    rating: 5,
+    comment:
+      'Climbing Sigiriya rock fortress at sunrise with an expert private naturalist and encountering wild leopard prides in Yala national park was extraordinary. GlobalVista gave us access to royal historic estates that ordinary tourists never get to see.',
+  },
+  {
+    _id: 'rev-6',
+    name: 'Amélie & Julien Laurent',
+    country: 'Paris, France',
+    packageTitle: 'Thailand Paradise Tour',
+    rating: 5,
+    comment:
+      'Private catamaran charter across Phang Nga bay, sunset beachside dining, and 5-star pool villas made our Thailand holiday top tier. The digital itinerary voucher and invoice system made check-ins effortless at every hotel.',
   },
 ];
 
@@ -247,6 +289,108 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const [itineraryPkg, setItineraryPkg] = useState<ApiPackage | null>(null);
   const [bookingPkg, setBookingPkg] = useState<ApiPackage | null>(null);
   const [savedPackageIds, setSavedPackageIds] = useState<string[]>([]);
+
+  // Guest Reflections State (Matching Web / Lansakara Interactive Review System)
+  const [localCustomReviews, setLocalCustomReviews] = useState<GuestReview[]>([]);
+  const [hasSubmittedReview, setHasSubmittedReview] = useState<boolean>(false);
+  const [activeReviewIdx, setActiveReviewIdx] = useState<number>(0);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState<boolean>(false);
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [formReviewerName, setFormReviewerName] = useState<string>('');
+  const [formReviewerEmail, setFormReviewerEmail] = useState<string>('');
+  const [formReviewerCountry, setFormReviewerCountry] = useState<string>('');
+  const [formReviewerDestination, setFormReviewerDestination] = useState<string>('');
+  const [formReviewerComment, setFormReviewerComment] = useState<string>('');
+  const [submittingReview, setSubmittingReview] = useState<boolean>(false);
+  const [reviewAlert, setReviewAlert] = useState<{ type: string; text: string }>({ type: '', text: '' });
+  const [reviewsSectionY, setReviewsSectionY] = useState<number>(1400);
+
+  // Load custom reviews and submission status from AsyncStorage
+  useEffect(() => {
+    (async () => {
+      try {
+        const hasRev = await AsyncStorage.getItem('globalvista_has_reviewed');
+        if (hasRev === 'true') {
+          setHasSubmittedReview(true);
+        }
+        const storedReviews = await AsyncStorage.getItem('globalvista_custom_reviews');
+        if (storedReviews) {
+          const parsed = JSON.parse(storedReviews);
+          if (Array.isArray(parsed)) {
+            setLocalCustomReviews(parsed);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    })();
+  }, []);
+
+  const displayReviews: GuestReview[] = useMemo(() => {
+    return [...localCustomReviews, ...DEFAULT_REVIEWS];
+  }, [localCustomReviews]);
+
+  // Auto-slide reviews every 5.5s unless modal is open
+  useEffect(() => {
+    if (isReviewModalOpen || displayReviews.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveReviewIdx((prev) => (prev + 1) % displayReviews.length);
+    }, 5500);
+    return () => clearInterval(timer);
+  }, [displayReviews.length, isReviewModalOpen]);
+
+  const openReviewModal = () => {
+    if (user?.name) {
+      setFormReviewerName(user.name);
+    }
+    if (user?.email) {
+      setFormReviewerEmail(user.email);
+    }
+    setIsReviewModalOpen(true);
+  };
+
+  const handleReviewSubmit = async () => {
+    if (!formReviewerName.trim() || !formReviewerComment.trim()) {
+      setReviewAlert({ type: 'error', text: 'Please fill in your name and review impressions.' });
+      return;
+    }
+
+    setSubmittingReview(true);
+    setReviewAlert({ type: '', text: '' });
+
+    setTimeout(async () => {
+      const newRev: GuestReview = {
+        _id: 'user-rev-' + Date.now(),
+        name: formReviewerName.trim(),
+        country: formReviewerCountry.trim() || 'Verified Explorer',
+        packageTitle: formReviewerDestination.trim() || 'Custom Luxury Expedition',
+        rating: reviewRating,
+        comment: formReviewerComment.trim(),
+      };
+
+      const updated = [newRev, ...localCustomReviews];
+      setLocalCustomReviews(updated);
+      setActiveReviewIdx(0);
+      setSubmittingReview(false);
+      setHasSubmittedReview(true);
+      setReviewAlert({
+        type: 'success',
+        text: 'Thank you! Your travel reflection has been published and featured.',
+      });
+
+      try {
+        await AsyncStorage.setItem('globalvista_custom_reviews', JSON.stringify(updated));
+        await AsyncStorage.setItem('globalvista_has_reviewed', 'true');
+      } catch {}
+
+      setTimeout(() => {
+        setIsReviewModalOpen(false);
+        setReviewAlert({ type: '', text: '' });
+        setFormReviewerComment('');
+        setFormReviewerDestination('');
+      }, 1500);
+    }, 600);
+  };
 
   useEffect(() => {
     loadData();
@@ -562,7 +706,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => {
                 setActiveCategory('REVIEWS');
                 setMobileNavOpen(false);
-                scrollRef.current?.scrollTo({ y: 1200, animated: true });
+                scrollRef.current?.scrollTo({ y: Math.max(0, reviewsSectionY - 20), animated: true });
               }}
               activeOpacity={0.75}
             >
@@ -655,7 +799,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.categoryPill, activeCategory === 'REVIEWS' && styles.categoryPillActive]}
             onPress={() => {
               setActiveCategory('REVIEWS');
-              scrollRef.current?.scrollTo({ y: 1200, animated: true });
+              scrollRef.current?.scrollTo({ y: Math.max(0, reviewsSectionY - 20), animated: true });
             }}
             activeOpacity={0.75}
           >
@@ -1165,43 +1309,135 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         </View>
 
         {/* ========================================================
-            VERIFIED GUEST REFLECTIONS (Web Reflections Section)
+            VERIFIED GUEST REFLECTIONS (Lansakara Interactive Section)
             ======================================================== */}
-        <View style={styles.reflectionsSection}>
-          <View style={styles.sectionHeader}>
-            <View>
-              <Text style={styles.sectionBadge}>VERIFIED TRAVELLERS</Text>
-              <Text style={styles.sectionTitle}>Guest Reflections</Text>
+        <View
+          style={styles.reflectionsSection}
+          onLayout={(e) => setReviewsSectionY(e.nativeEvent.layout.y)}
+        >
+          {/* Header */}
+          <View style={styles.reflectionsHeaderWrap}>
+            <View style={styles.luxuryBadgePill}>
+              <Sparkles size={12} color="#d97706" />
+              <Text style={styles.luxuryBadgeText}>DISCERNING GUESTS</Text>
             </View>
-            <View style={styles.reflectionsRatingTag}>
-              <Star size={12} color="#fbbf24" fill="#fbbf24" />
-              <Text style={styles.reflectionsRatingVal}>4.9 / 5.0</Text>
+            <Text style={styles.reflectionsMainTitle}>Guest Reflections</Text>
+            <Text style={styles.reflectionsMainSub}>
+              Read authentic impressions and heartfelt reviews from global travellers experiencing our private expeditions.
+            </Text>
+
+            {/* Lansakara Summary Bar */}
+            <View style={styles.reviewsSummaryBar}>
+              <View style={styles.reviewsScorePill}>
+                <Text style={styles.goldStarsText}>★★★★★</Text>
+                <Text style={styles.scoreText}>4.9 / 5.0 Rating</Text>
+                <Text style={styles.scoreCount}>· 1,420+ Explorers</Text>
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.btnWriteReview,
+                  hasSubmittedReview && styles.btnWriteReviewSubmitted,
+                ]}
+                onPress={openReviewModal}
+                activeOpacity={0.8}
+              >
+                <Sparkles size={14} color={hasSubmittedReview ? '#059669' : '#ffffff'} />
+                <Text
+                  style={[
+                    styles.btnWriteReviewText,
+                    hasSubmittedReview && styles.btnWriteReviewTextSubmitted,
+                  ]}
+                >
+                  {hasSubmittedReview ? '✓ Review Shared' : 'Share Experience'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.reflectionsScroll}>
-            {GUEST_REFLECTIONS.map((ref) => (
-              <View key={ref.id} style={styles.reflectionCard}>
-                <View style={styles.reflectionStars}>
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star key={s} size={13} color="#fbbf24" fill="#fbbf24" />
-                  ))}
+          {/* Testimonial Active Card Slider */}
+          <View style={styles.testimonialSliderContainer}>
+            {/* Prev Arrow */}
+            <TouchableOpacity
+              style={styles.sliderArrowBtn}
+              onPress={() =>
+                setActiveReviewIdx(
+                  (prev) => (prev - 1 + displayReviews.length) % displayReviews.length
+                )
+              }
+              activeOpacity={0.7}
+            >
+              <ChevronLeft size={18} color="#0c2738" />
+            </TouchableOpacity>
+
+            {/* Testimonial Card */}
+            {displayReviews[activeReviewIdx] && (
+              <View style={styles.testimonialCard}>
+                <View style={styles.testimonialCardTop}>
+                  <Text style={styles.goldStarsLarge}>
+                    {'★'.repeat(displayReviews[activeReviewIdx].rating || 5)}
+                    {'☆'.repeat(5 - (displayReviews[activeReviewIdx].rating || 5))}
+                  </Text>
+                  <Text style={styles.quoteIcon}>“</Text>
                 </View>
-                <Text style={styles.reflectionQuote}>"{ref.quote}"</Text>
-                <View style={styles.reflectionAuthorRow}>
-                  <View style={styles.reflectionAvatar}>
-                    <Text style={styles.reflectionAvatarText}>
-                      {ref.author.split(' ').map((n) => n[0]).join('')}
+
+                <Text style={styles.testimonialQuoteText} numberOfLines={5}>
+                  {displayReviews[activeReviewIdx].comment}
+                </Text>
+
+                <View style={styles.testimonialAuthorWrap}>
+                  <View style={styles.testimonialAvatar}>
+                    <Text style={styles.testimonialAvatarText}>
+                      {(displayReviews[activeReviewIdx].name?.charAt(0) || 'E').toUpperCase()}
                     </Text>
                   </View>
-                  <View>
-                    <Text style={styles.reflectionAuthorName}>{ref.author}</Text>
-                    <Text style={styles.reflectionOrigin}>{ref.origin} · {ref.tour}</Text>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.testimonialNameRow}>
+                      <Text style={styles.testimonialAuthorName}>
+                        {displayReviews[activeReviewIdx].name}
+                      </Text>
+                      <View style={styles.verifiedBadge}>
+                        <CircleCheck size={11} color="#0284c7" />
+                        <Text style={styles.verifiedBadgeText}>Verified</Text>
+                      </View>
+                    </View>
+                    <Text style={styles.testimonialMetaLocation}>
+                      {displayReviews[activeReviewIdx].country}
+                      {displayReviews[activeReviewIdx].packageTitle
+                        ? ` · ${displayReviews[activeReviewIdx].packageTitle}`
+                        : ''}
+                    </Text>
                   </View>
                 </View>
               </View>
+            )}
+
+            {/* Next Arrow */}
+            <TouchableOpacity
+              style={styles.sliderArrowBtn}
+              onPress={() =>
+                setActiveReviewIdx((prev) => (prev + 1) % displayReviews.length)
+              }
+              activeOpacity={0.7}
+            >
+              <ChevronRight size={18} color="#0c2738" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Slider Dots */}
+          <View style={styles.testimonialsDotsRow}>
+            {displayReviews.slice(0, 8).map((_, i) => (
+              <TouchableOpacity
+                key={i}
+                style={[
+                  styles.testDot,
+                  i === activeReviewIdx && styles.testDotActive,
+                ]}
+                onPress={() => setActiveReviewIdx(i)}
+                activeOpacity={0.8}
+              />
             ))}
-          </ScrollView>
+          </View>
         </View>
 
         {/* ========================================================
@@ -1379,6 +1615,175 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onSuccess={() => navigation.navigate('My Trips')}
         onNavigateToAuth={() => navigation.navigate('Profile')}
       />
+
+      {/* ========================================================
+          LANSAKARA-STYLE INTERACTIVE REVIEW SUBMISSION MODAL
+          ======================================================== */}
+      <Modal
+        visible={isReviewModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsReviewModalOpen(false)}
+      >
+        <View style={styles.reviewModalOverlay}>
+          <View style={styles.reviewModalBox}>
+            <TouchableOpacity
+              style={styles.reviewModalCloseBtn}
+              onPress={() => setIsReviewModalOpen(false)}
+              activeOpacity={0.75}
+            >
+              <X size={18} color="#94a3b8" />
+            </TouchableOpacity>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={styles.reviewModalHeader}>
+                <View style={styles.reviewModalEyebrowRow}>
+                  <Sparkles size={12} color="#6fe0ff" />
+                  <Text style={styles.reviewModalEyebrow}>DISCERNING TRAVEL REFLECTIONS</Text>
+                </View>
+                <Text style={styles.reviewModalTitle}>Share Your Expedition Experience</Text>
+                <Text style={styles.reviewModalSubtitle}>
+                  Your impressions inspire fellow travellers seeking world-class luxury journeys.
+                </Text>
+              </View>
+
+              {reviewAlert.text ? (
+                <View
+                  style={[
+                    styles.reviewAlertBox,
+                    reviewAlert.type === 'success' ? styles.alertBoxSuccess : styles.alertBoxError,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.reviewAlertText,
+                      reviewAlert.type === 'success' ? styles.alertTextSuccess : styles.alertTextError,
+                    ]}
+                  >
+                    {reviewAlert.text}
+                  </Text>
+                </View>
+              ) : null}
+
+              {/* Star Rating Selector */}
+              <View style={styles.reviewFormGroup}>
+                <Text style={styles.reviewFormLabel}>Overall Experience Rating *</Text>
+                <View style={styles.starPickerRow}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <TouchableOpacity
+                      key={star}
+                      onPress={() => setReviewRating(star)}
+                      activeOpacity={0.7}
+                      style={{ padding: 4 }}
+                    >
+                      <Star
+                        size={28}
+                        color={star <= reviewRating ? '#fbbf24' : '#475569'}
+                        fill={star <= reviewRating ? '#fbbf24' : 'transparent'}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={styles.starRatingDesc}>
+                  {reviewRating === 5 && '5 Stars · Flawless Luxury'}
+                  {reviewRating === 4 && '4 Stars · Wonderful Journey'}
+                  {reviewRating === 3 && '3 Stars · Good Expedition'}
+                  {reviewRating === 2 && '2 Stars · Fair Experience'}
+                  {reviewRating === 1 && '1 Star · Needs Improvement'}
+                </Text>
+              </View>
+
+              {/* Full Name */}
+              <View style={styles.reviewFormGroup}>
+                <Text style={styles.reviewFormLabel}>Full Name *</Text>
+                <TextInput
+                  style={styles.reviewModalInput}
+                  placeholder="e.g. Elena Rostova"
+                  placeholderTextColor="#64748b"
+                  value={formReviewerName}
+                  onChangeText={setFormReviewerName}
+                />
+              </View>
+
+              {/* Email Address */}
+              <View style={styles.reviewFormGroup}>
+                <Text style={styles.reviewFormLabel}>Email Address *</Text>
+                <TextInput
+                  style={styles.reviewModalInput}
+                  placeholder="name@example.com"
+                  placeholderTextColor="#64748b"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  value={formReviewerEmail}
+                  onChangeText={setFormReviewerEmail}
+                />
+              </View>
+
+              {/* Country / Residence */}
+              <View style={styles.reviewFormGroup}>
+                <Text style={styles.reviewFormLabel}>Country / Residence</Text>
+                <TextInput
+                  style={styles.reviewModalInput}
+                  placeholder="e.g. Geneva, Switzerland"
+                  placeholderTextColor="#64748b"
+                  value={formReviewerCountry}
+                  onChangeText={setFormReviewerCountry}
+                />
+              </View>
+
+              {/* Expedition / Destination */}
+              <View style={styles.reviewFormGroup}>
+                <Text style={styles.reviewFormLabel}>Expedition / Destination *</Text>
+                <TextInput
+                  style={styles.reviewModalInput}
+                  placeholder="e.g. Maldives Luxury Escape"
+                  placeholderTextColor="#64748b"
+                  value={formReviewerDestination}
+                  onChangeText={setFormReviewerDestination}
+                />
+              </View>
+
+              {/* Travel Impressions / Comment */}
+              <View style={styles.reviewFormGroup}>
+                <Text style={styles.reviewFormLabel}>Your Impressions & Travel Reflection *</Text>
+                <TextInput
+                  style={[styles.reviewModalInput, styles.reviewModalTextarea]}
+                  placeholder="Describe your itinerary highlights, boutique accommodations, concierge support, and unforgettable moments..."
+                  placeholderTextColor="#64748b"
+                  multiline
+                  numberOfLines={4}
+                  value={formReviewerComment}
+                  onChangeText={setFormReviewerComment}
+                />
+              </View>
+
+              {/* Action Buttons */}
+              <View style={styles.reviewModalActions}>
+                <TouchableOpacity
+                  style={styles.reviewCancelBtn}
+                  onPress={() => setIsReviewModalOpen(false)}
+                  disabled={submittingReview}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.reviewCancelBtnText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.reviewSubmitBtn, submittingReview && { opacity: 0.7 }]}
+                  onPress={handleReviewSubmit}
+                  disabled={submittingReview}
+                  activeOpacity={0.85}
+                >
+                  <Send size={15} color="#ffffff" />
+                  <Text style={styles.reviewSubmitBtnText}>
+                    {submittingReview ? 'Publishing Review...' : 'Publish Review'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -2453,81 +2858,367 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#ffffff',
   },
-  /* Reflections / Reviews */
+  /* Reflections / Reviews (Lansakara Interactive Design matching Web) */
   reflectionsSection: {
-    marginTop: 24,
-  },
-  reflectionsRatingTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: '#fffbeb',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#fef3c7',
-  },
-  reflectionsRatingVal: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#b45309',
-  },
-  reflectionsScroll: {
-    paddingLeft: 16,
-    paddingRight: 8,
-    gap: 12,
-  },
-  reflectionCard: {
-    width: SCREEN_WIDTH * 0.78,
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-    ...SHADOWS.small,
-  },
-  reflectionStars: {
-    flexDirection: 'row',
-    gap: 2,
+    marginTop: 28,
     marginBottom: 8,
   },
-  reflectionQuote: {
-    fontSize: 12,
-    color: '#334155',
-    lineHeight: 18,
-    fontStyle: 'italic',
-    marginBottom: 12,
+  reflectionsHeaderWrap: {
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  reflectionAuthorRow: {
+  reflectionsMainTitle: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0c2738',
+    marginTop: 8,
+    letterSpacing: -0.3,
+    textAlign: 'center',
+  },
+  reflectionsMainSub: {
+    fontSize: 12.5,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginTop: 6,
+    maxWidth: 320,
+  },
+  reviewsSummaryBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginTop: 14,
+    flexWrap: 'wrap',
+  },
+  reviewsScorePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.45)',
+    borderRadius: 999,
+    ...SHADOWS.small,
+  },
+  goldStarsText: {
+    color: '#d4af37',
+    fontSize: 12,
+    letterSpacing: 1.5,
+  },
+  scoreText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#0c2738',
+  },
+  scoreCount: {
+    fontSize: 10.5,
+    color: '#64748b',
+    fontWeight: '600',
+  },
+  btnWriteReview: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    backgroundColor: '#0c2738',
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.5)',
+    ...SHADOWS.small,
+  },
+  btnWriteReviewSubmitted: {
+    backgroundColor: 'rgba(5, 150, 105, 0.12)',
+    borderColor: 'rgba(5, 150, 105, 0.4)',
+  },
+  btnWriteReviewText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  btnWriteReviewTextSubmitted: {
+    color: '#059669',
+  },
+
+  /* Testimonial Active Slider */
+  testimonialSliderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+    gap: 8,
+  },
+  sliderArrowBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...SHADOWS.small,
+  },
+  testimonialCard: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    ...SHADOWS.medium,
+  },
+  testimonialCardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  goldStarsLarge: {
+    color: '#d4af37',
+    fontSize: 15,
+    letterSpacing: 2,
+  },
+  quoteIcon: {
+    fontSize: 28,
+    lineHeight: 28,
+    fontWeight: '900',
+    color: '#cbd5e1',
+    fontFamily: 'serif',
+  },
+  testimonialQuoteText: {
+    fontSize: 12.5,
+    color: '#334155',
+    lineHeight: 19,
+    fontStyle: 'italic',
+    marginBottom: 14,
+  },
+  testimonialAuthorWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     borderTopWidth: 1,
     borderTopColor: '#f1f5f9',
-    paddingTop: 8,
+    paddingTop: 10,
   },
-  reflectionAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#0a192f',
+  testimonialAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0c2738',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  reflectionAvatarText: {
-    fontSize: 11,
-    fontWeight: '800',
+  testimonialAvatarText: {
+    fontSize: 14,
+    fontWeight: '900',
     color: '#ffffff',
   },
-  reflectionAuthorName: {
+  testimonialNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  testimonialAuthorName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0c2738',
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    backgroundColor: '#f0f9ff',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#bae6fd',
+  },
+  verifiedBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    color: '#0284c7',
+  },
+  testimonialMetaLocation: {
+    fontSize: 10.5,
+    color: '#64748b',
+    marginTop: 2,
+  },
+  testimonialsDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 14,
+  },
+  testDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#cbd5e1',
+  },
+  testDotActive: {
+    width: 20,
+    backgroundColor: '#0c2738',
+  },
+
+  /* Review Submission Modal Styles */
+  reviewModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(6, 23, 38, 0.85)',
+    justifyContent: 'center',
+    padding: 16,
+  },
+  reviewModalBox: {
+    backgroundColor: '#091e30',
+    borderRadius: 22,
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.4)',
+    padding: 20,
+    maxHeight: '85%',
+    position: 'relative',
+    ...SHADOWS.large,
+  },
+  reviewModalCloseBtn: {
+    position: 'absolute',
+    top: 14,
+    right: 14,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  reviewModalHeader: {
+    marginBottom: 16,
+    paddingRight: 30,
+  },
+  reviewModalEyebrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    marginBottom: 4,
+  },
+  reviewModalEyebrow: {
+    fontSize: 9.5,
+    fontWeight: '900',
+    color: '#6fe0ff',
+    letterSpacing: 1.4,
+  },
+  reviewModalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#ffffff',
+    lineHeight: 24,
+  },
+  reviewModalSubtitle: {
+    fontSize: 11.5,
+    color: '#94a3b8',
+    marginTop: 4,
+    lineHeight: 16,
+  },
+  reviewAlertBox: {
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 14,
+  },
+  alertBoxSuccess: {
+    backgroundColor: 'rgba(5, 150, 105, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(5, 150, 105, 0.5)',
+  },
+  alertBoxError: {
+    backgroundColor: 'rgba(225, 29, 72, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(225, 29, 72, 0.5)',
+  },
+  reviewAlertText: {
+    fontSize: 12,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  alertTextSuccess: {
+    color: '#34d399',
+  },
+  alertTextError: {
+    color: '#fb7185',
+  },
+  reviewFormGroup: {
+    marginBottom: 12,
+  },
+  reviewFormLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#cbd5e1',
+    marginBottom: 6,
+  },
+  starPickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  starRatingDesc: {
+    fontSize: 11,
+    color: '#d4af37',
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  reviewModalInput: {
+    backgroundColor: '#0f2942',
+    borderWidth: 1,
+    borderColor: '#1e3a5f',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: '#ffffff',
+    fontSize: 13,
+  },
+  reviewModalTextarea: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  reviewModalActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 10,
+    marginTop: 8,
+    paddingBottom: 4,
+  },
+  reviewCancelBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  reviewCancelBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94a3b8',
+  },
+  reviewSubmitBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0284c7',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  reviewSubmitBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: COLORS.textPrimary,
-  },
-  reflectionOrigin: {
-    fontSize: 10,
-    color: COLORS.textMuted,
+    color: '#ffffff',
   },
   /* Plans Section */
   plansSection: {
