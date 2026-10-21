@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -44,7 +45,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCurrency, CURRENCIES, CurrencyCode } from '../context/CurrencyContext';
 import { useLanguage, LanguageCode } from '../context/LanguageContext';
 import { WHATSAPP_NUMBER, WHATSAPP_DEFAULT_MSG } from '../constants/config';
-import { api } from '../services/api';
+import { api, normalizeMediaUrl } from '../services/api';
 import { MobileAdminPortal } from '../components/MobileAdminPortal';
 import { MobileGuidePortal } from '../components/MobileGuidePortal';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
@@ -277,9 +278,16 @@ export const ProfileScreen: React.FC = () => {
           <View>
             <View style={styles.profileHeader}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {(user.name?.trim().charAt(0) || 'T').toUpperCase()}
-                </Text>
+                {user.profileImage ? (
+                  <Image
+                    source={{ uri: normalizeMediaUrl(user.profileImage) }}
+                    style={styles.avatarImg}
+                  />
+                ) : (
+                  <Text style={styles.avatarText}>
+                    {(user.name?.trim().charAt(0) || 'T').toUpperCase()}
+                  </Text>
+                )}
               </View>
               <Text style={styles.userName}>{user.name}</Text>
               <Text style={styles.userEmail}>{user.email}</Text>
@@ -1056,7 +1064,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 10,
+    overflow: 'hidden',
     ...SHADOWS.medium,
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 32,
   },
   avatarText: {
     fontSize: 24,

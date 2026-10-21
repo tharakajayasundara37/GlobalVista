@@ -104,7 +104,6 @@ export class UsersController {
   @Patch('me/profile')
   @UseGuards(
     JwtGuard,
-    AdminGuard,
   )
   updateMyProfile(
     @Req() req: any,
@@ -114,6 +113,11 @@ export class UsersController {
       name?: string;
       mobile?: string;
       country?: string;
+      city?: string;
+      profileImage?: string;
+      about?: string;
+      languages?: string[];
+      experienceYears?: number;
     },
   ) {
 
@@ -131,6 +135,11 @@ export class UsersController {
       name?: string;
       mobile?: string;
       country?: string;
+      city?: string;
+      profileImage?: string;
+      about?: string;
+      languages?: string[];
+      experienceYears?: number;
     } = {};
 
     if (
@@ -178,6 +187,26 @@ export class UsersController {
       updates.country = body.country;
     }
 
+    if (body.city !== undefined && typeof body.city === 'string') {
+      updates.city = body.city;
+    }
+
+    if (body.profileImage !== undefined && typeof body.profileImage === 'string') {
+      updates.profileImage = body.profileImage;
+    }
+
+    if (body.about !== undefined && typeof body.about === 'string') {
+      updates.about = body.about;
+    }
+
+    if (body.languages !== undefined && Array.isArray(body.languages)) {
+      updates.languages = body.languages;
+    }
+
+    if (body.experienceYears !== undefined && typeof body.experienceYears === 'number') {
+      updates.experienceYears = body.experienceYears;
+    }
+
     if (
       Object.keys(updates).length === 0
     ) {
@@ -201,7 +230,6 @@ export class UsersController {
   @Post('me/profile-image')
   @UseGuards(
     JwtGuard,
-    AdminGuard,
   )
   @UseInterceptors(
     FileInterceptor(
@@ -341,7 +369,6 @@ export class UsersController {
   @Patch('me/password')
   @UseGuards(
     JwtGuard,
-    AdminGuard,
   )
   changeMyPassword(
     @Req() req: any,

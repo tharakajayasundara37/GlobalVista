@@ -12,7 +12,9 @@ import {
   Linking,
   Platform,
   StatusBar,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   X,
@@ -46,9 +48,11 @@ import {
   CreditCard,
   FileText,
   AlertCircle,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
-import { ApiUser, ApiDestination, ApiBooking, api } from '../services/api';
+import { ApiUser, ApiDestination, ApiBooking, api, normalizeMediaUrl } from '../services/api';
 import { WHATSAPP_NUMBER } from '../constants/config';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -110,6 +114,8 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
   const [profileLanguages, setProfileLanguages] = useState('');
   const [profileExperience, setProfileExperience] = useState('');
   const [profileAbout, setProfileAbout] = useState('');
+  const [profileImage, setProfileImage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
 
   // Change Password Modal State
@@ -166,7 +172,7 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
   };
 
   // ==========================================
-  // PROFILE EDIT HANDLERS
+  // PROFILE EDIT & PHOTO HANDLERS
   // ==========================================
   const handleOpenEditProfile = () => {
     setProfileName(currentUser.name || '');
@@ -176,7 +182,73 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
     setProfileLanguages(Array.isArray(currentUser.languages) ? currentUser.languages.join(', ') : '');
     setProfileExperience(currentUser.experienceYears ? String(currentUser.experienceYears) : '');
     setProfileAbout(currentUser.about || '');
+    setProfileImage(currentUser.profileImage || '');
     setShowEditProfileModal(true);
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Needed', 'Please allow gallery access to select a profile photo.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        await uploadSelectedImage(result.assets[0]);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not pick image.');
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Needed', 'Please allow camera access to take a profile photo.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        await uploadSelectedImage(result.assets[0]);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not take photo.');
+    }
+  };
+
+  const uploadSelectedImage = async (asset: { uri: string; fileName?: string | null; mimeType?: string | null }) => {
+    if (!token) return;
+    setUploadingImage(true);
+    try {
+      const res = await api.uploadProfileImage(
+        {
+          uri: asset.uri,
+          name: asset.fileName || 'guide-profile.jpg',
+          type: asset.mimeType || 'image/jpeg',
+        },
+        token
+      );
+      const updatedUser = res.user || res;
+      const newPath = updatedUser.profileImage || asset.uri;
+      setProfileImage(newPath);
+      await updateUser({ profileImage: newPath });
+      Alert.alert('Photo Updated 🎉', 'Your guide profile photo has been updated!');
+    } catch (err: any) {
+      Alert.alert('Upload Failed', err.message || 'Could not upload profile photo.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -194,7 +266,7 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
 
       const expNum = profileExperience.trim() ? parseInt(profileExperience.trim(), 10) : undefined;
 
-      const payload = {
+      const payload: any = {
         name: profileName.trim(),
         mobile: profileMobile.trim(),
         country: profileCountry.trim(),
@@ -203,6 +275,9 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
         experienceYears: isNaN(expNum as number) ? undefined : expNum,
         about: profileAbout.trim(),
       };
+      if (profileImage.trim()) {
+        payload.profileImage = profileImage.trim();
+      }
 
       const res = await api.updateMyProfile(payload, token);
       const updatedData = res.user || res;
@@ -215,10 +290,11 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
         languages: updatedData.languages ?? payload.languages,
         experienceYears: updatedData.experienceYears ?? payload.experienceYears,
         about: updatedData.about ?? payload.about,
+        profileImage: updatedData.profileImage ?? (profileImage.trim() || undefined),
       });
 
       setShowEditProfileModal(false);
-      Alert.alert('Profile Updated', 'Your Tour Guide credentials have been successfully saved.');
+      Alert.alert('Profile Updated 🎉', 'Your Tour Guide credentials have been successfully saved.');
     } catch (err: any) {
       Alert.alert('Update Failed', err.message || 'Could not update your profile.');
     } finally {
@@ -442,9 +518,16 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
               activeOpacity={0.8}
             >
               <View style={styles.profileAvatar}>
-                <Text style={styles.profileAvatarText}>
-                  {(currentUser.name || 'G').charAt(0).toUpperCase()}
-                </Text>
+                {currentUser.profileImage ? (
+                  <Image
+                    source={{ uri: normalizeMediaUrl(currentUser.profileImage) }}
+                    style={styles.profileAvatarImg}
+                  />
+                ) : (
+                  <Text style={styles.profileAvatarText}>
+                    {(currentUser.name || 'G').charAt(0).toUpperCase()}
+                  </Text>
+                )}
               </View>
               <Text style={styles.profileName} numberOfLines={1}>
                 {currentUser.name ? currentUser.name.split(' ')[0] : 'Guide'}
@@ -1226,13 +1309,48 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
               <View style={styles.profileCard}>
                 <View style={styles.profileHeader}>
                   <View style={styles.bigAvatar}>
-                    <Text style={styles.bigAvatarText}>
-                      {(currentUser.name || 'G').charAt(0).toUpperCase()}
-                    </Text>
+                    {currentUser.profileImage ? (
+                      <Image
+                        source={{ uri: normalizeMediaUrl(currentUser.profileImage) }}
+                        style={styles.bigAvatarImg}
+                      />
+                    ) : (
+                      <Text style={styles.bigAvatarText}>
+                        {(currentUser.name || 'G').charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                    {uploadingImage && (
+                      <View style={styles.avatarLoadingOverlay}>
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      </View>
+                    )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.bigProfileName}>{currentUser.name || 'Tour Guide'}</Text>
                     <Text style={styles.publicIdText}>{currentUser.publicId || 'GV-GUIDE-PARTNER'}</Text>
+                    
+                    <View style={{ flexDirection: 'row', gap: 6, marginTop: 4 }}>
+                      <TouchableOpacity
+                        style={styles.guidePhotoActionBtn}
+                        onPress={handlePickImage}
+                        disabled={uploadingImage}
+                        activeOpacity={0.8}
+                      >
+                        <ImageIcon size={12} color="#059669" />
+                        <Text style={styles.guidePhotoActionBtnText}>Gallery</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.guidePhotoActionBtn}
+                        onPress={handleTakePhoto}
+                        disabled={uploadingImage}
+                        activeOpacity={0.8}
+                      >
+                        <Camera size={12} color="#2563eb" />
+                        <Text style={[styles.guidePhotoActionBtnText, { color: '#2563eb' }]}>Camera</Text>
+                      </TouchableOpacity>
+                    </View>
+
                     <View style={styles.certPill}>
                       <BadgeCheck size={12} color="#059669" />
                       <Text style={styles.certPillText}>
@@ -1510,7 +1628,62 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+              <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                {/* Guide Profile Photo Section */}
+                <View style={styles.modalAvatarSection}>
+                  <View style={styles.modalAvatarCircle}>
+                    {profileImage ? (
+                      <Image
+                        source={{ uri: normalizeMediaUrl(profileImage) }}
+                        style={styles.modalAvatarImg}
+                      />
+                    ) : (
+                      <Text style={styles.modalAvatarText}>
+                        {(profileName || currentUser.name || 'G').charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                    {uploadingImage && (
+                      <View style={styles.avatarLoadingOverlay}>
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.avatarBtnGroup}>
+                    <Text style={styles.avatarPickerTitle}>Guide Profile Photo</Text>
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 5 }}>
+                      <TouchableOpacity
+                        style={styles.avatarPickerBtn}
+                        onPress={handlePickImage}
+                        disabled={uploadingImage}
+                        activeOpacity={0.8}
+                      >
+                        <ImageIcon size={13} color="#059669" />
+                        <Text style={styles.avatarPickerBtnText}>Gallery</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.avatarPickerBtn}
+                        onPress={handleTakePhoto}
+                        disabled={uploadingImage}
+                        activeOpacity={0.8}
+                      >
+                        <Camera size={13} color="#2563eb" />
+                        <Text style={styles.avatarPickerBtnText}>Camera</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+
+                <Text style={styles.inputLabel}>Profile Image URL</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="https://... or choose photo above"
+                  placeholderTextColor="#94a3b8"
+                  value={profileImage}
+                  onChangeText={setProfileImage}
+                />
+
                 <Text style={styles.inputLabel}>Full Name *</Text>
                 <TextInput
                   style={styles.formInput}
@@ -2778,5 +2951,96 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 13,
     fontWeight: '800',
+  },
+
+  /* ========================================================
+     AVATAR & PHOTO UPLOAD STYLES
+     ======================================================== */
+  profileAvatarImg: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+  },
+  bigAvatarImg: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 30,
+  },
+  avatarLoadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 30,
+  },
+  guidePhotoActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  guidePhotoActionBtnText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  modalAvatarSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 12,
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 6,
+  },
+  modalAvatarCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  modalAvatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  modalAvatarText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#ffffff',
+  },
+  avatarBtnGroup: {
+    flex: 1,
+  },
+  avatarPickerTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#18212f',
+  },
+  avatarPickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  avatarPickerBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
   },
 });

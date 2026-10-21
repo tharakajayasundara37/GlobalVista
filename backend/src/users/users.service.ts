@@ -49,6 +49,11 @@ type ProfileUpdateData = {
   name?: string;
   mobile?: string;
   country?: string;
+  city?: string;
+  profileImage?: string;
+  about?: string;
+  languages?: string[];
+  experienceYears?: number;
 };
 
 @Injectable()
@@ -285,6 +290,29 @@ export class UsersService {
 
       updates.country =
         data.country.trim();
+    }
+
+    if (data.city !== undefined && typeof data.city === 'string') {
+      updates.city = data.city.trim();
+    }
+
+    if (data.profileImage !== undefined && typeof data.profileImage === 'string') {
+      updates.profileImage = data.profileImage.trim();
+    }
+
+    if (data.about !== undefined && typeof data.about === 'string') {
+      updates.about = data.about.trim();
+    }
+
+    if (data.languages !== undefined && Array.isArray(data.languages)) {
+      updates.languages = data.languages.map((l) => String(l).trim()).filter(Boolean);
+    }
+
+    if (data.experienceYears !== undefined) {
+      const exp = Number(data.experienceYears);
+      if (!isNaN(exp) && exp >= 0) {
+        updates.experienceYears = exp;
+      }
     }
 
     if (

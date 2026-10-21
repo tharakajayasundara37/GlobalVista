@@ -183,12 +183,21 @@ export const normalizeMediaUrl = (
   // Rewrite localhost / LAN IP to WEB_BASE_URL (CDN-backed static & upload assets)
   url = url.replace(/^http:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+):(3000|3001)/, WEB_BASE_URL);
 
-  // Rewrite any Render backend video or image requests directly to Vercel CDN where they live
-  url = url.replace(/^https:\/\/globalvista-d7uz\.onrender\.com\/(videos|images|uploads)\//, `${WEB_BASE_URL}/$1/`);
+  // Rewrite any Render backend video or image requests directly to Vercel CDN where static assets live
+  // NOTE: uploads/users is preserved on API_BASE_URL because newly uploaded user photos live on backend!
+  url = url.replace(/^https:\/\/globalvista-d7uz\.onrender\.com\/(videos|images|uploads\/packages)\//, `${WEB_BASE_URL}/$1/`);
 
   // If already an external full URL (e.g. Unsplash, Vercel CDN, Cloudinary), return directly
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
+  }
+
+  // Handle /uploads/users/... (user profile photos uploaded to backend)
+  if (url.startsWith('/uploads/users/')) {
+    return `${API_BASE_URL}${url}`;
+  }
+  if (url.startsWith('uploads/users/')) {
+    return `${API_BASE_URL}/${url}`;
   }
 
   // Handle /images/... or images/... (public static assets)
@@ -199,7 +208,7 @@ export const normalizeMediaUrl = (
     return `${WEB_BASE_URL}/${url}`;
   }
 
-  // Handle /uploads/... or uploads/... (user uploaded files)
+  // Handle /uploads/... or uploads/... (package & destination uploads)
   if (url.startsWith('/uploads/')) {
     return `${WEB_BASE_URL}${url}`;
   }
@@ -761,6 +770,7 @@ export const api = {
       mobile?: string;
       country?: string;
       city?: string;
+      profileImage?: string;
       about?: string;
       languages?: string[];
       experienceYears?: number;
@@ -778,6 +788,37 @@ export const api = {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || 'Failed to update profile');
+      throw new Error(msg);
+    }
+    return await res.json();
+  },
+
+  async uploadProfileImage(
+    fileAsset: { uri: string; name?: string; type?: string },
+    token: string
+  ): Promise<{ message: string; user: ApiUser }> {
+    const formData = new FormData();
+    const filename = fileAsset.name || fileAsset.uri.split('/').pop() || 'profile.jpg';
+    const match = /\.(\w+)$/.exec(filename);
+    const type = match ? `image/${match[1].toLowerCase()}` : (fileAsset.type || 'image/jpeg');
+
+    formData.append('image', {
+      uri: fileAsset.uri,
+      name: filename,
+      type: type === 'image/jpg' ? 'image/jpeg' : type,
+    } as any);
+
+    const res = await fetch(`${API_BASE_URL}/users/me/profile-image`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = Array.isArray(err.message) ? err.message.join(', ') : (err.message || 'Failed to upload profile image');
       throw new Error(msg);
     }
     return await res.json();

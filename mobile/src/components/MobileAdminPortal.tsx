@@ -13,7 +13,9 @@ import {
   Switch,
   Platform,
   StatusBar,
+  Image,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   Globe2,
@@ -50,6 +52,8 @@ import {
   Pencil,
   KeyRound,
   ChevronDown,
+  Camera,
+  Image as ImageIcon,
 } from 'lucide-react-native';
 import { MobileInvoiceModal } from './MobileInvoiceModal';
 import { COLORS, SHADOWS } from '../constants/theme';
@@ -62,6 +66,7 @@ import {
   ApiPayment,
   ApiTravelPlan,
   api,
+  normalizeMediaUrl,
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency } from '../context/CurrencyContext';
@@ -116,6 +121,8 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
   const [profileName, setProfileName] = useState(user?.name || '');
   const [profileMobile, setProfileMobile] = useState(user?.mobile || '');
   const [profileCountry, setProfileCountry] = useState(user?.country || 'Sri Lanka');
+  const [profileImage, setProfileImage] = useState(user?.profileImage || '');
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -472,8 +479,74 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
     setProfileName(user?.name || '');
     setProfileMobile(user?.mobile || '');
     setProfileCountry(user?.country || 'Sri Lanka');
+    setProfileImage(user?.profileImage || '');
     setShowProfileActionsModal(false);
     setShowEditProfileModal(true);
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Needed', 'Please allow gallery access to select a profile photo.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        await uploadSelectedImage(result.assets[0]);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not select photo.');
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Needed', 'Please allow camera access to take a profile photo.');
+        return;
+      }
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        await uploadSelectedImage(result.assets[0]);
+      }
+    } catch (err: any) {
+      Alert.alert('Error', err.message || 'Could not capture photo.');
+    }
+  };
+
+  const uploadSelectedImage = async (asset: { uri: string; fileName?: string | null; mimeType?: string | null }) => {
+    if (!token) return;
+    setUploadingImage(true);
+    try {
+      const res = await api.uploadProfileImage(
+        {
+          uri: asset.uri,
+          name: asset.fileName || 'profile.jpg',
+          type: asset.mimeType || 'image/jpeg',
+        },
+        token
+      );
+      const updatedUser = res.user || res;
+      const newPath = updatedUser.profileImage || asset.uri;
+      setProfileImage(newPath);
+      await updateUser({ profileImage: newPath });
+      Alert.alert('Photo Updated 🎉', 'Your administrator profile photo has been updated!');
+    } catch (err: any) {
+      Alert.alert('Upload Failed', err.message || 'Could not upload profile photo.');
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSaveProfile = async () => {
@@ -484,21 +557,20 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
     }
     setProfileSaving(true);
     try {
-      const res = await api.updateMyProfile(
-        {
-          name: profileName.trim(),
-          mobile: profileMobile.trim(),
-          country: profileCountry.trim(),
-        },
-        token
-      );
+      const payload: any = {
+        name: profileName.trim(),
+        mobile: profileMobile.trim(),
+        country: profileCountry.trim(),
+      };
+      if (profileImage.trim()) {
+        payload.profileImage = profileImage.trim();
+      }
+      const res = await api.updateMyProfile(payload, token);
       if (res.user) {
         await updateUser(res.user);
       } else {
         await updateUser({
-          name: profileName.trim(),
-          mobile: profileMobile.trim(),
-          country: profileCountry.trim(),
+          ...payload,
         });
       }
       setShowEditProfileModal(false);
@@ -774,9 +846,16 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
                 activeOpacity={0.8}
               >
                 <View style={styles.adminAvatar}>
-                  <Text style={styles.adminAvatarText}>
-                    {(user?.name || 'A').charAt(0).toUpperCase()}
-                  </Text>
+                  {user?.profileImage ? (
+                    <Image
+                      source={{ uri: normalizeMediaUrl(user.profileImage) }}
+                      style={styles.adminAvatarImg}
+                    />
+                  ) : (
+                    <Text style={styles.adminAvatarText}>
+                      {(user?.name || 'A').charAt(0).toUpperCase()}
+                    </Text>
+                  )}
                 </View>
                 <View>
                   <Text style={styles.adminUserName} numberOfLines={1}>
@@ -1841,9 +1920,16 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
             <View style={styles.profileActionSheet}>
               <View style={styles.profileSheetHeader}>
                 <View style={styles.sheetAvatar}>
-                  <Text style={styles.sheetAvatarText}>
-                    {(user?.name || 'A').charAt(0).toUpperCase()}
-                  </Text>
+                  {user?.profileImage ? (
+                    <Image
+                      source={{ uri: normalizeMediaUrl(user.profileImage) }}
+                      style={styles.sheetAvatarImg}
+                    />
+                  ) : (
+                    <Text style={styles.sheetAvatarText}>
+                      {(user?.name || 'A').charAt(0).toUpperCase()}
+                    </Text>
+                  )}
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sheetName}>{user?.name || 'Administrator'}</Text>
@@ -1861,6 +1947,24 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
 
               <TouchableOpacity
                 style={styles.sheetActionItem}
+                onPress={() => {
+                  setShowProfileActionsModal(false);
+                  handlePickImage();
+                }}
+                activeOpacity={0.75}
+              >
+                <View style={[styles.sheetActionIcon, { backgroundColor: '#fdf2f8' }]}>
+                  <Camera size={18} color="#db2777" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sheetActionTitle}>Change Profile Photo</Text>
+                  <Text style={styles.sheetActionSub}>Choose a new photo from your gallery</Text>
+                </View>
+                <ChevronRight size={16} color="#94a3b8" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.sheetActionItem}
                 onPress={handleOpenEditProfile}
                 activeOpacity={0.75}
               >
@@ -1869,7 +1973,7 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.sheetActionTitle}>Edit Profile Information</Text>
-                  <Text style={styles.sheetActionSub}>Update your name, phone number, and country</Text>
+                  <Text style={styles.sheetActionSub}>Update your name, phone number, and photo</Text>
                 </View>
                 <ChevronRight size={16} color="#94a3b8" />
               </TouchableOpacity>
@@ -1923,7 +2027,62 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
                 </TouchableOpacity>
               </View>
 
-              <ScrollView style={{ maxHeight: 380 }} showsVerticalScrollIndicator={false}>
+              <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                {/* Profile Photo Upload Section */}
+                <View style={styles.modalAvatarSection}>
+                  <View style={styles.modalAvatarCircle}>
+                    {profileImage ? (
+                      <Image
+                        source={{ uri: normalizeMediaUrl(profileImage) }}
+                        style={styles.modalAvatarImg}
+                      />
+                    ) : (
+                      <Text style={styles.modalAvatarText}>
+                        {(profileName || user?.name || 'A').charAt(0).toUpperCase()}
+                      </Text>
+                    )}
+                    {uploadingImage && (
+                      <View style={styles.avatarLoadingOverlay}>
+                        <ActivityIndicator size="small" color="#ffffff" />
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.avatarBtnGroup}>
+                    <Text style={styles.avatarPickerTitle}>Profile Photo</Text>
+                    <View style={{ flexDirection: 'row', gap: 8, marginTop: 5 }}>
+                      <TouchableOpacity
+                        style={styles.avatarPickerBtn}
+                        onPress={handlePickImage}
+                        disabled={uploadingImage}
+                        activeOpacity={0.8}
+                      >
+                        <ImageIcon size={13} color="#059669" />
+                        <Text style={styles.avatarPickerBtnText}>Gallery</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        style={styles.avatarPickerBtn}
+                        onPress={handleTakePhoto}
+                        disabled={uploadingImage}
+                        activeOpacity={0.8}
+                      >
+                        <Camera size={13} color="#2563eb" />
+                        <Text style={styles.avatarPickerBtnText}>Camera</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+
+                <Text style={styles.inputLabel}>Profile Image URL</Text>
+                <TextInput
+                  style={styles.formInput}
+                  placeholder="https://... or choose photo above"
+                  placeholderTextColor="#94a3b8"
+                  value={profileImage}
+                  onChangeText={setProfileImage}
+                />
+
                 <Text style={styles.inputLabel}>Full Name *</Text>
                 <TextInput
                   style={styles.formInput}
@@ -2949,5 +3108,79 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: '#475569',
+  },
+
+  /* ========================================================
+     AVATAR & PHOTO UPLOAD STYLES
+     ======================================================== */
+  adminAvatarImg: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  sheetAvatarImg: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+  },
+  modalAvatarSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    padding: 12,
+    backgroundColor: '#f8fafc',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    marginBottom: 6,
+  },
+  modalAvatarCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#10b981',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  modalAvatarImg: {
+    width: '100%',
+    height: '100%',
+  },
+  modalAvatarText: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#ffffff',
+  },
+  avatarLoadingOverlay: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: 'rgba(15, 23, 42, 0.6)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarBtnGroup: {
+    flex: 1,
+  },
+  avatarPickerTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#18212f',
+  },
+  avatarPickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  avatarPickerBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
   },
 });
