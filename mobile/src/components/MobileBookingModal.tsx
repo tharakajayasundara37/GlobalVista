@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { X, Calendar, Users, Check, ShieldCheck, Sparkles, Crown } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
 import { ApiPackage, ApiTravelPlan, api } from '../services/api';
@@ -22,6 +23,7 @@ interface Props {
   pkg: ApiPackage | null;
   onSuccess: () => void;
   onNavigateToAuth?: () => void;
+  preSelectedPlanId?: string;
 }
 
 export const MobileBookingModal: React.FC<Props> = ({
@@ -30,6 +32,7 @@ export const MobileBookingModal: React.FC<Props> = ({
   pkg,
   onSuccess,
   onNavigateToAuth,
+  preSelectedPlanId,
 }) => {
   const { user, token } = useAuth();
   const { formatPrice } = useCurrency();
@@ -42,20 +45,28 @@ export const MobileBookingModal: React.FC<Props> = ({
   const [guests, setGuests] = useState<number>(2);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [plans, setPlans] = useState<ApiTravelPlan[]>([]);
-  const [selectedPlanId, setSelectedPlanId] = useState<string>('6ac9cbea9a0ec138e6e680df'); // default to Premium
+  const [selectedPlanId, setSelectedPlanId] = useState<string>(preSelectedPlanId || '');
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   useEffect(() => {
     if (visible) {
-      api.getTravelPlans().then((res) => {
-        if (res && res.length > 0) {
-          setPlans(res);
-          const popular = res.find((p) => p.isPopular) || res[0];
-          setSelectedPlanId((prev) => (prev ? prev : popular._id));
-        }
+      AsyncStorage.getItem('globalvista_selected_travel_plan').then((stored) => {
+        const targetId = preSelectedPlanId || stored;
+        api.getTravelPlans().then((res) => {
+          if (res && res.length > 0) {
+            setPlans(res);
+            const chosen = targetId && res.find((p) => p._id === targetId);
+            if (chosen) {
+              setSelectedPlanId(chosen._id);
+            } else {
+              const popular = res.find((p) => p.isPopular) || res[0];
+              setSelectedPlanId((prev) => (res.some((p) => p._id === prev) ? prev : popular._id));
+            }
+          }
+        });
       });
     }
-  }, [visible]);
+  }, [visible, preSelectedPlanId]);
 
   if (!pkg) return null;
 
@@ -197,7 +208,10 @@ export const MobileBookingModal: React.FC<Props> = ({
                   <TouchableOpacity
                     key={p._id}
                     style={[styles.planCard, isSelected && styles.planCardActive]}
-                    onPress={() => setSelectedPlanId(p._id)}
+                    onPress={() => {
+                      setSelectedPlanId(p._id);
+                      AsyncStorage.setItem('globalvista_selected_travel_plan', p._id).catch(() => {});
+                    }}
                     activeOpacity={0.8}
                   >
                     <View style={styles.planTop}>

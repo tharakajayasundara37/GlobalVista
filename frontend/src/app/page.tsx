@@ -1357,13 +1357,70 @@ export default function Home() {
             TravelPlan[] =
             await response.json();
 
-          setTravelPlans(
+          const plansList =
             Array.isArray(
               data,
             )
               ? data
-              : [],
+              : [];
+
+          setTravelPlans(
+            plansList,
           );
+
+          if (
+            plansList.length >
+            0
+          ) {
+            const stored =
+              typeof window !==
+              'undefined'
+                ? localStorage.getItem(
+                    'globalvista_selected_travel_plan',
+                  )
+                : '';
+
+            const validStored =
+              plansList.find(
+                (
+                  p,
+                ) =>
+                  p._id ===
+                  stored,
+              );
+
+            if (
+              validStored
+            ) {
+              setSelectedTravelPlanId(
+                validStored._id,
+              );
+            } else {
+              const popular =
+                plansList.find(
+                  (
+                    p,
+                  ) =>
+                    p.isPopular,
+                ) ||
+                plansList[0];
+
+              setSelectedTravelPlanId(
+                (
+                  prev,
+                ) =>
+                  plansList.some(
+                    (
+                      p,
+                    ) =>
+                      p._id ===
+                      prev,
+                  )
+                    ? prev
+                    : popular._id,
+              );
+            }
+          }
         } catch (
           error
         ) {
@@ -1480,16 +1537,38 @@ export default function Home() {
 
       window.setTimeout(
         () => {
-          document
-            .getElementById(
-              'destinations',
-            )
-            ?.scrollIntoView({
+          const target =
+            document.getElementById(
+              'packages',
+            );
+
+          if (target) {
+            const headerOffset = 80;
+            const elementPosition =
+              target.getBoundingClientRect()
+                .top;
+            const offsetPosition =
+              elementPosition +
+              window.pageYOffset -
+              headerOffset;
+
+            window.scrollTo({
+              top: offsetPosition,
               behavior:
                 'smooth',
-              block:
-                'start',
             });
+          } else {
+            document
+              .getElementById(
+                'destinations',
+              )
+              ?.scrollIntoView({
+                behavior:
+                  'smooth',
+                block:
+                  'start',
+              });
+          }
         },
         120,
       );

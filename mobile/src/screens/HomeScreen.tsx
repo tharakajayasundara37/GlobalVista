@@ -45,8 +45,9 @@ import {
   Briefcase,
   Camera,
 } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { COLORS, SHADOWS } from '../constants/theme';
-import { ApiPackage, ApiDestination, api, getPackageImage, getDestinationImage } from '../services/api';
+import { ApiPackage, ApiDestination, ApiTravelPlan, api, getPackageImage, getDestinationImage } from '../services/api';
 import { useCurrency } from '../context/CurrencyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
@@ -156,28 +157,33 @@ const GUEST_REFLECTIONS = [
   },
 ];
 
-const TRAVEL_PLANS = [
+const defaultTravelPlans: ApiTravelPlan[] = [
   {
-    name: 'Explorer Tier',
-    tag: 'ESSENTIAL CONCIERGE',
-    price: '99',
-    period: 'per journey',
-    features: ['Curated 4-Star & 5-Star Itineraries', '24/7 Digital Concierge Support', 'Airport & Hotel Private Transfers', 'Certified Multilingual Guide'],
+    _id: '6ac9cbd09a0ec138e6e680de',
+    name: 'Basic',
+    price: 555,
+    priceSuffix: '/ person',
+    features: ['3-star hotels', 'Airport transfers', 'Guided city tour', 'Breakfast included'],
+    isPopular: false,
+    isActive: true,
   },
   {
-    name: 'Atelier Signature',
-    tag: 'MOST POPULAR · BESPOKE',
-    price: '249',
-    period: 'per journey',
+    _id: '6ac9cbea9a0ec138e6e680df',
+    name: 'Premium',
+    price: 999,
+    priceSuffix: '/ person',
+    features: ['5-star hotels', 'Premium transfers', 'Private guided tours', '24/7 travel support'],
     isPopular: true,
-    features: ['Fully Handcrafted Bespoke Itineraries', 'Dedicated Personal Chauffeur & Luxury Vehicle', 'VIP Fast-Track Clearance & Lounge Access', 'Complimentary Luxury Welcome Hamper'],
+    isActive: true,
   },
   {
-    name: 'Imperial Presidential',
-    tag: 'ULTRA LUXURY',
-    price: '599',
-    period: 'per journey',
-    features: ['Helicopter & Seaplane Private Charters', 'Private Villa & Presidential Suite Bookings', '24/7 Personal Butler & Private Chef Access', 'All-Inclusive Michelin Dining Reservations'],
+    _id: '6ac9cc1e9a0ec138e6e680e0',
+    name: 'Luxury',
+    price: 1999,
+    priceSuffix: '/ person',
+    features: ['Luxury resorts', 'Business-class transfer', 'Private experiences'],
+    isPopular: false,
+    isActive: true,
   },
 ];
 
@@ -194,6 +200,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const [packages, setPackages] = useState<ApiPackage[]>([]);
   const [destinations, setDestinations] = useState<ApiDestination[]>([]);
+  const [travelPlans, setTravelPlans] = useState<ApiTravelPlan[]>([]);
+  const [selectedPlanId, setSelectedPlanId] = useState<string>('');
+  const [packagesSectionY, setPackagesSectionY] = useState<number>(1000);
+  const [plansSectionY, setPlansSectionY] = useState<number>(1600);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -228,16 +238,42 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [pkgs, dests] = await Promise.all([
+      const [pkgs, dests, plans] = await Promise.all([
         api.getPackages(),
         api.getDestinations(),
+        api.getTravelPlans(),
       ]);
       setPackages(pkgs);
       setDestinations(dests);
+      if (plans && plans.length > 0) {
+        setTravelPlans(plans);
+        const stored = await AsyncStorage.getItem('globalvista_selected_travel_plan');
+        if (stored && plans.some((p) => p._id === stored)) {
+          setSelectedPlanId(stored);
+        } else {
+          const popular = plans.find((p) => p.isPopular) || plans[0];
+          setSelectedPlanId((prev) => (plans.some((p) => p._id === prev) ? prev : popular._id));
+        }
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
+  };
+
+  const handleSelectPlan = async (planId: string) => {
+    setSelectedPlanId(planId);
+    try {
+      await AsyncStorage.setItem('globalvista_selected_travel_plan', planId);
+    } catch (e) {
+      // ignore
+    }
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({
+        y: Math.max(0, packagesSectionY - 20),
+        animated: true,
+      });
+    }, 100);
   };
 
   const handleRefresh = () => {
@@ -528,7 +564,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() => {
                 setActiveCategory('PLANS');
                 setMobileNavOpen(false);
-                scrollRef.current?.scrollTo({ y: 1550, animated: true });
+                scrollRef.current?.scrollTo({ y: Math.max(0, plansSectionY - 20), animated: true });
               }}
               activeOpacity={0.75}
             >
@@ -616,7 +652,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.categoryPill, activeCategory === 'PLANS' && styles.categoryPillActive]}
             onPress={() => {
               setActiveCategory('PLANS');
-              scrollRef.current?.scrollTo({ y: 1550, animated: true });
+              scrollRef.current?.scrollTo({ y: Math.max(0, plansSectionY - 20), animated: true });
             }}
             activeOpacity={0.75}
           >
@@ -924,7 +960,10 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* ========================================================
             EXPLORE TRAVEL PACKAGES - DISCOVER YOUR PERFECT JOURNEY
             ======================================================== */}
-        <View style={[styles.luxurySectionHeader, { marginTop: 28 }]}>
+        <View 
+          style={[styles.luxurySectionHeader, { marginTop: 28 }]}
+          onLayout={(e) => setPackagesSectionY(e.nativeEvent.layout.y)}
+        >
           <View style={styles.luxuryEyebrowRow}>
             <View style={styles.luxuryBadgePill}>
               <Sparkles size={12} color="#d97706" />
@@ -1151,50 +1190,73 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         {/* ========================================================
             BESPOKE TRAVEL PLANS & TIERS (Web Plans Section)
             ======================================================== */}
-        <View style={styles.plansSection}>
+        <View 
+          style={styles.plansSection}
+          onLayout={(e) => setPlansSectionY(e.nativeEvent.layout.y)}
+        >
           <View style={styles.sectionHeader}>
             <View>
               <Text style={styles.sectionBadge}>BESPOKE SERVICE TIERS</Text>
-              <Text style={styles.sectionTitle}>Travel Plans & Concierge</Text>
+              <Text style={styles.sectionTitle}>Tiered Travel Memberships</Text>
             </View>
           </View>
 
           <View style={styles.plansContainer}>
-            {TRAVEL_PLANS.map((plan, idx) => (
-              <View key={idx} style={[styles.planCard, plan.isPopular && styles.planCardPopular]}>
-                {plan.isPopular && (
-                  <View style={styles.planPopularBadge}>
-                    <Text style={styles.planPopularText}>MOST POPULAR</Text>
-                  </View>
-                )}
-                <Text style={styles.planName}>{plan.name}</Text>
-                <Text style={styles.planTag}>{plan.tag}</Text>
-                <View style={styles.planPriceRow}>
-                  <Text style={styles.planCurrency}>$</Text>
-                  <Text style={styles.planPriceVal}>{plan.price}</Text>
-                  <Text style={styles.planPeriod}>/{plan.period}</Text>
-                </View>
-
-                <View style={styles.planFeaturesList}>
-                  {plan.features.map((feat, fIdx) => (
-                    <View key={fIdx} style={styles.planFeatureItem}>
-                      <Check size={14} color="#10b981" />
-                      <Text style={styles.planFeatureText}>{feat}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                <TouchableOpacity
-                  style={[styles.planSelectBtn, plan.isPopular && styles.planSelectBtnPopular]}
-                  onPress={() => openWhatsApp(`Hello GlobalVista, I am interested in inquiring about the ${plan.name} Tier.`)}
-                  activeOpacity={0.85}
+            {(travelPlans.length > 0 ? travelPlans : defaultTravelPlans).map((plan) => {
+              const isSelected = selectedPlanId === plan._id;
+              return (
+                <View
+                  key={plan._id}
+                  style={[
+                    styles.planCard,
+                    plan.isPopular && styles.planCardPopular,
+                    isSelected && styles.planCardSelected,
+                  ]}
                 >
-                  <Text style={[styles.planSelectBtnText, plan.isPopular && styles.planSelectBtnTextPopular]}>
-                    Inquire Tier Details
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            ))}
+                  {plan.isPopular && (
+                    <View style={styles.planPopularBadge}>
+                      <Text style={styles.planPopularText}>MOST POPULAR</Text>
+                    </View>
+                  )}
+                  <Text style={styles.planName}>{plan.name}</Text>
+                  <Text style={styles.planTag}>{plan.isPopular ? 'RECOMMENDED MEMBERSHIP' : 'BESPOKE CONCIERGE'}</Text>
+                  <View style={styles.planPriceRow}>
+                    <Text style={styles.planCurrency}>$</Text>
+                    <Text style={styles.planPriceVal}>{plan.price}</Text>
+                    <Text style={styles.planPeriod}>{plan.priceSuffix || '/ person'}</Text>
+                  </View>
+
+                  <View style={styles.planFeaturesList}>
+                    {plan.features.map((feat, fIdx) => (
+                      <View key={fIdx} style={styles.planFeatureItem}>
+                        <Check size={14} color={isSelected ? '#2563eb' : '#10b981'} />
+                        <Text style={styles.planFeatureText}>{feat}</Text>
+                      </View>
+                    ))}
+                  </View>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.planSelectBtn,
+                      plan.isPopular && styles.planSelectBtnPopular,
+                      isSelected && styles.planSelectBtnActive,
+                    ]}
+                    onPress={() => handleSelectPlan(plan._id)}
+                    activeOpacity={0.85}
+                  >
+                    <Text
+                      style={[
+                        styles.planSelectBtnText,
+                        plan.isPopular && styles.planSelectBtnTextPopular,
+                        isSelected && styles.planSelectBtnTextActive,
+                      ]}
+                    >
+                      {isSelected ? 'Selected ✓' : 'Select Plan'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              );
+            })}
           </View>
         </View>
 
@@ -1295,6 +1357,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
       <MobileBookingModal
         visible={!!bookingPkg}
         pkg={bookingPkg}
+        preSelectedPlanId={selectedPlanId}
         onClose={() => setBookingPkg(null)}
         onSuccess={() => navigation.navigate('My Trips')}
         onNavigateToAuth={() => navigation.navigate('Profile')}
@@ -2532,6 +2595,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#475569',
   },
+  planCardSelected: {
+    borderColor: '#2563eb',
+    borderWidth: 2,
+    backgroundColor: '#eff6ff',
+  },
   planSelectBtn: {
     backgroundColor: '#f1f5f9',
     paddingVertical: 10,
@@ -2544,12 +2612,19 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
+  planSelectBtnActive: {
+    backgroundColor: '#2563eb',
+    borderColor: '#2563eb',
+  },
   planSelectBtnText: {
     fontSize: 12,
     fontWeight: '800',
     color: COLORS.primary,
   },
   planSelectBtnTextPopular: {
+    color: '#ffffff',
+  },
+  planSelectBtnTextActive: {
     color: '#ffffff',
   },
   /* Footer */
