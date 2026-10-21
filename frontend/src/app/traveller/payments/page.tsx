@@ -268,6 +268,9 @@ function PaymentsContent() {
     if (booking?.userId && typeof booking.userId === 'object') {
       return booking.userId;
     }
+    if (typeof window === 'undefined') {
+      return null;
+    }
     const raw = localStorage.getItem('globalvista_user') || localStorage.getItem('user');
     if (raw) {
       try {

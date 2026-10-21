@@ -198,6 +198,7 @@ export default function DestinationWorldMap() {
   return (
     <div className="realWorldMapWrap">
       <MapContainer
+        key={`gv-map-${destinations.length}`}
         center={[20, 0]}
         zoom={1.6}
         minZoom={1}

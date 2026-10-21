@@ -4088,6 +4088,7 @@ export default function Home() {
 
                       <button
                         type="button"
+                        suppressHydrationWarning
                         aria-pressed={
                           selectedTravelPlanId ===
                           plan._id
@@ -4114,7 +4115,7 @@ export default function Home() {
                         {selectedTravelPlanId ===
                         plan._id
                           ? 'Selected'
-                          : t.plans.selectPlan}
+                          : t?.plans?.selectPlan || 'Select Plan'}
                       </button>
                     </article>
                   ),
