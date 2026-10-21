@@ -548,6 +548,30 @@ export default function Home() {
 
   const [selectedGalleryDestination, setSelectedGalleryDestination] = useState<ApiDestination | null>(null);
   const [activeGalleryCountry, setActiveGalleryCountry] = useState<string>('ALL');
+  const [selectedDestCountry, setSelectedDestCountry] = useState<string>('ALL');
+  const [selectedPkgCountry, setSelectedPkgCountry] = useState<string>('ALL');
+
+  const destCountries = useMemo(() => {
+    return Array.from(new Set(destinations.map((d) => d.country).filter(Boolean)));
+  }, [destinations]);
+
+  const pkgCountries = useMemo(() => {
+    return Array.from(new Set(packages.map((p) => p.country).filter(Boolean)));
+  }, [packages]);
+
+  const filteredHomeDestinations = useMemo(() => {
+    if (selectedDestCountry === 'ALL') return destinations.slice(0, 9);
+    return destinations.filter(
+      (d) => (d.country || '').trim().toLowerCase() === selectedDestCountry.toLowerCase(),
+    );
+  }, [destinations, selectedDestCountry]);
+
+  const filteredHomePackages = useMemo(() => {
+    if (selectedPkgCountry === 'ALL') return packages.slice(0, 9);
+    return packages.filter(
+      (p) => (p.country || '').trim().toLowerCase() === selectedPkgCountry.toLowerCase(),
+    );
+  }, [packages, selectedPkgCountry]);
 
   const galleryDestinations = useMemo(() => {
     if (activeGalleryCountry === 'ALL') return destinations;
@@ -1961,9 +1985,9 @@ export default function Home() {
       }
     };
 
-  // Homepage preview limits only; /packages shows the full package collection.
-  const homeDestinations = destinations.slice(0, 6);
-  const homePackages = packages.slice(0, 9);
+  // Homepage filtered previews based on active country filters
+  const homeDestinations = filteredHomeDestinations;
+  const homePackages = filteredHomePackages;
 
   const specialOffers =
     packages
@@ -2718,6 +2742,52 @@ export default function Home() {
             </p>
           </motion.div>
 
+          {/* Aesthetic Scrapbook Banner & Country Filter Pills */}
+          <motion.div
+            className="galleryMoodboardBanner"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            <div className="scrapbookBadge leftBadge">
+              <span className="badgeTicketNum">№ 146017</span>
+              <strong>TICKET TO ANYWHERE</strong>
+              <small>Worldwide Boarding Pass</small>
+            </div>
+            <div className="scrapbookPoster">
+              <span className="posterQuote">“Travel is the only thing you buy that makes you richer.”</span>
+              <h3 className="posterJustGo">JUST GO.</h3>
+              <span className="posterSub">GLOBALVISTA EXPLORER JOURNAL</span>
+            </div>
+            <div className="scrapbookBadge rightBadge">
+              <span className="badgeTicketNum">№ 0045672</span>
+              <strong>AROUND THE WORLD</strong>
+              <small>Official Passport Stamped</small>
+            </div>
+          </motion.div>
+
+          {/* Dynamic Country Filter Pills */}
+          <div className="galleryFilterBar">
+            <button
+              type="button"
+              className={`galleryFilterPill ${selectedDestCountry === 'ALL' ? 'galleryFilterPillActive' : ''}`}
+              onClick={() => setSelectedDestCountry('ALL')}
+            >
+              All Destinations ({destinations.length})
+            </button>
+            {destCountries.map((c) => (
+              <button
+                key={`dest-filter-${c}`}
+                type="button"
+                className={`galleryFilterPill ${selectedDestCountry.toLowerCase() === c.toLowerCase() ? 'galleryFilterPillActive' : ''}`}
+                onClick={() => setSelectedDestCountry(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
           <div className="destinationGrid">
             {destinationsLoading && <p>Loading destinations...</p>}
             {!destinationsLoading && destinationsError && (
@@ -2798,6 +2868,52 @@ export default function Home() {
               Explore premium packages carefully prepared for your next unforgettable adventure.
             </p>
           </motion.div>
+
+          {/* Aesthetic Scrapbook Banner & Country Filter Pills */}
+          <motion.div
+            className="galleryMoodboardBanner"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            <div className="scrapbookBadge leftBadge">
+              <span className="badgeTicketNum">№ 829104</span>
+              <strong>FIRST CLASS EXPEDITION</strong>
+              <small>All-Inclusive Curated Tour</small>
+            </div>
+            <div className="scrapbookPoster">
+              <span className="posterQuote">“Wanderlust is the desire to travel, to explore and experience the world.”</span>
+              <h3 className="posterJustGo">EXPLORE.</h3>
+              <span className="posterSub">HANDPICKED TRAVEL EXPERIENCES</span>
+            </div>
+            <div className="scrapbookBadge rightBadge">
+              <span className="badgeTicketNum">№ 630192</span>
+              <strong>VIP EXPERIENCES</strong>
+              <small>Guaranteed Best Price &amp; Escapes</small>
+            </div>
+          </motion.div>
+
+          {/* Dynamic Country Filter Pills */}
+          <div className="galleryFilterBar">
+            <button
+              type="button"
+              className={`galleryFilterPill ${selectedPkgCountry === 'ALL' ? 'galleryFilterPillActive' : ''}`}
+              onClick={() => setSelectedPkgCountry('ALL')}
+            >
+              All Packages ({packages.length})
+            </button>
+            {pkgCountries.map((c) => (
+              <button
+                key={`pkg-filter-${c}`}
+                type="button"
+                className={`galleryFilterPill ${selectedPkgCountry.toLowerCase() === c.toLowerCase() ? 'galleryFilterPillActive' : ''}`}
+                onClick={() => setSelectedPkgCountry(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
 
           <div className="destinationGrid">
             {packagesLoading && <p>Loading packages...</p>}
