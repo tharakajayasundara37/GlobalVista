@@ -7,6 +7,7 @@ import { motion, useScroll, useSpring } from 'framer-motion';
 
 import {
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -21,6 +22,7 @@ import {
   ChevronDown,
   CheckCircle2,
   CreditCard,
+  Eye,
   Gift,
   Home as HomeIcon,
   Loader2,
@@ -183,6 +185,9 @@ function getDestinationImage(destination: ApiDestination) {
   );
 
   if (!image) return '/images/globalvista-bg.png';
+  if (image.includes('localhost:3001')) {
+    return image.replace(/http:\/\/localhost:3001/g, API_URL);
+  }
   if (image.startsWith('http://') || image.startsWith('https://')) {
     return image;
   }
@@ -541,6 +546,34 @@ export default function Home() {
   const [destinationsLoading, setDestinationsLoading] = useState(true);
   const [destinationsError, setDestinationsError] = useState('');
 
+  const [selectedGalleryDestination, setSelectedGalleryDestination] = useState<ApiDestination | null>(null);
+  const [activeGalleryCountry, setActiveGalleryCountry] = useState<string>('ALL');
+
+  const galleryDestinations = useMemo(() => {
+    if (activeGalleryCountry === 'ALL') return destinations;
+    return destinations.filter((d) => d.country?.toLowerCase() === activeGalleryCountry.toLowerCase());
+  }, [destinations, activeGalleryCountry]);
+
+  const galleryCountries = useMemo(() => {
+    return Array.from(new Set(destinations.map((d) => d.country).filter(Boolean)));
+  }, [destinations]);
+
+  const handleGalleryNext = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!selectedGalleryDestination || galleryDestinations.length === 0) return;
+    const currentIndex = galleryDestinations.findIndex((d) => d._id === selectedGalleryDestination._id);
+    const nextIndex = (currentIndex + 1) % galleryDestinations.length;
+    setSelectedGalleryDestination(galleryDestinations[nextIndex]);
+  };
+
+  const handleGalleryPrev = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!selectedGalleryDestination || galleryDestinations.length === 0) return;
+    const currentIndex = galleryDestinations.findIndex((d) => d._id === selectedGalleryDestination._id);
+    const prevIndex = (currentIndex - 1 + galleryDestinations.length) % galleryDestinations.length;
+    setSelectedGalleryDestination(galleryDestinations[prevIndex]);
+  };
+
   const [
     packagesLoading,
     setPackagesLoading,
@@ -611,11 +644,16 @@ export default function Home() {
         setIsCinematicModalOpen(false);
         setIsQuickSearchModalOpen(false);
         setIsLanguageDropdownOpen(false);
+        setSelectedGalleryDestination(null);
+      } else if (e.key === 'ArrowRight' && selectedGalleryDestination) {
+        handleGalleryNext();
+      } else if (e.key === 'ArrowLeft' && selectedGalleryDestination) {
+        handleGalleryPrev();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [selectedGalleryDestination, galleryDestinations]);
 
   // Autofocus quick search input on open
   useEffect(() => {
@@ -4057,6 +4095,140 @@ export default function Home() {
         </div>
       </section>
 
+      {/* AESTHETIC DESTINATION SCRAPBOOK GALLERY & MOODBOARD */}
+      <section className="section gallerySection" id="gallery">
+        <div className="container">
+          <motion.div
+            className="sectionHeading gallerySectionHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
+            <span className="galleryEyebrow">
+              <Compass size={14} style={{ display: 'inline', verticalAlign: '-2px', marginRight: 6 }} />
+              CURATED VISUAL SCRAPBOOK · AROUND THE WORLD
+            </span>
+            <h2>Moments Captured in Paradise</h2>
+            <p>
+              A live aesthetic moodboard of unforgettable horizons. Every snapshot is dynamically curated from our verified destination sanctuaries.
+            </p>
+          </motion.div>
+
+          {/* Aesthetic Scrapbook Banner (Inspired by User's Reference Collage) */}
+          <motion.div
+            className="galleryMoodboardBanner"
+            initial={{ opacity: 0, y: 25 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-30px' }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+          >
+            <div className="scrapbookBadge leftBadge">
+              <span className="badgeTicketNum">№ 146017</span>
+              <strong>TICKET TO ANYWHERE</strong>
+              <small>Worldwide Boarding Pass</small>
+            </div>
+            <div className="scrapbookPoster">
+              <span className="posterQuote">“Travel is the only thing you buy that makes you richer.”</span>
+              <h3 className="posterJustGo">JUST GO.</h3>
+              <span className="posterSub">GLOBALVISTA EXPLORER JOURNAL</span>
+            </div>
+            <div className="scrapbookBadge rightBadge">
+              <span className="badgeTicketNum">№ 0045672</span>
+              <strong>AROUND THE WORLD</strong>
+              <small>Official Passport Stamped</small>
+            </div>
+          </motion.div>
+
+          {/* Dynamic Country Filter Pills */}
+          <div className="galleryFilterBar">
+            <button
+              type="button"
+              className={`galleryFilterPill ${activeGalleryCountry === 'ALL' ? 'galleryFilterPillActive' : ''}`}
+              onClick={() => setActiveGalleryCountry('ALL')}
+            >
+              All Snapshots ({destinations.length})
+            </button>
+            {galleryCountries.map((c) => (
+              <button
+                key={c}
+                type="button"
+                className={`galleryFilterPill ${activeGalleryCountry.toLowerCase() === c.toLowerCase() ? 'galleryFilterPillActive' : ''}`}
+                onClick={() => setActiveGalleryCountry(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Polaroid Cards Grid */}
+          <div className="polaroidGalleryGrid">
+            {destinationsLoading && <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#64748b' }}>Curating destination gallery...</p>}
+            {!destinationsLoading && galleryDestinations.length === 0 && (
+              <p style={{ gridColumn: '1 / -1', textAlign: 'center', color: '#64748b' }}>No destination snapshots found for this filter.</p>
+            )}
+            {!destinationsLoading &&
+              galleryDestinations.map((dest, idx) => {
+                const rotationAngles = [-2.2, 1.8, -1.2, 2.4, -1.8, 1.4];
+                const angle = rotationAngles[idx % rotationAngles.length];
+                const stampLabels = ['PASSPORT STAMPED', 'VERIFIED 5★', 'WANDERLUST', 'EXPEDITION', 'AUTHENTIC', 'ICONIC ESCAPE'];
+                const stampText = stampLabels[idx % stampLabels.length];
+                const isGold = idx % 2 === 0;
+
+                return (
+                  <motion.div
+                    key={dest._id}
+                    className="polaroidCard"
+                    style={{ transform: `rotate(${angle}deg)` }}
+                    initial={{ opacity: 0, y: 35 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: '-30px' }}
+                    transition={{ duration: 0.5, delay: (idx % 6) * 0.08, ease: 'easeOut' }}
+                    onClick={() => setSelectedGalleryDestination(dest)}
+                  >
+                    <div className="polaroidTape" />
+                    <div className="polaroidPhotoWrap">
+                      <img
+                        src={getDestinationImage(dest)}
+                        alt={dest.name}
+                        className="polaroidPhoto"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = '/images/globalvista-bg.png';
+                        }}
+                      />
+                      <div className="polaroidHoverOverlay">
+                        <span className="polaroidHoverBtn">
+                          <Eye size={13} /> Inspect Snapshot
+                        </span>
+                      </div>
+                    </div>
+                    <div className="polaroidCaption">
+                      <div className="polaroidInfo">
+                        <h4 className="polaroidTitle">{dest.name}</h4>
+                        <div className="polaroidMeta">
+                          <MapPin size={12} className="polaroidMetaPin" />
+                          <span>{dest.country}</span>
+                          {dest.bestTimeToVisit && (
+                            <>
+                              <span>·</span>
+                              <span>{dest.bestTimeToVisit}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className={`polaroidStamp ${isGold ? 'gold' : ''}`}>
+                        <Star size={10} fill="currentColor" />
+                        <span>{stampText}</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+          </div>
+        </div>
+      </section>
+
       <motion.section
         className="finalCta"
         initial={{ opacity: 0, y: 35 }}
@@ -5491,6 +5663,99 @@ export default function Home() {
           void openBooking(pkg);
         }}
       />
+
+      {/* Fullscreen Lightbox Modal for Gallery */}
+      {selectedGalleryDestination && (
+        <div className="galleryLightboxOverlay" onClick={() => setSelectedGalleryDestination(null)}>
+          <div className="galleryLightboxModal" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              className="lightboxCloseBtn"
+              onClick={() => setSelectedGalleryDestination(null)}
+              aria-label="Close photo preview"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="lightboxImageWrap">
+              {galleryDestinations.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    className="lightboxNavBtn lightboxNavPrev"
+                    onClick={handleGalleryPrev}
+                    aria-label="Previous photo"
+                  >
+                    <ChevronLeft size={22} />
+                  </button>
+                  <button
+                    type="button"
+                    className="lightboxNavBtn lightboxNavNext"
+                    onClick={handleGalleryNext}
+                    aria-label="Next photo"
+                  >
+                    <ChevronRight size={22} />
+                  </button>
+                </>
+              )}
+              <img
+                src={getDestinationImage(selectedGalleryDestination)}
+                alt={selectedGalleryDestination.name}
+                className="lightboxImg"
+              />
+            </div>
+
+            <div className="lightboxBody">
+              <div>
+                <div className="lightboxHeader">
+                  <span className="lightboxCountryTag">
+                    <MapPin size={13} />
+                    {selectedGalleryDestination.country}
+                  </span>
+                  <h3 className="lightboxTitle">{selectedGalleryDestination.name}</h3>
+                  <div className="lightboxRatingRow">
+                    <span className="lightboxRatingPill">
+                      <Star size={12} fill="currentColor" />
+                      {typeof selectedGalleryDestination.rating === 'number'
+                        ? selectedGalleryDestination.rating.toFixed(1)
+                        : '5.0'} / 5.0
+                    </span>
+                    {selectedGalleryDestination.bestTimeToVisit && (
+                      <span className="lightboxBestTime">
+                        Best Season: <strong>{selectedGalleryDestination.bestTimeToVisit}</strong>
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <p className="lightboxDescription">
+                  Experience the pristine wonders of {selectedGalleryDestination.name}, {selectedGalleryDestination.country}. Curated private expeditions, 5-star handpicked sanctuaries, and white-glove chauffeur transfers.
+                </p>
+              </div>
+
+              <div className="lightboxActions">
+                <Link
+                  className="lightboxPrimaryBtn"
+                  href={`/packages?destinationId=${encodeURIComponent(selectedGalleryDestination._id)}&destinationName=${encodeURIComponent(selectedGalleryDestination.name)}`}
+                  onClick={() => setSelectedGalleryDestination(null)}
+                >
+                  Explore Packages for {selectedGalleryDestination.name} <ArrowRight size={16} />
+                </Link>
+                <a
+                  className="lightboxSecondaryBtn"
+                  href="#planner"
+                  onClick={() => {
+                    setPlannerDestination(selectedGalleryDestination.name);
+                    setSelectedGalleryDestination(null);
+                  }}
+                >
+                  Customize Itinerary
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating WhatsApp VIP Concierge Button (Lansakara Style) */}
       <motion.a
