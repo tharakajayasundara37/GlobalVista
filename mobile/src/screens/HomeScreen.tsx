@@ -128,6 +128,23 @@ const getHeroScenes = (baseUrl: string) => [
       'Tokyo Private Helicopter Skyline Twilight Tour',
     ],
   },
+  {
+    id: 'france',
+    country: 'France',
+    flag: '🇫🇷',
+    location: 'Paris & French Riviera',
+    title: 'Haute Horology & Azure Coasts',
+    subtitle: 'Private Eiffel penthouse salons, Champagne cellars & Cannes superyacht charters.',
+    videoUrl: `${baseUrl}/videos/globalvista-hero-5.mp4`,
+    image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1200&q=80',
+    tag: 'RIVIERA PRESTIGE',
+    highlights: [
+      'Private Champagne Cellar Tasting in Reims',
+      'VIP Sunset Seine Cruise on Classic Riva Yacht',
+      'Michelin 3-Star Parisian Dining Experience',
+      'Helicopter Transfer to Monaco & Cote d’Azur',
+    ],
+  },
 ];
 
 const GUEST_REFLECTIONS = [
@@ -1664,7 +1681,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(10, 25, 47, 0.60)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
   },
   heroControlsRow: {
     flexDirection: 'row',
@@ -1944,7 +1961,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(10, 25, 47, 0.35)',
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
   },
   dealLocationBadge: {
     position: 'absolute',
@@ -2280,7 +2297,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(10, 25, 47, 0.38)',
+    backgroundColor: 'rgba(0, 0, 0, 0.38)',
   },
   destInfo: {
     position: 'absolute',
