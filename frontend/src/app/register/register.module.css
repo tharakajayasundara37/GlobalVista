@@ -1,0 +1,1749 @@
+.page {
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 42px 48px;
+
+  background: #061419;
+  color: #ffffff;
+}
+
+/* =========================
+   VIDEO BACKGROUND
+========================= */
+
+.backgroundVideo {
+  position: fixed;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  z-index: 0;
+
+  pointer-events: none;
+}
+
+/* =========================
+   OVERLAY
+========================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(3, 14, 24, 0.82) 0%,
+      rgba(3, 14, 24, 0.58) 44%,
+      rgba(3, 14, 24, 0.34) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.08),
+      rgba(0, 0, 0, 0.27)
+    );
+}
+
+/* =========================
+   BACK
+========================= */
+
+.backButton {
+  position: absolute;
+
+  top: 28px;
+  left: 40px;
+
+  z-index: 20;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.9
+    );
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.backButton:hover {
+  color: #ffffff;
+
+  transform:
+    translateX(-3px);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.container {
+  position: relative;
+
+  z-index: 5;
+
+  width:
+    min(
+      1180px,
+      100%
+    );
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(430px, 470px);
+
+  align-items: center;
+
+  gap:
+    clamp(
+      65px,
+      8vw,
+      120px
+    );
+}
+
+/* =========================
+   BRAND
+========================= */
+
+.brandSide {
+  min-height: 620px;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content:
+    flex-start;
+}
+
+.logo {
+  display: inline-block;
+
+  width: fit-content;
+
+  margin-top: 8px;
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 29px;
+  font-weight: 800;
+
+  letter-spacing: -1.2px;
+}
+
+.logo span {
+  color: #67dcf7;
+}
+
+.brandContent {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  max-width: 620px;
+
+  padding:
+    30px 0
+    10px;
+}
+
+.brandLine {
+  display: block;
+
+  width: 44px;
+  height: 2px;
+
+  margin-bottom: 20px;
+
+  background: #63d9f7;
+}
+
+.eyebrow {
+  display: block;
+
+  margin-bottom: 22px;
+
+  color: #6eddf7;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  letter-spacing: 2.7px;
+}
+
+.brandContent h1 {
+  margin: 0;
+
+  max-width: 620px;
+
+  color: #ffffff;
+
+  font-family:
+    Georgia,
+    'Times New Roman',
+    serif;
+
+  font-size:
+    clamp(
+      52px,
+      5.3vw,
+      74px
+    );
+
+  font-weight: 500;
+
+  line-height: 1.01;
+
+  letter-spacing: -2.6px;
+}
+
+.brandContent h1 em {
+  color: #ffffff;
+
+  font-weight: 400;
+}
+
+.brandContent p {
+  max-width: 520px;
+
+  margin:
+    30px 0
+    0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.78
+    );
+
+  font-size: 15px;
+
+  line-height: 1.75;
+}
+
+/* =========================
+   REGISTER CARD
+========================= */
+
+.registerCard {
+  position: relative;
+
+  width: 100%;
+  max-width: 470px;
+
+  justify-self: end;
+
+  padding:
+    34px 34px
+    29px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.46
+    );
+
+  border-radius: 31px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(
+        255,
+        255,
+        255,
+        0.13
+      ),
+      rgba(
+        255,
+        255,
+        255,
+        0.055
+      )
+    );
+
+  box-shadow:
+    0 30px 70px
+      rgba(
+        0,
+        0,
+        0,
+        0.2
+      ),
+    inset
+      0 1px 0
+      rgba(
+        255,
+        255,
+        255,
+        0.14
+      );
+
+  backdrop-filter:
+    blur(14px);
+
+  -webkit-backdrop-filter:
+    blur(14px);
+}
+
+.cardLabel {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-bottom: 22px;
+
+  color: #67ddf8;
+
+  font-size: 13px;
+  font-weight: 650;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.registerHeader h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family:
+    Georgia,
+    'Times New Roman',
+    serif;
+
+  font-size: 39px;
+
+  font-weight: 500;
+
+  line-height: 1.05;
+
+  letter-spacing: -1.4px;
+}
+
+.registerHeader p {
+  margin:
+    10px 0
+    0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form {
+  margin-top: 24px;
+}
+
+.formGrid {
+  display: grid;
+
+  grid-template-columns:
+    1fr 1fr;
+
+  gap: 14px;
+}
+
+.fieldGroup {
+  margin-bottom: 15px;
+}
+
+.fieldGroup label {
+  display: block;
+
+  margin-bottom: 7px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.92
+    );
+
+  font-size: 11px;
+  font-weight: 650;
+}
+
+/* =========================
+   INPUT
+========================= */
+
+.inputBox {
+  width: 100%;
+  min-height: 49px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 0 14px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.24
+    );
+
+  border-radius: 13px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.095
+    );
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inputBox:focus-within {
+  border-color:
+    rgba(
+      104,
+      220,
+      247,
+      0.9
+    );
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    );
+
+  box-shadow:
+    0 0 0 3px
+      rgba(
+        104,
+        220,
+        247,
+        0.11
+      );
+}
+
+.inputBox svg {
+  flex: 0 0 auto;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+}
+
+.inputBox input {
+  width: 100%;
+
+  padding: 14px 0;
+
+  border: 0;
+  outline: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+}
+
+.inputBox input::placeholder {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.45
+    );
+}
+
+.eyeButton {
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  padding: 3px;
+
+  border: 0;
+
+  background: transparent;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.72
+    );
+
+  cursor: pointer;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.error {
+  margin:
+    0 0
+    14px;
+
+  padding:
+    10px 12px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      130,
+      130,
+      0.3
+    );
+
+  border-radius: 11px;
+
+  background:
+    rgba(
+      125,
+      17,
+      17,
+      0.34
+    );
+
+  color: #ffdede;
+
+  font-size: 11px;
+
+  line-height: 1.45;
+}
+
+/* =========================
+   BUTTON
+========================= */
+
+.registerButton {
+  width: 100%;
+  min-height: 57px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-top: 2px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: #0b4568;
+
+  font-family: inherit;
+
+  font-size: 15px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 15px 35px
+      rgba(
+        0,
+        0,
+        0,
+        0.15
+      );
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.registerButton:hover:not(
+  :disabled
+) {
+  transform:
+    translateY(-2px);
+
+  background: #f8fcff;
+
+  box-shadow:
+    0 18px 40px
+      rgba(
+        0,
+        0,
+        0,
+        0.21
+      );
+}
+
+.registerButton:disabled {
+  opacity: 0.7;
+
+  cursor: wait;
+}
+
+/* =========================
+   LOGIN LINK
+========================= */
+
+.loginText {
+  margin-top: 20px;
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.67
+    );
+
+  font-size: 12px;
+}
+
+.loginText a {
+  color: #70def7;
+
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.loginText a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (
+  max-width: 960px
+) {
+  .page {
+    align-items:
+      flex-start;
+
+    padding:
+      100px 28px
+      50px;
+  }
+
+  .container {
+    grid-template-columns:
+      1fr;
+
+    gap: 42px;
+  }
+
+  .brandSide {
+    min-height: auto;
+  }
+
+  .brandContent {
+    display: block;
+
+    padding-top: 65px;
+  }
+
+  .brandContent h1 {
+    font-size: 58px;
+  }
+
+  .registerCard {
+    justify-self: start;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (
+  max-width: 600px
+) {
+  .page {
+    padding:
+      88px 16px
+      28px;
+  }
+
+  .overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(
+          3,
+          14,
+          24,
+          0.69
+        ),
+        rgba(
+          3,
+          14,
+          24,
+          0.6
+        )
+      );
+  }
+
+  .backButton {
+    top: 24px;
+    left: 18px;
+
+    font-size: 12px;
+  }
+
+  .container {
+    gap: 34px;
+  }
+
+  .logo {
+    font-size: 25px;
+  }
+
+  .brandContent {
+    padding-top: 52px;
+  }
+
+  .brandContent h1 {
+    font-size: 43px;
+
+    line-height: 1;
+
+    letter-spacing: -2px;
+  }
+
+  .brandContent p {
+    margin-top: 22px;
+
+    font-size: 14px;
+  }
+
+  .registerCard {
+    width: 100%;
+    max-width: 100%;
+
+    padding:
+      29px 21px
+      25px;
+
+    border-radius: 25px;
+  }
+
+  .registerHeader h2 {
+    font-size: 35px;
+  }
+
+  .formGrid {
+    grid-template-columns:
+      1fr;
+
+    gap: 0;
+  }
+
+  .registerButton {
+    min-height: 56px;
+  }
+}
+
+/* =========================
+   ROLE SELECTOR
+========================= */
+
+.roleSelector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  margin-top: 22px;
+  margin-bottom: 5px;
+}
+
+.roleButton {
+  min-height: 68px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 11px 12px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.2
+    );
+
+  border-radius: 13px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.07
+    );
+
+  color: #ffffff;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.roleButton:hover {
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.11
+    );
+
+  transform:
+    translateY(-1px);
+}
+
+.roleButtonActive {
+  border-color: #6eddf7;
+
+  background:
+    rgba(
+      103,
+      221,
+      248,
+      0.14
+    );
+
+  box-shadow:
+    0 0 0 2px
+    rgba(
+      103,
+      221,
+      248,
+      0.08
+    );
+}
+
+.roleButton svg {
+  flex: 0 0 auto;
+
+  color: #6eddf7;
+}
+
+.roleButton div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+.roleButton strong {
+  font-size: 12px;
+}
+
+.roleButton span {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.58
+    );
+
+  font-size: 9px;
+}
+
+/* =========================
+   GUIDE SECTION
+========================= */
+
+.guideTitle {
+  margin:
+    8px 0
+    15px;
+
+  padding-top: 17px;
+
+  border-top:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.14
+    );
+
+  color: #70def7;
+
+  font-size: 11px;
+  font-weight: 800;
+
+  letter-spacing: 1.6px;
+
+  text-transform: uppercase;
+}
+
+/* =========================
+   SELECT
+========================= */
+
+.inputBox select {
+  width: 100%;
+
+  padding: 14px 0;
+
+  border: 0;
+  outline: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.inputBox select option {
+  color: #0b2130;
+
+  background: #ffffff;
+}
+
+/* =========================
+   TEXTAREA
+========================= */
+
+.textArea {
+  width: 100%;
+  min-height: 90px;
+
+  resize: vertical;
+
+  padding: 13px 14px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.24
+    );
+
+  border-radius: 13px;
+
+  outline: none;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.095
+    );
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  line-height: 1.6;
+}
+
+.textArea::placeholder {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.45
+    );
+}
+
+.textArea:focus {
+  border-color:
+    rgba(
+      104,
+      220,
+      247,
+      0.9
+    );
+
+  box-shadow:
+    0 0 0 3px
+    rgba(
+      104,
+      220,
+      247,
+      0.11
+    );
+}
+
+/* =========================
+   GUIDE SUCCESS
+========================= */
+
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  padding:
+    30px 4px
+    10px;
+
+  text-align: center;
+}
+
+.successIcon {
+  width: 64px;
+  height: 64px;
+
+  display: grid;
+  place-items: center;
+
+  margin-bottom: 21px;
+
+  border:
+    1px solid
+    rgba(
+      103,
+      221,
+      248,
+      0.4
+    );
+
+  border-radius: 50%;
+
+  background:
+    rgba(
+      103,
+      221,
+      248,
+      0.12
+    );
+
+  color: #70def7;
+}
+
+.successState > span {
+  color: #70def7;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  letter-spacing: 2px;
+}
+
+.successState h2 {
+  margin:
+    11px 0
+    12px;
+
+  color: #ffffff;
+
+  font-family:
+    Georgia,
+    'Times New Roman',
+    serif;
+
+  font-size: 36px;
+
+  font-weight: 500;
+
+  letter-spacing: -1px;
+}
+
+.successState p {
+  max-width: 340px;
+
+  margin: 0;
+
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.7
+    );
+
+  font-size: 12px;
+
+  line-height: 1.7;
+}
+
+.successId {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+
+  margin:
+    25px 0
+    20px;
+
+  padding: 15px;
+
+  border:
+    1px solid
+    rgba(
+      255,
+      255,
+      255,
+      0.16
+    );
+
+  border-radius: 13px;
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      0.07
+    );
+}
+
+.successId small {
+  color:
+    rgba(
+      255,
+      255,
+      255,
+      0.55
+    );
+
+  font-size: 10px;
+}
+
+.successId strong {
+  color: #ffffff;
+
+  font-size: 18px;
+
+  letter-spacing: 1.5px;
+}
+
+.successButton {
+  width: 100%;
+  min-height: 55px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  border-radius: 13px;
+
+  background: #ffffff;
+
+  color: #0b4568;
+
+  text-decoration: none;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+@media (max-width: 600px) {
+  .roleSelector {
+    grid-template-columns: 1fr;
+  }
+}
+/* =========================
+   LANGUAGE MULTI SELECT
+========================= */
+
+.languageSelector {
+  position: relative;
+  width: 100%;
+}
+
+.languageTrigger {
+  width: 100%;
+  min-height: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 0 14px;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.24);
+
+  border-radius: 13px;
+
+  background:
+    rgba(255, 255, 255, 0.095);
+
+  color: #ffffff;
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.languageTrigger:hover {
+  background:
+    rgba(255, 255, 255, 0.12);
+
+  border-color:
+    rgba(255, 255, 255, 0.35);
+}
+
+.languageTrigger:focus {
+  outline: none;
+
+  border-color:
+    rgba(104, 220, 247, 0.9);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(104, 220, 247, 0.11);
+}
+
+.languageTriggerLeft {
+  min-width: 0;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+}
+
+.languageTriggerLeft svg {
+  flex: 0 0 auto;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.65
+  );
+}
+
+.languageTriggerLeft span {
+  overflow: hidden;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.78
+  );
+
+  font-size: 12px;
+
+  text-overflow: ellipsis;
+
+  white-space: nowrap;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.languageTrigger > svg {
+  transition:
+    transform 0.2s ease;
+}
+
+/* =========================
+   DROPDOWN
+========================= */
+
+.languageDropdown {
+  position: absolute;
+
+  top: calc(100% + 8px);
+  left: 0;
+
+  width: 100%;
+
+  z-index: 50;
+
+  overflow: hidden;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.2);
+
+  border-radius: 14px;
+
+  background:
+    rgba(11, 34, 50, 0.97);
+
+  box-shadow:
+    0 20px 50px
+    rgba(0, 0, 0, 0.35);
+
+  backdrop-filter:
+    blur(24px);
+}
+
+/* =========================
+   SEARCH
+========================= */
+
+.languageSearch {
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 10px 12px;
+
+  border-bottom: 1px solid
+    rgba(255, 255, 255, 0.12);
+}
+
+.languageSearch svg {
+  flex: 0 0 auto;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.55
+  );
+}
+
+.languageSearch input {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  background:
+    transparent;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+}
+
+.languageSearch input::placeholder {
+  color: rgba(
+    255,
+    255,
+    255,
+    0.42
+  );
+}
+
+/* =========================
+   OPTIONS
+========================= */
+
+.languageOptions {
+  max-height: 230px;
+
+  overflow-y: auto;
+
+  padding: 6px;
+}
+
+.languageOption {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  padding: 10px 11px;
+
+  border: 0;
+
+  border-radius: 9px;
+
+  background:
+    transparent;
+
+  color: rgba(
+    255,
+    255,
+    255,
+    0.78
+  );
+
+  cursor: pointer;
+
+  font-family: inherit;
+
+  font-size: 12px;
+
+  text-align: left;
+
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.languageOption:hover {
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+}
+
+.languageOptionActive {
+  background:
+    rgba(104, 220, 247, 0.12);
+
+  color: #73e0f8;
+}
+
+.languageCheck {
+  width: 20px;
+  height: 20px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  border: 1px solid
+    rgba(255, 255, 255, 0.18);
+
+  border-radius: 6px;
+}
+
+.languageOptionActive
+.languageCheck {
+  border-color:
+    rgba(104, 220, 247, 0.55);
+
+  background:
+    rgba(104, 220, 247, 0.15);
+
+  color: #73e0f8;
+}
+
+.noLanguages {
+  padding: 18px 12px;
+
+  color:
+    rgba(255, 255, 255, 0.5);
+
+  font-size: 11px;
+
+  text-align: center;
+}
+
+/* =========================
+   CHIPS
+========================= */
+
+.languageChips {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 7px;
+
+  margin-top: 10px;
+}
+
+.languageChip {
+  display: inline-flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding:
+    6px 8px
+    6px 10px;
+
+  border: 1px solid
+    rgba(104, 220, 247, 0.25);
+
+  border-radius: 999px;
+
+  background:
+    rgba(104, 220, 247, 0.1);
+
+  color: #dff9ff;
+
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.languageChip button {
+  width: 18px;
+  height: 18px;
+
+  display: grid;
+  place-items: center;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  color:
+    rgba(255, 255, 255, 0.7);
+
+  cursor: pointer;
+}
+
+.languageChip button:hover {
+  background:
+    rgba(255, 255, 255, 0.16);
+
+  color: #ffffff;
+}
+
+/* =========================
+   OTHER LANGUAGE
+========================= */
+
+.otherLanguageBox {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  margin-top: 10px;
+
+  padding: 0 12px;
+
+  border: 1px solid
+    rgba(104, 220, 247, 0.25);
+
+  border-radius: 12px;
+
+  background:
+    rgba(104, 220, 247, 0.07);
+}
+
+.otherLanguageBox > svg {
+  flex: 0 0 auto;
+
+  color: #73e0f8;
+}
+
+.otherLanguageBox input {
+  width: 100%;
+
+  padding: 12px 0;
+
+  border: 0;
+  outline: 0;
+
+  background:
+    transparent;
+
+  color: #ffffff;
+
+  font-family: inherit;
+
+  font-size: 12px;
+}
+
+.otherLanguageBox input::placeholder {
+  color:
+    rgba(255, 255, 255, 0.45);
+}
+
+.otherLanguageBox button {
+  width: 28px;
+  height: 28px;
+
+  display: grid;
+  place-items: center;
+
+  flex: 0 0 auto;
+
+  padding: 0;
+
+  border: 0;
+
+  border-radius: 50%;
+
+  background:
+    transparent;
+
+  color:
+    rgba(255, 255, 255, 0.6);
+
+  cursor: pointer;
+}
+
+.otherLanguageBox button:hover {
+  background:
+    rgba(255, 255, 255, 0.08);
+
+  color: #ffffff;
+}
+
+/* GUIDE PRIVATE DOCUMENT PICKER: native input launched by an explicit button */
+.documentPicker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 17px;
+  border: 1px dashed rgba(255, 255, 255, 0.47);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Keep the input in the DOM for its value and native file selection,
+   but let the visible button launch the picker from a direct user click. */
+.registerCard input[type="file"][hidden] {
+  display: none !important;
+}
+
+.documentPickerButton {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  max-width: 100%;
+  padding: 12px 15px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.4;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.documentPickerButton:hover,
+.documentPickerButton:focus-visible {
+  background: rgba(112, 222, 247, 0.23);
+  border-color: #70def7;
+  outline-color: #70def7;
+}
+
+.documentPickerFilename {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+}

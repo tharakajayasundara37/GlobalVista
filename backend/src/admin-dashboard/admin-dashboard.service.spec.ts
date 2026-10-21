@@ -1,18 +1,102 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AdminDashboardService } from './admin-dashboard.service';
+import {
+  Test,
+  TestingModule,
+} from '@nestjs/testing';
 
-describe('AdminDashboardService', () => {
-  let service: AdminDashboardService;
+import {
+  getModelToken,
+} from '@nestjs/mongoose';
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [AdminDashboardService],
-    }).compile();
+import {
+  AdminDashboardService,
+} from './admin-dashboard.service';
 
-    service = module.get<AdminDashboardService>(AdminDashboardService);
-  });
+import {
+  User,
+} from '../users/schemas/user.schema';
 
-  it('should be defined', () => {
-    expect(service).toBeDefined();
-  });
-});
+import {
+  Package,
+} from '../packages/schemas/package.schema';
+
+import {
+  Booking,
+} from '../bookings/schemas/booking.schema';
+
+import {
+  Payment,
+} from '../payments/schemas/payment.schema';
+
+describe(
+  'AdminDashboardService',
+  () => {
+    let service:
+      AdminDashboardService;
+
+    beforeEach(
+      async () => {
+        const module:
+          TestingModule =
+          await Test
+            .createTestingModule(
+              {
+                providers: [
+                  AdminDashboardService,
+
+                  {
+                    provide:
+                      getModelToken(
+                        User.name,
+                      ),
+
+                    useValue: {},
+                  },
+
+                  {
+                    provide:
+                      getModelToken(
+                        Package.name,
+                      ),
+
+                    useValue: {},
+                  },
+
+                  {
+                    provide:
+                      getModelToken(
+                        Booking.name,
+                      ),
+
+                    useValue: {},
+                  },
+
+                  {
+                    provide:
+                      getModelToken(
+                        Payment.name,
+                      ),
+
+                    useValue: {},
+                  },
+                ],
+              },
+            )
+            .compile();
+
+        service =
+          module.get<AdminDashboardService>(
+            AdminDashboardService,
+          );
+      },
+    );
+
+    it(
+      'should be defined',
+      () => {
+        expect(
+          service,
+        ).toBeDefined();
+      },
+    );
+  },
+);

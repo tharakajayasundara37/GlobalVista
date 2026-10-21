@@ -1,83 +1,184 @@
-import { NestFactory } from '@nestjs/core';
 
-import { AppModule } from './app.module';
+import {
+  ValidationPipe,
+} from '@nestjs/common';
 
-import { ValidationPipe } from '@nestjs/common';
+import {
+  NestFactory,
+} from '@nestjs/core';
+
+import {
+  NestExpressApplication,
+} from '@nestjs/platform-express';
 
 import {
   SwaggerModule,
-  DocumentBuilder
+  DocumentBuilder,
 } from '@nestjs/swagger';
 
+import {
+  join,
+} from 'path';
 
+import {
+  mkdirSync,
+} from 'fs';
+
+import {
+  AppModule,
+} from './app.module';
 
 async function bootstrap() {
+  const app =
+    await NestFactory.create<NestExpressApplication>(
+      AppModule,
+    );
 
+  // ==========================================
+  // ENABLE CORS
+  // ==========================================
 
-const app = await NestFactory.create(
-AppModule
-);
+  app.enableCors();
 
+  // ==========================================
+  // GLOBAL VALIDATION
+  // ==========================================
 
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
 
-app.enableCors();
+      forbidNonWhitelisted:
+        true,
 
+      transform: true,
+    }),
+  );
 
+  // ==========================================
+  // ENSURE PACKAGE UPLOAD DIRECTORY EXISTS
+  // ==========================================
 
-app.useGlobalPipes(
+  mkdirSync(
+    join(
+      process.cwd(),
+      'uploads',
+      'packages',
+    ),
+    {
+      recursive: true,
+    },
+  );
 
-new ValidationPipe({
+  // ==========================================
+  // NEW - ADMIN PROFILE IMAGE DIRECTORY
+  // ==========================================
 
-whitelist:true,
+  mkdirSync(
+    join(
+      process.cwd(),
+      'uploads',
+      'users',
+    ),
+    {
+      recursive: true,
+    },
+  );
 
-forbidNonWhitelisted:true
+  // ==========================================
+  // SERVE ALL UPLOADED IMAGES
+  // ==========================================
+  //
+  // Existing package images:
+  // http://localhost:3001/uploads/packages/image.jpg
+  //
+  // New admin profile images:
+  // http://localhost:3001/uploads/users/profile.jpg
+  //
+  // ==========================================
 
-})
+  app.useStaticAssets(
+    join(
+      process.cwd(),
+      'uploads',
+    ),
+    {
+      prefix:
+        '/uploads/',
+    },
+  );
 
-);
+  app.useStaticAssets(
+    join(
+      process.cwd(),
+      'uploads',
+    ),
+    {
+      prefix:
+        '/images/',
+    },
+  );
 
+  app.useStaticAssets(
+    join(
+      process.cwd(),
+      '..',
+      'frontend',
+      'public',
+      'videos',
+    ),
+    {
+      prefix:
+        '/videos/',
+    },
+  );
 
+  // ==========================================
+  // SWAGGER CONFIGURATION
+  // ==========================================
 
-const config = new DocumentBuilder()
+  const config =
+    new DocumentBuilder()
+      .setTitle(
+        'GlobalVista Travel API',
+      )
+      .setDescription(
+        'Travel Booking Management System API Documentation',
+      )
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
 
-.setTitle(
-'GlobalVista Travel API'
-)
+  const document =
+    SwaggerModule.createDocument(
+      app,
+      config,
+    );
 
-.setDescription(
-'Travel Booking Management System API Documentation'
-)
+  SwaggerModule.setup(
+    'api',
+    app,
+    document,
+  );
 
-.setVersion(
-'1.0'
-)
+  // ==========================================
+  // SERVER PORT
+  // ==========================================
 
-.addBearerAuth()
+  const port =
+    Number(
+      process.env.PORT,
+    ) || 3001;
 
-.build();
+  await app.listen(port);
 
+  console.log(
+    `GlobalVista API running on http://localhost:${port}`,
+  );
 
-
-const document =
-SwaggerModule.createDocument(
-app,
-config
-);
-
-
-
-SwaggerModule.setup(
-'api',
-app,
-document
-);
-
-
-
-await app.listen(3000);
-
-
+  console.log(
+    `Profile images available at http://localhost:${port}/uploads/users/`,
+  );
 }
-
 
 bootstrap();

@@ -1,113 +1,143 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
   Patch,
-  Delete,
+  Post,
+  Req,
   UseGuards,
-  Req
 } from '@nestjs/common';
 
+import {
+  PaymentsService,
+} from './payments.service';
 
-import { PaymentsService } from './payments.service';
+import {
+  CreatePaymentDto,
+} from './dto/create-payment.dto';
 
-import { CreatePaymentDto } from './dto/create-payment.dto';
+import {
+  JwtGuard,
+} from '../auth/jwt.guard';
 
-import { JwtGuard } from '../auth/jwt.guard';
-
-import { AdminGuard } from '../auth/admin.guard';
-
+import {
+  AdminGuard,
+} from '../auth/admin.guard';
 
 
 @Controller('payments')
 export class PaymentsController {
 
-
   constructor(
-    private paymentsService: PaymentsService
+    private readonly paymentsService:
+      PaymentsService,
   ) {}
 
 
+  /* =========================
+     CREATE PAYMENT
+  ========================= */
 
   @Post()
   @UseGuards(JwtGuard)
   create(
-    @Req() req:any,
-    @Body() body:CreatePaymentDto
+    @Req() req: any,
+    @Body() body: CreatePaymentDto,
   ) {
-
     return this.paymentsService.create(
       req.user,
-      body
+      body,
     );
-
   }
 
 
+  /* =========================
+     ADMIN - ALL PAYMENTS
+  ========================= */
 
   @Get()
-  @UseGuards(JwtGuard, AdminGuard)
+  @UseGuards(
+    JwtGuard,
+    AdminGuard,
+  )
   findAll() {
-
     return this.paymentsService.findAll();
-
   }
 
 
-
-  @Get(':id')
-  @UseGuards(JwtGuard)
-  findOne(
-    @Param('id') id:string
-  ) {
-
-    return this.paymentsService.findOne(id);
-
-  }
-
-
+  /* =========================
+     PAYMENTS BY BOOKING
+  ========================= */
 
   @Get('booking/:bookingId')
   @UseGuards(JwtGuard)
   findByBooking(
-    @Param('bookingId') bookingId:string
+    @Param('bookingId')
+    bookingId: string,
   ) {
-
     return this.paymentsService.findByBooking(
-      bookingId
+      bookingId,
     );
-
   }
 
 
+  /* =========================
+     SINGLE PAYMENT
+  ========================= */
+
+  @Get(':id')
+  @UseGuards(JwtGuard)
+  findOne(
+    @Param('id')
+    id: string,
+  ) {
+    return this.paymentsService.findOne(
+      id,
+    );
+  }
+
+
+  /* =========================
+     ADMIN UPDATE STATUS
+  ========================= */
 
   @Patch(':id')
-  @UseGuards(JwtGuard, AdminGuard)
+  @UseGuards(
+    JwtGuard,
+    AdminGuard,
+  )
   updateStatus(
-    @Param('id') id:string,
-    @Body('status') status:string
-  ) {
+    @Param('id')
+    id: string,
 
+    @Body('status')
+    status: string,
+  ) {
     return this.paymentsService.updateStatus(
       id,
-      status
+      status,
     );
-
   }
 
 
+  /* =========================
+     ADMIN DELETE PAYMENT
+  ========================= */
 
   @Delete(':id')
-  @UseGuards(JwtGuard, AdminGuard)
+  @UseGuards(
+    JwtGuard,
+    AdminGuard,
+  )
   remove(
-    @Param('id') id:string
+    @Param('id')
+    id: string,
   ) {
-
-    return this.paymentsService.remove(id);
-
+    return this.paymentsService.remove(
+      id,
+    );
   }
-
 
 }

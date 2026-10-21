@@ -1,31 +1,62 @@
 import {
-  IsString,
-  IsNumber,
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
+  IsInt,
+  IsMongoId,
   IsNotEmpty,
-  Min
+  IsOptional,
+  IsString,
+  Matches,
+  Max,
+  Min,
 } from 'class-validator';
 
 export class CreateBookingDto {
+  @IsMongoId()
+  @IsNotEmpty()
+  packageId: string;
 
+  /*
+   * Selected travel plan:
+   * Basic / Premium / Luxury
+   *
+   * Frontend sends only the ID.
+   * Price is loaded from database
+   * in backend.
+   */
+  @IsMongoId()
+  @IsNotEmpty()
+  travelPlanId: string;
 
-@IsString()
-@IsNotEmpty()
-userId:string;
+  /*
+   * Travel date format:
+   * YYYY-MM-DD
+   */
+  @IsString()
+  @Matches(
+    /^\d{4}-\d{2}-\d{2}$/,
+    {
+      message:
+        'travelDate must be in YYYY-MM-DD format',
+    },
+  )
+  travelDate: string;
 
-@IsString()
-@IsNotEmpty()
-packageId:string;
+  @IsInt()
+  @Min(1)
+  @Max(20)
+  numberOfPeople: number;
 
-@IsString()
-@IsNotEmpty()
-travelDate:string;
-
-@IsNumber()
-@Min(1)
-numberOfPeople:number;
-
-@IsNumber()
-@Min(0)
-totalPrice:number;
-
+  /*
+   * Optional package add-ons.
+   */
+  @IsOptional()
+  @IsArray()
+  @ArrayUnique()
+  @ArrayMaxSize(20)
+  @IsMongoId({
+    each: true,
+  })
+  selectedAddOnIds?: string[];
 }

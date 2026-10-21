@@ -1,92 +1,79 @@
-import { Module } from '@nestjs/common';
-
-
-import { MongooseModule } from '@nestjs/mongoose';
-
-
-import { BookingsController } from './bookings.controller';
-
-
-import { BookingsService } from './bookings.service';
-
-
+import {
+  Module,
+} from '@nestjs/common';
 
 import {
+  MongooseModule,
+} from '@nestjs/mongoose';
 
+import {
+  BookingsController,
+} from './bookings.controller';
+
+import {
+  BookingsService,
+} from './bookings.service';
+
+import {
   Booking,
-
-  BookingSchema
-
+  BookingSchema,
 } from './schemas/booking.schema';
 
+import {
+  Package,
+  PackageSchema,
+} from '../packages/schemas/package.schema';
 
+import {
+  TravelPlan,
+  TravelPlanSchema,
+} from '../travel-plans/schemas/travel-plan.schema';
 
-import { AuthModule } from '../auth/auth.module';
-
-
-
+import {
+  AuthModule,
+} from '../auth/auth.module';
 
 @Module({
+  imports: [
+    AuthModule,
 
-imports:[
+    MongooseModule.forFeature([
+      {
+        name:
+          Booking.name,
 
+        schema:
+          BookingSchema,
+      },
 
+      {
+        name:
+          Package.name,
 
-  AuthModule,
+        schema:
+          PackageSchema,
+      },
 
+      {
+        name:
+          TravelPlan.name,
 
+        schema:
+          TravelPlanSchema,
+      },
+    ]),
+  ],
 
-  MongooseModule.forFeature([
+  controllers: [
+    BookingsController,
+  ],
 
+  providers: [
+    BookingsService,
+  ],
 
-    {
-
-      name: Booking.name,
-
-      schema: BookingSchema
-
-    }
-
-
-  ])
-
-
-
-],
-
-
-
-
-
-controllers:[
-
-  BookingsController
-
-],
-
-
-
-
-
-providers:[
-
-  BookingsService
-
-],
-
-
-
-
-
-exports:[
-
-  BookingsService
-
-]
-
-
-
+  exports: [
+    BookingsService,
+  ],
 })
-
-
 export class BookingsModule {}

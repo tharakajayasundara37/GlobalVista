@@ -1,53 +1,88 @@
 import {
-  IsNotEmpty,
-  IsString,
+  ArrayMaxSize,
   IsArray,
+  IsBoolean,
   IsNumber,
-  IsOptional
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
 } from 'class-validator';
 
+import {
+  Type,
+} from 'class-transformer';
 
 export class CreateDestinationDto {
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  name: string;
 
+  @IsString()
+  @MinLength(2)
+  @MaxLength(100)
+  country: string;
 
-@IsNotEmpty()
-@IsString()
-name:string;
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  description?: string;
 
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({
+    each: true,
+  })
+  images?: string[];
 
-@IsNotEmpty()
-@IsString()
-country:string;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(5)
+  rating?: number;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  bestTimeToVisit?: string;
 
-@IsOptional()
-@IsString()
-description:string;
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(30)
+  @IsString({
+    each: true,
+  })
+  activities?: string[];
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  budget?: string;
 
-@IsOptional()
-@IsArray()
-images:string[];
+  /* =========================
+     REAL MAP LOCATION
+  ========================= */
 
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  latitude?: number;
 
-@IsOptional()
-@IsNumber()
-rating:number;
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  longitude?: number;
 
-
-@IsOptional()
-@IsString()
-bestTimeToVisit:string;
-
-
-@IsOptional()
-@IsArray()
-activities:string[];
-
-
-@IsOptional()
-@IsString()
-budget:string;
-
-
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

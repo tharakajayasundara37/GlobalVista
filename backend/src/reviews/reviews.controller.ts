@@ -1,95 +1,185 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
+  Controller,
   Delete,
+  ForbiddenException,
+  Get,
+  Param,
+  Post,
+  Req,
   UseGuards,
-  Req
 } from '@nestjs/common';
 
+import {
+  ReviewsService,
+} from './reviews.service';
 
-import { ReviewsService } from './reviews.service';
+import {
+  CreateReviewDto,
+} from './dto/create-review.dto';
 
-import { CreateReviewDto } from './dto/create-review.dto';
-
-import { JwtGuard } from '../auth/jwt.guard';
-
-import { AdminGuard } from '../auth/admin.guard';
-
-
+import {
+  JwtGuard,
+} from '../auth/jwt.guard';
 
 @Controller('reviews')
 export class ReviewsController {
-
-
   constructor(
-    private reviewsService: ReviewsService
+    private readonly reviewsService:
+      ReviewsService,
   ) {}
 
-
-
-  @Post()
-  @UseGuards(JwtGuard)
-  create(
-    @Req() req:any,
-    @Body() body:CreateReviewDto
+  private ensureAdmin(
+    user: any,
   ) {
+    const role =
+      String(
+        user?.role || '',
+      )
+        .trim()
+        .toUpperCase();
 
+    if (
+      role !== 'ADMIN'
+    ) {
+      throw new ForbiddenException(
+        'Admin access required',
+      );
+    }
+  }
+
+  /*
+   * TRAVELLER
+   * Submit a review.
+   */
+  @Post()
+  @UseGuards(
+    JwtGuard,
+  )
+  async create(
+    @Req()
+    req: any,
+
+    @Body()
+    body: CreateReviewDto,
+  ) {
     return this.reviewsService.create(
       req.user,
-      body
+      body,
     );
-
   }
 
+  /*
+   * PUBLIC
+   *
+   * Latest 3 approved real reviews
+   * for homepage.
+   *
+   * GET /reviews/recent
+   */
+  @Get('recent')
+  async findPublicRecent() {
+    return this.reviewsService
+      .findPublicRecent();
+  }
 
+  /*
+   * PUBLIC
+   *
+   * Package average rating.
+   *
+   * GET /reviews/package/:packageId/rating
+   */
+  @Get(
+    'package/:packageId/rating',
+  )
+  async getPackageRating(
+    @Param(
+      'packageId',
+    )
+    packageId: string,
+  ) {
+    return this.reviewsService
+      .getPackageRating(
+        packageId,
+      );
+  }
 
+  /*
+   * PUBLIC
+   *
+   * All approved reviews
+   * for one package.
+   *
+   * GET /reviews/package/:packageId
+   */
+  @Get(
+    'package/:packageId',
+  )
+  async findByPackage(
+    @Param(
+      'packageId',
+    )
+    packageId: string,
+  ) {
+    return this.reviewsService
+      .findByPackage(
+        packageId,
+      );
+  }
+
+  /*
+   * ADMIN
+   *
+   * Get all reviews.
+   *
+   * GET /reviews
+   */
   @Get()
-  findAll(){
-
-    return this.reviewsService.findAll();
-
-  }
-
-
-
-  @Get('package/:packageId')
-  findByPackage(
-    @Param('packageId') packageId:string
-  ){
-
-    return this.reviewsService.findByPackage(
-      packageId
+  @UseGuards(
+    JwtGuard,
+  )
+  async findAll(
+    @Req()
+    req: any,
+  ) {
+    this.ensureAdmin(
+      req.user,
     );
 
+    return this.reviewsService
+      .findAll();
   }
 
+  /*
+   * ADMIN
+   *
+   * Delete review.
+   *
+   * DELETE /reviews/:id
+   */
+  @Delete(
+    ':id',
+  )
+  @UseGuards(
+    JwtGuard,
+  )
+  async remove(
+    @Req()
+    req: any,
 
-
-  @Get('package/:packageId/rating')
-  getPackageRating(
-    @Param('packageId') packageId:string
-  ){
-
-    return this.reviewsService.getPackageRating(
-      packageId
+    @Param(
+      'id',
+    )
+    id: string,
+  ) {
+    this.ensureAdmin(
+      req.user,
     );
 
+    return this.reviewsService
+      .remove(
+        id,
+      );
   }
-
-
-
-  @Delete(':id')
-  @UseGuards(JwtGuard, AdminGuard)
-  remove(
-    @Param('id') id:string
-  ){
-
-    return this.reviewsService.remove(id);
-
-  }
-
-
 }

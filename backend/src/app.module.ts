@@ -1,41 +1,89 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
+import {
+  Module,
+} from '@nestjs/common';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import {
+  ConfigModule,
+  ConfigService,
+} from '@nestjs/config';
 
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { DestinationsModule } from './destinations/destinations.module';
-import { PackagesModule } from './packages/packages.module';
-import { BookingsModule } from './bookings/bookings.module';
-import { PaymentsModule } from './payments/payments.module';
-import { ReviewsModule } from './reviews/reviews.module';
-import { WishlistModule } from './wishlist/wishlist.module';
-import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
+import {
+  MongooseModule,
+} from '@nestjs/mongoose';
 
+import {
+  AppController,
+} from './app.controller';
+
+import {
+  AppService,
+} from './app.service';
+
+import {
+  AuthModule,
+} from './auth/auth.module';
+
+import {
+  UsersModule,
+} from './users/users.module';
+
+import {
+  DestinationsModule,
+} from './destinations/destinations.module';
+
+import {
+  PackagesModule,
+} from './packages/packages.module';
+
+import {
+  BookingsModule,
+} from './bookings/bookings.module';
+
+import {
+  PaymentsModule,
+} from './payments/payments.module';
+
+import {
+  ReviewsModule,
+} from './reviews/reviews.module';
+
+import {
+  WishlistModule,
+} from './wishlist/wishlist.module';
+
+import {
+  AdminDashboardModule,
+} from './admin-dashboard/admin-dashboard.module';
+
+import {
+  TravelPlansModule,
+} from './travel-plans/travel-plans.module';
 
 @Module({
   imports: [
-
     ConfigModule.forRoot({
       isGlobal: true,
     }),
 
-
     MongooseModule.forRootAsync({
+      imports: [
+        ConfigModule,
+      ],
 
-      imports: [ConfigModule],
-
-      useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGO_URI'),
+      useFactory: (
+        configService:
+          ConfigService,
+      ) => ({
+        uri:
+          configService.get<string>(
+            'MONGO_URI',
+          ),
       }),
 
-      inject: [ConfigService],
-
+      inject: [
+        ConfigService,
+      ],
     }),
-
 
     // Feature Modules
     AuthModule,
@@ -47,7 +95,7 @@ import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
     ReviewsModule,
     WishlistModule,
     AdminDashboardModule,
-
+    TravelPlansModule,
   ],
 
   controllers: [
@@ -57,6 +105,5 @@ import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
   providers: [
     AppService,
   ],
-
 })
 export class AppModule {}

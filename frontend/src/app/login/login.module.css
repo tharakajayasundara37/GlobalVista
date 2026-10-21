@@ -1,0 +1,782 @@
+.page {
+  position: relative;
+
+  width: 100%;
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 46px 48px;
+
+  background: #061419;
+  color: #ffffff;
+}
+
+/* =========================
+   VIDEO BACKGROUND
+========================= */
+
+.backgroundVideo {
+  position: fixed;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+  object-position: center;
+
+  z-index: 0;
+
+  pointer-events: none;
+}
+
+/* =========================
+   BACKGROUND OVERLAY
+========================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 1;
+
+  pointer-events: none;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(3, 14, 24, 0.8) 0%,
+      rgba(3, 14, 24, 0.58) 43%,
+      rgba(3, 14, 24, 0.32) 100%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.08) 0%,
+      rgba(0, 0, 0, 0.24) 100%
+    );
+}
+
+/* =========================
+   BACK BUTTON
+========================= */
+
+.backButton {
+  position: absolute;
+
+  top: 28px;
+  left: 40px;
+
+  z-index: 20;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  color: rgba(255, 255, 255, 0.9);
+
+  text-decoration: none;
+
+  font-size: 13px;
+  font-weight: 650;
+
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.backButton:hover {
+  color: #ffffff;
+
+  transform: translateX(-3px);
+}
+
+/* =========================
+   MAIN LAYOUT
+========================= */
+
+.container {
+  position: relative;
+
+  z-index: 5;
+
+  width: min(1180px, 100%);
+
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    minmax(390px, 410px);
+
+  align-items: center;
+
+  gap: clamp(
+    70px,
+    8vw,
+    130px
+  );
+}
+
+/* =========================
+   LEFT BRAND SIDE
+========================= */
+
+.brandSide {
+  min-height: 590px;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: flex-start;
+}
+
+/* =========================
+   LOGO
+========================= */
+
+.logo {
+  display: inline-block;
+
+  width: fit-content;
+
+  margin-top: 8px;
+
+  color: #ffffff;
+
+  text-decoration: none;
+
+  font-size: 29px;
+  font-weight: 800;
+
+  letter-spacing: -1.2px;
+}
+
+.logo span {
+  color: #67dcf7;
+}
+
+/* =========================
+   BRAND CONTENT
+========================= */
+
+.brandContent {
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  justify-content: center;
+
+  width: 100%;
+  max-width: 620px;
+
+  padding-top: 30px;
+  padding-bottom: 10px;
+}
+
+.brandLine {
+  display: block;
+
+  width: 44px;
+  height: 2px;
+
+  margin-bottom: 20px;
+
+  background: #63d9f7;
+}
+
+.eyebrow {
+  display: block;
+
+  margin-bottom: 22px;
+
+  color: #6eddf7;
+
+  font-size: 11px;
+  font-weight: 750;
+
+  letter-spacing: 2.7px;
+}
+
+.brandContent h1 {
+  margin: 0;
+
+  max-width: 620px;
+
+  color: #ffffff;
+
+  font-family:
+    Georgia,
+    'Times New Roman',
+    serif;
+
+  font-size: clamp(
+    52px,
+    5.3vw,
+    74px
+  );
+
+  font-weight: 500;
+
+  line-height: 1.01;
+
+  letter-spacing: -2.6px;
+}
+
+.brandContent h1 em {
+  color: #ffffff;
+
+  font-weight: 400;
+}
+
+.brandContent p {
+  max-width: 520px;
+
+  margin: 30px 0 0;
+
+  color: rgba(255, 255, 255, 0.78);
+
+  font-size: 15px;
+
+  line-height: 1.75;
+}
+
+/* =========================
+   GLASS LOGIN CARD
+========================= */
+
+.loginCard {
+  position: relative;
+
+  width: 100%;
+  max-width: 410px;
+
+  justify-self: end;
+
+  padding:
+    38px 36px
+    34px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.48);
+
+  border-radius: 31px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255, 255, 255, 0.13),
+      rgba(255, 255, 255, 0.055)
+    );
+
+  box-shadow:
+    0 30px 70px
+    rgba(0, 0, 0, 0.2),
+    inset
+    0 1px 0
+    rgba(255, 255, 255, 0.14);
+
+  backdrop-filter: blur(14px);
+
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* =========================
+   CARD LABEL
+========================= */
+
+.cardLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 30px;
+
+  color: #67ddf8;
+
+  font-size: 14px;
+  font-weight: 650;
+}
+
+/* =========================
+   LOGIN HEADING
+========================= */
+
+.loginHeader h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-family:
+    Georgia,
+    'Times New Roman',
+    serif;
+
+  font-size: 43px;
+
+  font-weight: 500;
+
+  line-height: 1.08;
+
+  letter-spacing: -1.5px;
+}
+
+.loginHeader p {
+  margin:
+    13px 0
+    0;
+
+  color: rgba(255, 255, 255, 0.74);
+
+  font-size: 13px;
+
+  line-height: 1.6;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form {
+  margin-top: 31px;
+}
+
+/* =========================
+   FIELD GROUP
+========================= */
+
+.fieldGroup {
+  margin-bottom: 19px;
+}
+
+.fieldGroup label {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: rgba(255, 255, 255, 0.92);
+
+  font-size: 12px;
+  font-weight: 650;
+}
+
+/* =========================
+   PASSWORD ROW
+========================= */
+
+.passwordLabel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =========================
+   FORGOT PASSWORD
+========================= */
+
+.forgotButton {
+  margin-bottom: 9px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  color: #71def6;
+
+  font-family: inherit;
+
+  font-size: 11px;
+  font-weight: 650;
+
+  cursor: pointer;
+}
+
+.forgotButton:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   INPUT BOX
+========================= */
+
+.inputBox {
+  width: 100%;
+  min-height: 54px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 15px;
+
+  border:
+    1px solid
+    rgba(255, 255, 255, 0.25);
+
+  border-radius: 14px;
+
+  background:
+    rgba(255, 255, 255, 0.1);
+
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inputBox:focus-within {
+  border-color:
+    rgba(104, 220, 247, 0.9);
+
+  background:
+    rgba(255, 255, 255, 0.14);
+
+  box-shadow:
+    0 0 0 3px
+    rgba(104, 220, 247, 0.11);
+}
+
+.inputBox svg {
+  flex: 0 0 auto;
+
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.inputBox input {
+  width: 100%;
+
+  padding: 16px 0;
+
+  border: 0;
+  outline: none;
+
+  background: transparent;
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 13px;
+}
+
+.inputBox input::placeholder {
+  color: rgba(255, 255, 255, 0.48);
+}
+
+/* =========================
+   PASSWORD EYE BUTTON
+========================= */
+
+.eyeButton {
+  flex: 0 0 auto;
+
+  display: grid;
+  place-items: center;
+
+  padding: 3px;
+
+  border: 0;
+
+  background: transparent;
+
+  color: rgba(255, 255, 255, 0.72);
+
+  cursor: pointer;
+}
+
+/* =========================
+   ERROR
+========================= */
+
+.error {
+  margin:
+    2px 0
+    17px;
+
+  padding:
+    11px 13px;
+
+  border:
+    1px solid
+    rgba(255, 130, 130, 0.3);
+
+  border-radius: 11px;
+
+  background:
+    rgba(125, 17, 17, 0.34);
+
+  color: #ffdede;
+
+  font-size: 12px;
+
+  line-height: 1.45;
+}
+
+/* =========================
+   LOGIN BUTTON
+========================= */
+
+.loginButton {
+  width: 100%;
+  min-height: 62px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 14px;
+
+  margin-top: 6px;
+
+  border: 0;
+
+  border-radius: 14px;
+
+  background: #ffffff;
+
+  color: #0b4568;
+
+  font-family: inherit;
+
+  font-size: 16px;
+  font-weight: 800;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 15px 35px
+    rgba(0, 0, 0, 0.15);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.loginButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+
+  background: #f8fcff;
+
+  box-shadow:
+    0 18px 40px
+    rgba(0, 0, 0, 0.21);
+}
+
+.loginButton:disabled {
+  opacity: 0.7;
+
+  cursor: wait;
+}
+
+/* =========================
+   REGISTER TEXT
+========================= */
+
+.registerText {
+  margin-top: 25px;
+
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 6px;
+
+  color: rgba(255, 255, 255, 0.67);
+
+  font-size: 12px;
+}
+
+.registerText a {
+  color: #70def7;
+
+  font-weight: 700;
+
+  text-decoration: none;
+}
+
+.registerText a:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   LARGE LAPTOP
+========================= */
+
+@media (max-width: 1200px) {
+  .container {
+    width: min(1080px, 100%);
+
+    gap: 70px;
+  }
+
+  .brandContent h1 {
+    font-size: 64px;
+  }
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 960px) {
+  .page {
+    align-items: flex-start;
+
+    min-height: 100vh;
+
+    padding:
+      100px 28px
+      50px;
+  }
+
+  .container {
+    grid-template-columns: 1fr;
+
+    gap: 42px;
+  }
+
+  .brandSide {
+    min-height: auto;
+  }
+
+  .logo {
+    margin-top: 0;
+  }
+
+  .brandContent {
+    display: block;
+
+    padding-top: 65px;
+    padding-bottom: 0;
+  }
+
+  .brandContent h1 {
+    font-size: 58px;
+  }
+
+  .loginCard {
+    justify-self: start;
+
+    width: min(470px, 100%);
+    max-width: 470px;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 600px) {
+  .page {
+    padding:
+      88px 16px
+      28px;
+  }
+
+  .backgroundVideo {
+    object-position: center;
+  }
+
+  .overlay {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(3, 14, 24, 0.68) 0%,
+        rgba(3, 14, 24, 0.54) 45%,
+        rgba(3, 14, 24, 0.64) 100%
+      );
+  }
+
+  .backButton {
+    top: 24px;
+    left: 18px;
+
+    font-size: 12px;
+  }
+
+  .container {
+    gap: 34px;
+  }
+
+  .logo {
+    font-size: 25px;
+  }
+
+  .brandContent {
+    padding-top: 52px;
+  }
+
+  .brandLine {
+    width: 38px;
+
+    margin-bottom: 17px;
+  }
+
+  .eyebrow {
+    margin-bottom: 17px;
+
+    font-size: 10px;
+
+    letter-spacing: 2.2px;
+  }
+
+  .brandContent h1 {
+    font-size: 43px;
+
+    line-height: 1;
+
+    letter-spacing: -2px;
+  }
+
+  .brandContent p {
+    margin-top: 22px;
+
+    font-size: 14px;
+
+    line-height: 1.65;
+  }
+
+  .loginCard {
+    width: 100%;
+    max-width: 100%;
+
+    padding:
+      31px 22px
+      27px;
+
+    border-radius: 25px;
+  }
+
+  .cardLabel {
+    margin-bottom: 23px;
+
+    font-size: 13px;
+  }
+
+  .loginHeader h2 {
+    font-size: 36px;
+  }
+
+  .loginHeader p {
+    font-size: 12px;
+  }
+
+  .form {
+    margin-top: 26px;
+  }
+
+  .inputBox {
+    min-height: 52px;
+  }
+
+  .loginButton {
+    min-height: 58px;
+  }
+}

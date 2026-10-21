@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+mobile/node_modules/
+
+# Production builds
+dist/
+backend/dist/
+frontend/.next/
+frontend/out/
+mobile/.expo/
+mobile/dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Temporary / Zip files
+*.zip
+*.log
+backend/*.zip
+
+# Uploaded assets & private sensitive documents
+backend/uploads/
+backend/private-data/
+
+# Large videos (>100MB exceed GitHub file limit)
+frontend/public/videos/*.mp4
+*.mp4
+*.webm

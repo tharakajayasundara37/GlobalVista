@@ -1,118 +1,124 @@
 import {
- Prop,
- Schema,
- SchemaFactory
+  Prop,
+  Schema,
+  SchemaFactory,
 } from '@nestjs/mongoose';
 
-
 import {
- Document,
- Types
+  Document,
+  Types,
 } from 'mongoose';
 
-
-
-
 export type PaymentDocument =
-Payment & Document;
-
-
-
-
+  Payment & Document;
 
 @Schema({
-
-timestamps:true
-
+  timestamps: true,
 })
-
 export class Payment {
+  @Prop({
+    type:
+      Types.ObjectId,
 
+    ref:
+      'Booking',
 
+    required:
+      true,
 
-@Prop({
+    index:
+      true,
+  })
+  bookingId:
+    Types.ObjectId;
 
-type:Types.ObjectId,
+  @Prop({
+    type:
+      Types.ObjectId,
 
-ref:'Booking',
+    ref:
+      'User',
 
-required:true
+    required:
+      true,
 
-})
+    index:
+      true,
+  })
+  userId:
+    Types.ObjectId;
 
-bookingId:Types.ObjectId;
+  @Prop({
+    type:
+      Number,
 
+    required:
+      true,
 
+    min:
+      0,
+  })
+  amount:
+    number;
 
+  @Prop({
+    type:
+      String,
 
+    required:
+      true,
 
+    trim:
+      true,
+  })
+  paymentMethod:
+    string;
 
-@Prop({
+  @Prop({
+    type:
+      String,
 
-type:Types.ObjectId,
+    required:
+      true,
 
-ref:'User',
+    trim:
+      true,
 
-required:true
+    unique:
+      true,
 
-})
+    index:
+      true,
+  })
+  transactionId:
+    string;
 
-userId:Types.ObjectId;
+  @Prop({
+    type:
+      String,
 
+    enum: [
+      'PENDING',
+      'SUCCESS',
+      'FAILED',
+    ],
 
+    default:
+      'PENDING',
 
-
-
-
-
-@Prop({
-
-required:true
-
-})
-
-amount:number;
-
-
-
-
-
-
-
-@Prop()
-
-paymentMethod:string;
-
-
-
-
-
-
-
-@Prop()
-
-transactionId:string;
-
-
-
-
-
-
-
-@Prop({
-
-default:"PENDING"
-
-})
-
-status:string;
-
-
-
+    index:
+      true,
+  })
+  status:
+    string;
 }
 
-
-
-
 export const PaymentSchema =
-SchemaFactory.createForClass(Payment);
+  SchemaFactory.createForClass(
+    Payment,
+  );
+
+PaymentSchema.index({
+  bookingId: 1,
+  status: 1,
+});

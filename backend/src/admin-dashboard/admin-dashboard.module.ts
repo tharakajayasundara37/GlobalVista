@@ -1,107 +1,92 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+} from '@nestjs/common';
 
+import {
+  MongooseModule,
+} from '@nestjs/mongoose';
 
-import { MongooseModule } from '@nestjs/mongoose';
+import {
+  AdminDashboardController,
+} from './admin-dashboard.controller';
 
+import {
+  AdminDashboardService,
+} from './admin-dashboard.service';
 
-import { AdminDashboardController } from './admin-dashboard.controller';
-
-
-import { AdminDashboardService } from './admin-dashboard.service';
-
-
-
-import { AuthModule } from '../auth/auth.module';
-
-
+import {
+  AuthModule,
+} from '../auth/auth.module';
 
 import {
   User,
-  UserSchema
+  UserSchema,
 } from '../users/schemas/user.schema';
-
-
 
 import {
   Package,
-  PackageSchema
+  PackageSchema,
 } from '../packages/schemas/package.schema';
-
-
 
 import {
   Booking,
-  BookingSchema
+  BookingSchema,
 } from '../bookings/schemas/booking.schema';
-
-
 
 import {
   Payment,
-  PaymentSchema
+  PaymentSchema,
 } from '../payments/schemas/payment.schema';
 
-
-
-
 @Module({
+  imports: [
+    AuthModule,
 
-imports:[
+    MongooseModule.forFeature([
+      {
+        name:
+          User.name,
 
+        schema:
+          UserSchema,
+      },
 
-AuthModule,
+      {
+        name:
+          Package.name,
 
+        schema:
+          PackageSchema,
+      },
 
-MongooseModule.forFeature([
+      {
+        name:
+          Booking.name,
 
+        schema:
+          BookingSchema,
+      },
 
-{
- name:User.name,
- schema:UserSchema
-},
+      {
+        name:
+          Payment.name,
 
+        schema:
+          PaymentSchema,
+      },
+    ]),
+  ],
 
-{
- name:Package.name,
- schema:PackageSchema
-},
+  controllers: [
+    AdminDashboardController,
+  ],
 
+  providers: [
+    AdminDashboardService,
+  ],
 
-{
- name:Booking.name,
- schema:BookingSchema
-},
-
-
-{
- name:Payment.name,
- schema:PaymentSchema
-}
-
-
-])
-
-
-],
-
-
-
-controllers:[
-
-AdminDashboardController
-
-],
-
-
-
-providers:[
-
-AdminDashboardService
-
-]
-
-
+  exports: [
+    AdminDashboardService,
+  ],
 })
-
-
 export class AdminDashboardModule {}
