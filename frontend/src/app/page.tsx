@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
+import { motion, useScroll, useSpring } from 'framer-motion';
 
 import {
   useEffect,
@@ -501,6 +502,12 @@ const defaultReviews = [
 
 export default function Home() {
   const router = useRouter();
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
   const { formatPrice, currentCurrency, currency } = useCurrency();
   const { language, setLanguage, t } = useLanguage();
 
@@ -1931,6 +1938,21 @@ export default function Home() {
 
   return (
     <main>
+      <motion.div
+        className="scrollProgressBar"
+        style={{
+          scaleX,
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: 'linear-gradient(90deg, #0284c7, #38bdf8, #0ea5e9, #38bdf8)',
+          transformOrigin: '0%',
+          zIndex: 9999,
+          boxShadow: '0 0 10px rgba(56, 189, 248, 0.7)',
+        }}
+      />
       <section
         className="hero"
       >
@@ -2233,8 +2255,11 @@ export default function Home() {
         <div
           className="heroInner container"
         >
-          <div
+          <motion.div
             className="heroText"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: 'easeOut' }}
           >
             <div
               className="eyebrow"
@@ -2355,11 +2380,15 @@ export default function Home() {
                 </small>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <aside
+          <motion.aside
             className="heroDealCard"
             aria-label="Featured luxury escape deal"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
+            whileHover={{ y: -6, transition: { duration: 0.25 } }}
           >
             <div className="dealCardTop">
               <div
@@ -2468,7 +2497,7 @@ export default function Home() {
                 </button>
               </div>
             </div>
-          </aside>
+          </motion.aside>
         </div>
 
         {/* Live Hero Background Scene Controller */}
@@ -2529,8 +2558,12 @@ export default function Home() {
           </div>
         </div>
 
-        <div
+        <motion.div
           className="heroStats container"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-40px' }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
         >
           <div
             className="stat"
@@ -2595,7 +2628,7 @@ export default function Home() {
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       <section
@@ -2603,11 +2636,17 @@ export default function Home() {
         id="destinations"
       >
         <div className="container">
-          <div className="sectionHeading">
+          <motion.div
+            className="sectionHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <span>{t.destinations.eyebrow}</span>
             <h2>{t.destinations.title}</h2>
             <p>{t.destinations.subtitle}</p>
-          </div>
+          </motion.div>
 
           <div className="destinationGrid">
             {destinationsLoading && <p>Loading destinations...</p>}
@@ -2618,8 +2657,16 @@ export default function Home() {
               <p>No destinations available.</p>
             )}
             {!destinationsLoading && !destinationsError &&
-              homeDestinations.map((destination) => (
-                <article className="destinationCard" key={destination._id}>
+              homeDestinations.map((destination, destIdx) => (
+                <motion.article
+                  className="destinationCard"
+                  key={destination._id}
+                  initial={{ opacity: 0, y: 35 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-30px' }}
+                  transition={{ duration: 0.5, delay: (destIdx % 4) * 0.08, ease: 'easeOut' }}
+                  whileHover={{ y: -8, transition: { duration: 0.25 } }}
+                >
                   <img
                     src={getDestinationImage(destination)}
                     alt={destination.name}
@@ -2647,7 +2694,7 @@ export default function Home() {
                       {t.destinations.viewBook} <ArrowRight size={13} />
                     </Link>
                   </div>
-                </article>
+                </motion.article>
               ))}
           </div>
 
@@ -2665,11 +2712,17 @@ export default function Home() {
         style={{ paddingTop: '75px', background: '#f6f9fc' }}
       >
         <div className="container">
-          <div className="sectionHeading">
+          <motion.div
+            className="sectionHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <span>EXPLORE TRAVEL PACKAGES</span>
             <h2>Discover your perfect journey</h2>
             <p>Explore premium packages carefully prepared for your next adventure.</p>
-          </div>
+          </motion.div>
 
           <div className="destinationGrid">
             {packagesLoading && <p>Loading packages...</p>}
@@ -2678,15 +2731,20 @@ export default function Home() {
               <p>No packages available.</p>
             )}
             {!packagesLoading && !packagesError &&
-              homePackages.map((pkg) => {
+              homePackages.map((pkg, pkgIdx) => {
                 const rating = Number(pkg.reviewInfo?.averageRating || 0);
                 const reviewCount = Number(pkg.reviewInfo?.totalReviews || 0);
                 return (
-                      <article
+                      <motion.article
                         className="destinationCard"
                         key={
                           pkg._id
                         }
+                        initial={{ opacity: 0, y: 35 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true, margin: '-30px' }}
+                        transition={{ duration: 0.5, delay: (pkgIdx % 4) * 0.08, ease: 'easeOut' }}
+                        whileHover={{ y: -8, transition: { duration: 0.25 } }}
                       >
                         <img
                           src={getPackageImage(
@@ -2815,7 +2873,7 @@ export default function Home() {
                             </strong>
                           </div>
                         </div>
-                      </article>
+                      </motion.article>
                 );
               })}
           </div>
@@ -2833,7 +2891,13 @@ export default function Home() {
         id="experiences"
       >
         <div className="container">
-          <div className="sectionHeading lightHeading">
+          <motion.div
+            className="sectionHeading lightHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <span>
               <Sparkles size={14} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 6 }} />
               CURATED WORLD-CLASS EXPEDITIONS
@@ -2846,17 +2910,26 @@ export default function Home() {
             <p>
               From private overwater atolls to high-altitude helicopter traverses, explore handcrafted escapes designed with white-glove concierge precision.
             </p>
-          </div>
+          </motion.div>
 
           <div className="experienceGrid">
-            {exclusiveExperiences.map((exp) => {
+            {exclusiveExperiences.map((exp, expIdx) => {
               const BadgeIcon = exp.badgeIcon;
               return (
-                <Link
-                  href={`/packages?search=${encodeURIComponent(exp.searchQuery)}`}
-                  className="experienceCard"
+                <motion.div
                   key={exp.id}
+                  initial={{ opacity: 0, y: 35 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-30px' }}
+                  transition={{ duration: 0.5, delay: (expIdx % 3) * 0.1, ease: 'easeOut' }}
+                  whileHover={{ y: -8, scale: 1.015, transition: { duration: 0.25 } }}
+                  style={{ display: 'flex' }}
                 >
+                  <Link
+                    href={`/packages?search=${encodeURIComponent(exp.searchQuery)}`}
+                    className="experienceCard"
+                    style={{ width: '100%' }}
+                  >
                   <img
                     src={exp.image}
                     alt={exp.title}
@@ -2906,11 +2979,19 @@ export default function Home() {
                     </div>
                   </div>
                 </Link>
-              );
-            })}
+              </motion.div>
+            );
+          })}
           </div>
 
-          <div className="tripPlanner" id="planner">
+          <motion.div
+            className="tripPlanner"
+            id="planner"
+            initial={{ opacity: 0, y: 35 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+          >
             <div className="plannerTitle">
               <span className="plannerEyebrow">
                 <Sparkles size={14} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 6 }} />
@@ -3031,7 +3112,7 @@ export default function Home() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -3042,8 +3123,12 @@ export default function Home() {
         <div
           className="container"
         >
-          <div
+          <motion.div
             className="sectionHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
           >
             <span>
               {t.offers.eyebrow}
@@ -3056,7 +3141,7 @@ export default function Home() {
             <p>
               {t.offers.subtitle}
             </p>
-          </div>
+          </motion.div>
 
           <div
             className="destinationGrid"
@@ -3114,6 +3199,7 @@ export default function Home() {
               specialOffers.map(
                 (
                   pkg,
+                  offerIdx,
                 ) => {
                   const rating =
                     Number(
@@ -3157,11 +3243,16 @@ export default function Home() {
                     );
 
                   return (
-                    <article
+                    <motion.article
                       className="destinationCard specialOfferDestinationCard"
                       key={
                         pkg._id
                       }
+                      initial={{ opacity: 0, y: 35 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-30px' }}
+                      transition={{ duration: 0.5, delay: (offerIdx % 4) * 0.08, ease: 'easeOut' }}
+                      whileHover={{ y: -8, transition: { duration: 0.25 } }}
                     >
                       <img
                         src={getPackageImage(
@@ -3314,7 +3405,7 @@ export default function Home() {
                           </strong>
                         </div>
                       </div>
-                    </article>
+                    </motion.article>
                   );
                 },
               )}
@@ -3322,57 +3413,67 @@ export default function Home() {
         </div>
       </section>
 
-<section
-  className="videoBanner container"
->
-  <video
-    className="videoBannerVideo"
-    autoPlay
-    muted
-    loop
-    playsInline
-    preload="auto"
-    aria-hidden="true"
-  >
-    <source
-      src="/videos/globalvista-adventure-banner.mp4"
-      type="video/mp4"
-    />
-  </video>
+      <motion.section
+        className="videoBanner container"
+        initial={{ opacity: 0, scale: 0.96, y: 30 }}
+        whileInView={{ opacity: 1, scale: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+      >
+        <video
+          className="videoBannerVideo"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+        >
+          <source
+            src="/videos/globalvista-adventure-banner.mp4"
+            type="video/mp4"
+          />
+        </video>
 
-  <div
-    className="videoBannerOverlay"
-  />
+        <div
+          className="videoBannerOverlay"
+        />
 
-  <div
-    className="videoBannerText"
-  >
-    <span>
-      Your next adventure
-    </span>
+        <div
+          className="videoBannerText"
+        >
+          <span>
+            Your next adventure
+          </span>
 
-    <h2>
-      starts right here.
-    </h2>
-  </div>
+          <h2>
+            starts right here.
+          </h2>
+        </div>
 
-  <div
-    className="videoBannerRight"
-  >
-    Discover incredible destinations
+        <div
+          className="videoBannerRight"
+        >
+          Discover incredible destinations
 
-    <br />
+          <br />
 
-    and unforgettable experiences.
-  </div>
-</section>
+          and unforgettable experiences.
+        </div>
+      </motion.section>
 
       <section
         className="section reviewsSection"
         id="reviews"
       >
         <div className="container">
-          <div className="sectionHeading reviewsSectionHeading">
+          <motion.div
+            className="sectionHeading reviewsSectionHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          >
             <span className="reviewsEyebrow">
               <Sparkles size={14} style={{ display: 'inline', verticalAlign: '-1px', marginRight: 6 }} />
               {t.reflections.eyebrow}
@@ -3407,11 +3508,15 @@ export default function Home() {
                 {hasSubmittedReview ? '✓ Review Shared' : t.reflections.shareExperience}
               </button>
             </div>
-          </div>
+          </motion.div>
 
           {/* Lansakara-style Testimonials Slider Controls & Track */}
-          <div
+          <motion.div
             className="sliderControlsWrap"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.7, delay: 0.15, ease: 'easeOut' }}
             onMouseEnter={() => setIsReviewHovered(true)}
             onMouseLeave={() => setIsReviewHovered(false)}
           >
@@ -3494,7 +3599,7 @@ export default function Home() {
                 />
               ))}
             </div>
-          </div>
+          </motion.div>
         </div>
 
         {/* Lansakara-style Interactive Review Modal */}
@@ -3653,8 +3758,12 @@ export default function Home() {
         <div
           className="container"
         >
-          <div
+          <motion.div
             className="sectionHeading"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
           >
             <span>
               {t.plans.eyebrow}
@@ -3663,10 +3772,14 @@ export default function Home() {
             <h2>
               {t.plans.title}
             </h2>
-          </div>
+          </motion.div>
 
-          <div
+          <motion.div
             className="plansLayout"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-40px' }}
+            transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
           >
             <div
               className="plansGrid"
@@ -3896,11 +4009,15 @@ export default function Home() {
                 },
               )}
             </div>
-          </div>
+          </motion.div>
 
-          <div
+          <motion.div
             className="worldExplore"
             id="global-map"
+            initial={{ opacity: 0, y: 35 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-50px' }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
           >
             <div
               className="worldExploreCopy"
@@ -3937,12 +4054,16 @@ export default function Home() {
             >
               <DestinationWorldMap />
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      <section
+      <motion.section
         className="finalCta"
+        initial={{ opacity: 0, y: 35 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-50px' }}
+        transition={{ duration: 0.7, ease: 'easeOut' }}
       >
         <div
           className="finalCtaOverlay"
@@ -3994,7 +4115,7 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <footer
         className="gvFooter"
@@ -5373,12 +5494,17 @@ export default function Home() {
       />
 
       {/* Floating WhatsApp VIP Concierge Button (Lansakara Style) */}
-      <a
+      <motion.a
         href="https://wa.me/94771234567?text=Hello%20GlobalVista%20Concierge,%20I%20would%20like%20to%20inquire%20about%20your%20luxury%20travel%20packages%20and%20tailored%20itineraries."
         target="_blank"
         rel="noopener noreferrer"
         className="floatingWhatsAppBtn"
         aria-label="Chat with GlobalVista Concierge on WhatsApp"
+        initial={{ opacity: 0, scale: 0.8, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.5, type: 'spring' }}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
         <div className="whatsappIconWrap">
           <FaWhatsapp className="whatsappIcon" />
@@ -5388,7 +5514,7 @@ export default function Home() {
           <span className="whatsappSubtitle">{t.whatsapp.conciergeOnline}</span>
           <strong className="whatsappTitle">{t.whatsapp.chatWhatsApp}</strong>
         </div>
-      </a>
+      </motion.a>
     </main>
   );
 }
