@@ -2708,9 +2708,14 @@ export default function Home() {
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <span>{t.destinations.eyebrow}</span>
-            <h2>{t.destinations.title}</h2>
-            <p>{t.destinations.subtitle}</p>
+            <span className="luxuryHeadingEyebrow">
+              <Compass size={14} style={{ display: 'inline', verticalAlign: '-1px' }} />
+              CURATED SANCTUARIES
+            </span>
+            <h2>Signature Luxury Expeditions</h2>
+            <p>
+              Handcrafted expeditions across pristine islands, cultural citadels, and alpine heights.
+            </p>
           </motion.div>
 
           <div className="destinationGrid">
@@ -2784,9 +2789,14 @@ export default function Home() {
             viewport={{ once: true, margin: '-50px' }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
           >
-            <span>EXPLORE TRAVEL PACKAGES</span>
+            <span className="luxuryHeadingEyebrow">
+              <Sparkles size={14} style={{ display: 'inline', verticalAlign: '-1px' }} />
+              EXPLORE TRAVEL PACKAGES
+            </span>
             <h2>Discover your perfect journey</h2>
-            <p>Explore premium packages carefully prepared for your next adventure.</p>
+            <p>
+              Explore premium packages carefully prepared for your next unforgettable adventure.
+            </p>
           </motion.div>
 
           <div className="destinationGrid">
