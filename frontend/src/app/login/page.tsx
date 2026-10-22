@@ -536,7 +536,7 @@ export default function LoginPage() {
               className={styles.loginButton}
               disabled={loading}
             >
-              <span>{loading ? 'Authenticating Account...' : 'Sign In to Portal'}</span>
+              <span>{loading ? 'Authenticating Account...' : 'Sign In'}</span>
               {!loading && <ArrowRight size={18} />}
             </button>
           </form>
