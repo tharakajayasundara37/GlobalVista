@@ -1,63 +1,53 @@
+/* ==========================================================================
+   GLOBALVISTA LUXURY LOGIN PORTAL STYLES (ENTERPRISE EDITION)
+   ========================================================================== */
+
 .page {
   position: relative;
-
   width: 100%;
   min-height: 100vh;
-
   overflow-x: hidden;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 46px 48px;
-
-  background: #061419;
+  padding: 50px 32px;
+  background: #030a10;
   color: #ffffff;
+  font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
 }
 
 /* =========================
-   VIDEO BACKGROUND
+   BACKGROUND VIDEO & OVERLAY
 ========================= */
 
 .backgroundVideo {
   position: fixed;
   inset: 0;
-
   width: 100%;
   height: 100%;
-
   object-fit: cover;
   object-position: center;
-
   z-index: 0;
-
   pointer-events: none;
 }
-
-/* =========================
-   BACKGROUND OVERLAY
-========================= */
 
 .overlay {
   position: fixed;
   inset: 0;
-
   z-index: 1;
-
   pointer-events: none;
-
   background:
+    radial-gradient(circle at 20% 40%, rgba(14, 165, 233, 0.15) 0%, transparent 55%),
     linear-gradient(
       90deg,
-      rgba(3, 14, 24, 0.8) 0%,
-      rgba(3, 14, 24, 0.58) 43%,
-      rgba(3, 14, 24, 0.32) 100%
+      rgba(3, 10, 18, 0.88) 0%,
+      rgba(3, 12, 22, 0.72) 45%,
+      rgba(3, 12, 22, 0.55) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.08) 0%,
-      rgba(0, 0, 0, 0.24) 100%
+      rgba(2, 6, 12, 0.4) 0%,
+      rgba(2, 6, 12, 0.75) 100%
     );
 }
 
@@ -67,58 +57,45 @@
 
 .backButton {
   position: absolute;
-
   top: 28px;
-  left: 40px;
-
+  left: 36px;
   z-index: 20;
-
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
   color: rgba(255, 255, 255, 0.9);
-
   text-decoration: none;
-
   font-size: 13px;
-  font-weight: 650;
-
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.25s ease;
 }
 
 .backButton:hover {
   color: #ffffff;
-
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(56, 189, 248, 0.4);
   transform: translateX(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 }
 
 /* =========================
-   MAIN LAYOUT
+   MAIN CONTAINER
 ========================= */
 
 .container {
   position: relative;
-
   z-index: 5;
-
-  width: min(1180px, 100%);
-
+  width: min(1200px, 100%);
   display: grid;
-
-  grid-template-columns:
-    minmax(0, 1fr)
-    minmax(390px, 410px);
-
+  grid-template-columns: minmax(0, 1.15fr) minmax(400px, 440px);
   align-items: center;
-
-  gap: clamp(
-    70px,
-    8vw,
-    130px
-  );
+  gap: clamp(48px, 6vw, 96px);
 }
 
 /* =========================
@@ -126,123 +103,201 @@
 ========================= */
 
 .brandSide {
-  min-height: 590px;
-
   display: flex;
   flex-direction: column;
-
-  justify-content: flex-start;
+  justify-content: center;
+  padding: 20px 0;
 }
 
-/* =========================
-   LOGO
-========================= */
+.logoRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
+}
 
 .logo {
   display: inline-block;
-
-  width: fit-content;
-
-  margin-top: 8px;
-
   color: #ffffff;
-
   text-decoration: none;
-
-  font-size: 29px;
+  font-size: 32px;
   font-weight: 800;
-
-  letter-spacing: -1.2px;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .logo span {
-  color: #67dcf7;
+  color: #38bdf8;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* =========================
-   BRAND CONTENT
-========================= */
+.brandPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #7dd3fc;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 .brandContent {
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-
-  justify-content: center;
-
   width: 100%;
-  max-width: 620px;
-
-  padding-top: 30px;
-  padding-bottom: 10px;
-}
-
-.brandLine {
-  display: block;
-
-  width: 44px;
-  height: 2px;
-
-  margin-bottom: 20px;
-
-  background: #63d9f7;
+  max-width: 580px;
 }
 
 .eyebrow {
-  display: block;
-
-  margin-bottom: 22px;
-
-  color: #6eddf7;
-
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: #38bdf8;
+  font-size: 11.5px;
   font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
 
-  letter-spacing: 2.7px;
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background: linear-gradient(90deg, #38bdf8, transparent);
+  border-radius: 2px;
 }
 
 .brandContent h1 {
-  margin: 0;
-
-  max-width: 620px;
-
+  margin: 0 0 18px;
   color: #ffffff;
-
-  font-family:
-    Georgia,
-    'Times New Roman',
-    serif;
-
-  font-size: clamp(
-    52px,
-    5.3vw,
-    74px
-  );
-
-  font-weight: 500;
-
-  line-height: 1.01;
-
-  letter-spacing: -2.6px;
+  font-family: inherit;
+  font-size: clamp(44px, 4.4vw, 62px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
 }
 
-.brandContent h1 em {
-  color: #ffffff;
-
-  font-weight: 400;
+.heroGradient {
+  background: linear-gradient(135deg, #ffffff 40%, #7dd3fc 75%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 
-.brandContent p {
-  max-width: 520px;
-
-  margin: 30px 0 0;
-
+.brandDesc {
+  margin: 0 0 32px;
   color: rgba(255, 255, 255, 0.78);
+  font-size: 15.5px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  max-width: 520px;
+}
 
-  font-size: 15px;
+/* Feature Highlights */
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 34px;
+}
 
-  line-height: 1.75;
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
+
+.featureItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(56, 189, 248, 0.25);
+  transform: translateX(4px);
+}
+
+.featureIconBox {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.featureText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.featureTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.featureSubtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.45;
+}
+
+/* Trust Pill */
+.trustPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.avatarGroup {
+  display: flex;
+  align-items: center;
+}
+
+.avatarCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #0f172a;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  margin-left: -7px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #0c1a29;
+}
+
+.avatarCircle:first-child {
+  margin-left: 0;
+}
+
+.stars {
+  color: #fbbf24;
+  letter-spacing: 1px;
+  font-size: 11px;
 }
 
 /* =========================
@@ -251,123 +306,74 @@
 
 .loginCard {
   position: relative;
-
   width: 100%;
-  max-width: 410px;
-
+  max-width: 440px;
   justify-self: end;
-
-  padding:
-    38px 36px
-    34px;
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.48);
-
-  border-radius: 31px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255, 255, 255, 0.13),
-      rgba(255, 255, 255, 0.055)
-    );
-
+  padding: 38px 34px 30px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 28px;
+  background: linear-gradient(165deg, rgba(14, 27, 43, 0.82) 0%, rgba(6, 16, 28, 0.92) 100%);
   box-shadow:
-    0 30px 70px
-    rgba(0, 0, 0, 0.2),
-    inset
-    0 1px 0
-    rgba(255, 255, 255, 0.14);
-
-  backdrop-filter: blur(14px);
-
-  -webkit-backdrop-filter: blur(14px);
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 35px rgba(14, 165, 233, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
-
-/* =========================
-   CARD LABEL
-========================= */
 
 .cardLabel {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-
-  margin-bottom: 30px;
-
-  color: #67ddf8;
-
-  font-size: 14px;
-  font-weight: 650;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
 }
 
-/* =========================
-   LOGIN HEADING
-========================= */
-
 .loginHeader h2 {
-  margin: 0;
-
+  margin: 0 0 8px;
   color: #ffffff;
-
-  font-family:
-    Georgia,
-    'Times New Roman',
-    serif;
-
-  font-size: 43px;
-
-  font-weight: 500;
-
-  line-height: 1.08;
-
-  letter-spacing: -1.5px;
+  font-family: inherit;
+  font-size: 28px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 .loginHeader p {
-  margin:
-    13px 0
-    0;
-
-  color: rgba(255, 255, 255, 0.74);
-
-  font-size: 13px;
-
-  line-height: 1.6;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13.5px;
+  line-height: 1.5;
 }
 
 /* =========================
-   FORM
+   FORM & FIELDS
 ========================= */
 
 .form {
-  margin-top: 31px;
+  margin-top: 26px;
 }
 
-/* =========================
-   FIELD GROUP
-========================= */
-
 .fieldGroup {
-  margin-bottom: 19px;
+  margin-bottom: 18px;
 }
 
 .fieldGroup label {
   display: block;
-
-  margin-bottom: 9px;
-
-  color: rgba(255, 255, 255, 0.92);
-
-  font-size: 12px;
-  font-weight: 650;
+  margin-bottom: 7px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
-
-/* =========================
-   PASSWORD ROW
-========================= */
 
 .passwordLabel {
   display: flex;
@@ -375,147 +381,97 @@
   justify-content: space-between;
 }
 
-/* =========================
-   FORGOT PASSWORD
-========================= */
-
 .forgotButton {
-  margin-bottom: 9px;
-
+  margin-bottom: 7px;
   padding: 0;
-
   border: 0;
-
   background: transparent;
-
-  color: #71def6;
-
+  color: #38bdf8;
   font-family: inherit;
-
-  font-size: 11px;
-  font-weight: 650;
-
+  font-size: 11.5px;
+  font-weight: 600;
   cursor: pointer;
+  transition: color 0.2s ease;
 }
 
 .forgotButton:hover {
+  color: #7dd3fc;
   text-decoration: underline;
 }
 
-/* =========================
-   INPUT BOX
-========================= */
-
 .inputBox {
   width: 100%;
-  min-height: 54px;
-
+  min-height: 50px;
   display: flex;
   align-items: center;
   gap: 12px;
-
   padding: 0 15px;
-
-  border:
-    1px solid
-    rgba(255, 255, 255, 0.25);
-
-  border-radius: 14px;
-
-  background:
-    rgba(255, 255, 255, 0.1);
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .inputBox:focus-within {
-  border-color:
-    rgba(104, 220, 247, 0.9);
-
-  background:
-    rgba(255, 255, 255, 0.14);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(104, 220, 247, 0.11);
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
 }
 
 .inputBox svg {
   flex: 0 0 auto;
-
-  color: rgba(255, 255, 255, 0.72);
+  color: rgba(56, 189, 248, 0.85);
 }
 
 .inputBox input {
   width: 100%;
-
-  padding: 16px 0;
-
+  padding: 14px 0;
   border: 0;
   outline: none;
-
   background: transparent;
-
   color: #ffffff;
-
   font-family: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
 }
 
 .inputBox input::placeholder {
-  color: rgba(255, 255, 255, 0.48);
+  color: rgba(255, 255, 255, 0.4);
 }
-
-/* =========================
-   PASSWORD EYE BUTTON
-========================= */
 
 .eyeButton {
   flex: 0 0 auto;
-
   display: grid;
   place-items: center;
-
-  padding: 3px;
-
+  padding: 5px;
   border: 0;
-
   background: transparent;
-
-  color: rgba(255, 255, 255, 0.72);
-
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
+  border-radius: 6px;
+  transition: color 0.2s ease, background 0.2s ease;
+}
+
+.eyeButton:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* =========================
-   ERROR
+   ERROR & STATUS
 ========================= */
 
 .error {
-  margin:
-    2px 0
-    17px;
-
-  padding:
-    11px 13px;
-
-  border:
-    1px solid
-    rgba(255, 130, 130, 0.3);
-
+  margin: 6px 0 16px;
+  padding: 11px 14px;
+  border: 1px solid rgba(244, 63, 94, 0.35);
   border-radius: 11px;
-
-  background:
-    rgba(125, 17, 17, 0.34);
-
-  color: #ffdede;
-
-  font-size: 12px;
-
-  line-height: 1.45;
+  background: rgba(244, 63, 94, 0.12);
+  color: #fecdd3;
+  font-size: 12.5px;
+  line-height: 1.5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* =========================
@@ -524,259 +480,133 @@
 
 .loginButton {
   width: 100%;
-  min-height: 62px;
-
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  gap: 14px;
-
-  margin-top: 6px;
-
+  gap: 10px;
+  margin-top: 8px;
   border: 0;
-
-  border-radius: 14px;
-
-  background: #ffffff;
-
-  color: #0b4568;
-
+  border-radius: 12px;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: #ffffff;
   font-family: inherit;
-
-  font-size: 16px;
-  font-weight: 800;
-
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
   cursor: pointer;
-
-  box-shadow:
-    0 15px 35px
-    rgba(0, 0, 0, 0.15);
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .loginButton:hover:not(:disabled) {
   transform: translateY(-2px);
+  background: linear-gradient(135deg, #60a5fa 0%, #0369a1 100%);
+  box-shadow: 0 14px 28px rgba(2, 132, 199, 0.45);
+}
 
-  background: #f8fcff;
-
-  box-shadow:
-    0 18px 40px
-    rgba(0, 0, 0, 0.21);
+.loginButton:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .loginButton:disabled {
-  opacity: 0.7;
-
+  opacity: 0.65;
   cursor: wait;
 }
 
 /* =========================
-   REGISTER TEXT
+   REGISTER LINK
 ========================= */
 
 .registerText {
-  margin-top: 25px;
-
+  margin-top: 20px;
   display: flex;
+  align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-
   gap: 6px;
-
-  color: rgba(255, 255, 255, 0.67);
-
-  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
 }
 
 .registerText a {
-  color: #70def7;
-
+  color: #38bdf8;
   font-weight: 700;
-
   text-decoration: none;
+  transition: color 0.2s ease;
 }
 
 .registerText a:hover {
+  color: #7dd3fc;
   text-decoration: underline;
 }
 
 /* =========================
-   LARGE LAPTOP
+   SECURITY NOTE
 ========================= */
 
-@media (max-width: 1200px) {
-  .container {
-    width: min(1080px, 100%);
+.securityBox {
+  margin-top: 22px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  background: rgba(16, 185, 129, 0.08);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
 
-    gap: 70px;
-  }
-
-  .brandContent h1 {
-    font-size: 64px;
-  }
+.securityBox p {
+  margin: 0;
+  font-size: 11.5px;
+  color: #a7f3d0;
+  line-height: 1.55;
+  font-weight: 500;
 }
 
 /* =========================
-   TABLET
+   RESPONSIVE QUERIES
 ========================= */
 
-@media (max-width: 960px) {
-  .page {
-    align-items: flex-start;
-
-    min-height: 100vh;
-
-    padding:
-      100px 28px
-      50px;
-  }
-
+@media (max-width: 1080px) {
   .container {
     grid-template-columns: 1fr;
-
-    gap: 42px;
+    gap: 40px;
   }
 
   .brandSide {
-    min-height: auto;
+    align-items: center;
+    text-align: center;
   }
 
-  .logo {
-    margin-top: 0;
+  .eyebrow::before {
+    display: none;
   }
 
-  .brandContent {
-    display: block;
-
-    padding-top: 65px;
-    padding-bottom: 0;
-  }
-
-  .brandContent h1 {
-    font-size: 58px;
+  .featureList {
+    display: none;
   }
 
   .loginCard {
-    justify-self: start;
-
-    width: min(470px, 100%);
-    max-width: 470px;
+    justify-self: center;
   }
 }
 
-/* =========================
-   MOBILE
-========================= */
-
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .page {
-    padding:
-      88px 16px
-      28px;
-  }
-
-  .backgroundVideo {
-    object-position: center;
-  }
-
-  .overlay {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(3, 14, 24, 0.68) 0%,
-        rgba(3, 14, 24, 0.54) 45%,
-        rgba(3, 14, 24, 0.64) 100%
-      );
+    padding: 80px 18px 30px;
   }
 
   .backButton {
-    top: 24px;
+    top: 20px;
     left: 18px;
-
-    font-size: 12px;
-  }
-
-  .container {
-    gap: 34px;
-  }
-
-  .logo {
-    font-size: 25px;
-  }
-
-  .brandContent {
-    padding-top: 52px;
-  }
-
-  .brandLine {
-    width: 38px;
-
-    margin-bottom: 17px;
-  }
-
-  .eyebrow {
-    margin-bottom: 17px;
-
-    font-size: 10px;
-
-    letter-spacing: 2.2px;
-  }
-
-  .brandContent h1 {
-    font-size: 43px;
-
-    line-height: 1;
-
-    letter-spacing: -2px;
-  }
-
-  .brandContent p {
-    margin-top: 22px;
-
-    font-size: 14px;
-
-    line-height: 1.65;
   }
 
   .loginCard {
-    width: 100%;
-    max-width: 100%;
-
-    padding:
-      31px 22px
-      27px;
-
-    border-radius: 25px;
+    padding: 30px 20px 24px;
+    border-radius: 22px;
   }
 
-  .cardLabel {
-    margin-bottom: 23px;
-
-    font-size: 13px;
-  }
-
-  .loginHeader h2 {
-    font-size: 36px;
-  }
-
-  .loginHeader p {
-    font-size: 12px;
-  }
-
-  .form {
-    margin-top: 26px;
-  }
-
-  .inputBox {
-    min-height: 52px;
-  }
-
-  .loginButton {
-    min-height: 58px;
+  .brandContent h1 {
+    font-size: 38px;
   }
 }

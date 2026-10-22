@@ -1,1749 +1,842 @@
+/* ==========================================================================
+   GLOBALVISTA LUXURY REGISTRATION PORTAL STYLES (ENTERPRISE EDITION)
+   ========================================================================== */
+
 .page {
   position: relative;
-
   width: 100%;
   min-height: 100vh;
-
   overflow-x: hidden;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 42px 48px;
-
-  background: #061419;
+  padding: 46px 32px;
+  background: #030a10;
   color: #ffffff;
+  font-family: var(--font-sans, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
 }
 
 /* =========================
-   VIDEO BACKGROUND
+   BACKGROUND VIDEO & OVERLAY
 ========================= */
 
 .backgroundVideo {
   position: fixed;
   inset: 0;
-
   width: 100%;
   height: 100%;
-
   object-fit: cover;
   object-position: center;
-
   z-index: 0;
-
   pointer-events: none;
 }
-
-/* =========================
-   OVERLAY
-========================= */
 
 .overlay {
   position: fixed;
   inset: 0;
-
   z-index: 1;
-
   pointer-events: none;
-
   background:
+    radial-gradient(circle at 20% 40%, rgba(14, 165, 233, 0.15) 0%, transparent 55%),
     linear-gradient(
       90deg,
-      rgba(3, 14, 24, 0.82) 0%,
-      rgba(3, 14, 24, 0.58) 44%,
-      rgba(3, 14, 24, 0.34) 100%
+      rgba(3, 10, 18, 0.88) 0%,
+      rgba(3, 12, 22, 0.72) 45%,
+      rgba(3, 12, 22, 0.55) 100%
     ),
     linear-gradient(
       180deg,
-      rgba(0, 0, 0, 0.08),
-      rgba(0, 0, 0, 0.27)
+      rgba(2, 6, 12, 0.4) 0%,
+      rgba(2, 6, 12, 0.75) 100%
     );
 }
 
 /* =========================
-   BACK
+   BACK BUTTON
 ========================= */
 
 .backButton {
   position: absolute;
-
   top: 28px;
-  left: 40px;
-
+  left: 36px;
   z-index: 20;
-
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.9
-    );
-
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(12px);
+  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-
   font-size: 13px;
-  font-weight: 650;
-
-  transition:
-    color 0.2s ease,
-    transform 0.2s ease;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  transition: all 0.25s ease;
 }
 
 .backButton:hover {
   color: #ffffff;
-
-  transform:
-    translateX(-3px);
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(56, 189, 248, 0.4);
+  transform: translateX(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25);
 }
 
 /* =========================
-   LAYOUT
+   MAIN CONTAINER
 ========================= */
 
 .container {
   position: relative;
-
   z-index: 5;
-
-  width:
-    min(
-      1180px,
-      100%
-    );
-
+  width: min(1200px, 100%);
   display: grid;
-
-  grid-template-columns:
-    minmax(0, 1fr)
-    minmax(430px, 470px);
-
+  grid-template-columns: minmax(0, 1fr) minmax(440px, 490px);
   align-items: center;
-
-  gap:
-    clamp(
-      65px,
-      8vw,
-      120px
-    );
+  gap: clamp(48px, 6vw, 96px);
 }
 
 /* =========================
-   BRAND
+   LEFT BRAND SIDE
 ========================= */
 
 .brandSide {
-  min-height: 620px;
-
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  padding: 20px 0;
+}
 
-  justify-content:
-    flex-start;
+.logoRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 28px;
 }
 
 .logo {
   display: inline-block;
-
-  width: fit-content;
-
-  margin-top: 8px;
-
   color: #ffffff;
-
   text-decoration: none;
-
-  font-size: 29px;
+  font-size: 32px;
   font-weight: 800;
-
-  letter-spacing: -1.2px;
+  letter-spacing: -0.04em;
+  line-height: 1;
 }
 
 .logo span {
-  color: #67dcf7;
+  color: #38bdf8;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brandPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  color: #7dd3fc;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .brandContent {
-  flex: 1;
-
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-
-  max-width: 620px;
-
-  padding:
-    30px 0
-    10px;
-}
-
-.brandLine {
-  display: block;
-
-  width: 44px;
-  height: 2px;
-
-  margin-bottom: 20px;
-
-  background: #63d9f7;
+  width: 100%;
+  max-width: 580px;
 }
 
 .eyebrow {
-  display: block;
-
-  margin-bottom: 22px;
-
-  color: #6eddf7;
-
-  font-size: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: #38bdf8;
+  font-size: 11.5px;
   font-weight: 750;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
 
-  letter-spacing: 2.7px;
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 2px;
+  background: linear-gradient(90deg, #38bdf8, transparent);
+  border-radius: 2px;
 }
 
 .brandContent h1 {
-  margin: 0;
-
-  max-width: 620px;
-
+  margin: 0 0 18px;
   color: #ffffff;
-
-  font-family:
-    Georgia,
-    'Times New Roman',
-    serif;
-
-  font-size:
-    clamp(
-      52px,
-      5.3vw,
-      74px
-    );
-
-  font-weight: 500;
-
-  line-height: 1.01;
-
-  letter-spacing: -2.6px;
+  font-family: inherit;
+  font-size: clamp(44px, 4.4vw, 62px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
 }
 
-.brandContent h1 em {
-  color: #ffffff;
-
-  font-weight: 400;
+.heroGradient {
+  background: linear-gradient(135deg, #ffffff 40%, #7dd3fc 75%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 
-.brandContent p {
+.brandDesc {
+  margin: 0 0 32px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 15.5px;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
   max-width: 520px;
+}
 
-  margin:
-    30px 0
-    0;
+.featureList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 34px;
+}
 
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.78
-    );
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+}
 
-  font-size: 15px;
+.featureItem:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(56, 189, 248, 0.25);
+  transform: translateX(4px);
+}
 
-  line-height: 1.75;
+.featureIconBox {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.featureText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.featureTitle {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
+
+.featureSubtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  line-height: 1.45;
+}
+
+.trustPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.avatarGroup {
+  display: flex;
+  align-items: center;
+}
+
+.avatarCircle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #0f172a;
+  background: linear-gradient(135deg, #38bdf8, #818cf8);
+  margin-left: -7px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  color: #0c1a29;
+}
+
+.avatarCircle:first-child {
+  margin-left: 0;
+}
+
+.stars {
+  color: #fbbf24;
+  letter-spacing: 1px;
+  font-size: 11px;
 }
 
 /* =========================
-   REGISTER CARD
+   GLASS REGISTER CARD
 ========================= */
 
 .registerCard {
   position: relative;
-
   width: 100%;
-  max-width: 470px;
-
+  max-width: 490px;
   justify-self: end;
-
-  padding:
-    34px 34px
-    29px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      0.46
-    );
-
-  border-radius: 31px;
-
-  background:
-    linear-gradient(
-      145deg,
-      rgba(
-        255,
-        255,
-        255,
-        0.13
-      ),
-      rgba(
-        255,
-        255,
-        255,
-        0.055
-      )
-    );
-
+  padding: 34px 32px 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 28px;
+  background: linear-gradient(165deg, rgba(14, 27, 43, 0.84) 0%, rgba(6, 16, 28, 0.94) 100%);
   box-shadow:
-    0 30px 70px
-      rgba(
-        0,
-        0,
-        0,
-        0.2
-      ),
-    inset
-      0 1px 0
-      rgba(
-        255,
-        255,
-        255,
-        0.14
-      );
-
-  backdrop-filter:
-    blur(14px);
-
-  -webkit-backdrop-filter:
-    blur(14px);
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 35px rgba(14, 165, 233, 0.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .cardLabel {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-
-  gap: 10px;
-
-  margin-bottom: 22px;
-
-  color: #67ddf8;
-
-  font-size: 13px;
-  font-weight: 650;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  color: #38bdf8;
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
 }
 
-/* =========================
-   HEADER
-========================= */
-
 .registerHeader h2 {
-  margin: 0;
-
+  margin: 0 0 6px;
   color: #ffffff;
-
-  font-family:
-    Georgia,
-    'Times New Roman',
-    serif;
-
-  font-size: 39px;
-
-  font-weight: 500;
-
-  line-height: 1.05;
-
-  letter-spacing: -1.4px;
+  font-family: inherit;
+  font-size: 26px;
+  font-weight: 750;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 .registerHeader p {
-  margin:
-    10px 0
-    0;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.72
-    );
-
-  font-size: 12px;
-
-  line-height: 1.6;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 /* =========================
-   FORM
-========================= */
-
-.form {
-  margin-top: 24px;
-}
-
-.formGrid {
-  display: grid;
-
-  grid-template-columns:
-    1fr 1fr;
-
-  gap: 14px;
-}
-
-.fieldGroup {
-  margin-bottom: 15px;
-}
-
-.fieldGroup label {
-  display: block;
-
-  margin-bottom: 7px;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.92
-    );
-
-  font-size: 11px;
-  font-weight: 650;
-}
-
-/* =========================
-   INPUT
-========================= */
-
-.inputBox {
-  width: 100%;
-  min-height: 49px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 10px;
-
-  padding: 0 14px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      0.24
-    );
-
-  border-radius: 13px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.095
-    );
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.inputBox:focus-within {
-  border-color:
-    rgba(
-      104,
-      220,
-      247,
-      0.9
-    );
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.14
-    );
-
-  box-shadow:
-    0 0 0 3px
-      rgba(
-        104,
-        220,
-        247,
-        0.11
-      );
-}
-
-.inputBox svg {
-  flex: 0 0 auto;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.7
-    );
-}
-
-.inputBox input {
-  width: 100%;
-
-  padding: 14px 0;
-
-  border: 0;
-  outline: none;
-
-  background: transparent;
-
-  color: #ffffff;
-
-  font-family: inherit;
-
-  font-size: 12px;
-}
-
-.inputBox input::placeholder {
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.45
-    );
-}
-
-.eyeButton {
-  flex: 0 0 auto;
-
-  display: grid;
-  place-items: center;
-
-  padding: 3px;
-
-  border: 0;
-
-  background: transparent;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.72
-    );
-
-  cursor: pointer;
-}
-
-/* =========================
-   ERROR
-========================= */
-
-.error {
-  margin:
-    0 0
-    14px;
-
-  padding:
-    10px 12px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      130,
-      130,
-      0.3
-    );
-
-  border-radius: 11px;
-
-  background:
-    rgba(
-      125,
-      17,
-      17,
-      0.34
-    );
-
-  color: #ffdede;
-
-  font-size: 11px;
-
-  line-height: 1.45;
-}
-
-/* =========================
-   BUTTON
-========================= */
-
-.registerButton {
-  width: 100%;
-  min-height: 57px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 14px;
-
-  margin-top: 2px;
-
-  border: 0;
-
-  border-radius: 14px;
-
-  background: #ffffff;
-
-  color: #0b4568;
-
-  font-family: inherit;
-
-  font-size: 15px;
-  font-weight: 800;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 15px 35px
-      rgba(
-        0,
-        0,
-        0,
-        0.15
-      );
-
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.registerButton:hover:not(
-  :disabled
-) {
-  transform:
-    translateY(-2px);
-
-  background: #f8fcff;
-
-  box-shadow:
-    0 18px 40px
-      rgba(
-        0,
-        0,
-        0,
-        0.21
-      );
-}
-
-.registerButton:disabled {
-  opacity: 0.7;
-
-  cursor: wait;
-}
-
-/* =========================
-   LOGIN LINK
-========================= */
-
-.loginText {
-  margin-top: 20px;
-
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-
-  gap: 6px;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.67
-    );
-
-  font-size: 12px;
-}
-
-.loginText a {
-  color: #70def7;
-
-  font-weight: 700;
-
-  text-decoration: none;
-}
-
-.loginText a:hover {
-  text-decoration: underline;
-}
-
-/* =========================
-   TABLET
-========================= */
-
-@media (
-  max-width: 960px
-) {
-  .page {
-    align-items:
-      flex-start;
-
-    padding:
-      100px 28px
-      50px;
-  }
-
-  .container {
-    grid-template-columns:
-      1fr;
-
-    gap: 42px;
-  }
-
-  .brandSide {
-    min-height: auto;
-  }
-
-  .brandContent {
-    display: block;
-
-    padding-top: 65px;
-  }
-
-  .brandContent h1 {
-    font-size: 58px;
-  }
-
-  .registerCard {
-    justify-self: start;
-  }
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media (
-  max-width: 600px
-) {
-  .page {
-    padding:
-      88px 16px
-      28px;
-  }
-
-  .overlay {
-    background:
-      linear-gradient(
-        180deg,
-        rgba(
-          3,
-          14,
-          24,
-          0.69
-        ),
-        rgba(
-          3,
-          14,
-          24,
-          0.6
-        )
-      );
-  }
-
-  .backButton {
-    top: 24px;
-    left: 18px;
-
-    font-size: 12px;
-  }
-
-  .container {
-    gap: 34px;
-  }
-
-  .logo {
-    font-size: 25px;
-  }
-
-  .brandContent {
-    padding-top: 52px;
-  }
-
-  .brandContent h1 {
-    font-size: 43px;
-
-    line-height: 1;
-
-    letter-spacing: -2px;
-  }
-
-  .brandContent p {
-    margin-top: 22px;
-
-    font-size: 14px;
-  }
-
-  .registerCard {
-    width: 100%;
-    max-width: 100%;
-
-    padding:
-      29px 21px
-      25px;
-
-    border-radius: 25px;
-  }
-
-  .registerHeader h2 {
-    font-size: 35px;
-  }
-
-  .formGrid {
-    grid-template-columns:
-      1fr;
-
-    gap: 0;
-  }
-
-  .registerButton {
-    min-height: 56px;
-  }
-}
-
-/* =========================
-   ROLE SELECTOR
+   ROLE SELECTOR TABS
 ========================= */
 
 .roleSelector {
   display: grid;
   grid-template-columns: 1fr 1fr;
-
   gap: 10px;
-
-  margin-top: 22px;
-  margin-bottom: 5px;
+  margin: 20px 0 22px;
+  padding: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
 }
 
 .roleButton {
-  min-height: 68px;
-
   display: flex;
   align-items: center;
-
   gap: 10px;
-
-  padding: 11px 12px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      0.2
-    );
-
-  border-radius: 13px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.07
-    );
-
-  color: #ffffff;
-
-  text-align: left;
-
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.roleButton:hover {
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.11
-    );
-
-  transform:
-    translateY(-1px);
-}
-
-.roleButtonActive {
-  border-color: #6eddf7;
-
-  background:
-    rgba(
-      103,
-      221,
-      248,
-      0.14
-    );
-
-  box-shadow:
-    0 0 0 2px
-    rgba(
-      103,
-      221,
-      248,
-      0.08
-    );
-}
-
-.roleButton svg {
-  flex: 0 0 auto;
-
-  color: #6eddf7;
+  text-align: left;
+  transition: all 0.2s ease;
 }
 
 .roleButton div {
   display: flex;
   flex-direction: column;
-
-  gap: 3px;
 }
 
 .roleButton strong {
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
 }
 
 .roleButton span {
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.58
-    );
-
-  font-size: 9px;
-}
-
-/* =========================
-   GUIDE SECTION
-========================= */
-
-.guideTitle {
-  margin:
-    8px 0
-    15px;
-
-  padding-top: 17px;
-
-  border-top:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      0.14
-    );
-
-  color: #70def7;
-
   font-size: 11px;
-  font-weight: 800;
+  color: rgba(255, 255, 255, 0.55);
+}
 
-  letter-spacing: 1.6px;
+.roleButtonActive {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.22), rgba(14, 165, 233, 0.1));
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #38bdf8;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
 
-  text-transform: uppercase;
+.roleButtonActive strong {
+  color: #7dd3fc;
+}
+
+.roleButtonActive span {
+  color: rgba(125, 211, 252, 0.8);
 }
 
 /* =========================
-   SELECT
+   FORM & FIELDS
 ========================= */
 
+.form {
+  margin-top: 10px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.fieldGroup {
+  margin-bottom: 14px;
+}
+
+.fieldGroup label {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.inputBox {
+  width: 100%;
+  min-height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.inputBox:focus-within {
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+}
+
+.inputBox svg {
+  flex: 0 0 auto;
+  color: rgba(56, 189, 248, 0.85);
+}
+
+.inputBox input,
 .inputBox select {
   width: 100%;
-
-  padding: 14px 0;
-
+  padding: 12px 0;
   border: 0;
   outline: none;
-
   background: transparent;
-
   color: #ffffff;
-
   font-family: inherit;
-
-  font-size: 12px;
-
-  cursor: pointer;
+  font-size: 13px;
 }
 
 .inputBox select option {
-  color: #0b2130;
-
-  background: #ffffff;
+  background: #0b1726;
+  color: #ffffff;
 }
 
-/* =========================
-   TEXTAREA
-========================= */
+.inputBox input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
 
 .textArea {
   width: 100%;
-  min-height: 90px;
-
-  resize: vertical;
-
-  padding: 13px 14px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      0.24
-    );
-
-  border-radius: 13px;
-
-  outline: none;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.095
-    );
-
+  min-height: 80px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
-
   font-family: inherit;
-
-  font-size: 12px;
-
-  line-height: 1.6;
-}
-
-.textArea::placeholder {
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.45
-    );
+  font-size: 12.5px;
+  line-height: 1.5;
+  outline: none;
+  resize: vertical;
+  transition: all 0.2s ease;
 }
 
 .textArea:focus {
-  border-color:
-    rgba(
-      104,
-      220,
-      247,
-      0.9
-    );
-
-  box-shadow:
-    0 0 0 3px
-    rgba(
-      104,
-      220,
-      247,
-      0.11
-    );
+  border-color: #38bdf8;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
 }
 
-/* =========================
-   GUIDE SUCCESS
-========================= */
-
-.successState {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  padding:
-    30px 4px
-    10px;
-
-  text-align: center;
-}
-
-.successIcon {
-  width: 64px;
-  height: 64px;
-
+.eyeButton {
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
-
-  margin-bottom: 21px;
-
-  border:
-    1px solid
-    rgba(
-      103,
-      221,
-      248,
-      0.4
-    );
-
-  border-radius: 50%;
-
-  background:
-    rgba(
-      103,
-      221,
-      248,
-      0.12
-    );
-
-  color: #70def7;
+  padding: 4px;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  border-radius: 6px;
 }
 
-.successState > span {
-  color: #70def7;
-
-  font-size: 10px;
-  font-weight: 800;
-
-  letter-spacing: 2px;
-}
-
-.successState h2 {
-  margin:
-    11px 0
-    12px;
-
+.eyeButton:hover {
   color: #ffffff;
-
-  font-family:
-    Georgia,
-    'Times New Roman',
-    serif;
-
-  font-size: 36px;
-
-  font-weight: 500;
-
-  letter-spacing: -1px;
 }
 
-.successState p {
-  max-width: 340px;
-
-  margin: 0;
-
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.7
-    );
-
-  font-size: 12px;
-
-  line-height: 1.7;
-}
-
-.successId {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 5px;
-
-  margin:
-    25px 0
-    20px;
-
-  padding: 15px;
-
-  border:
-    1px solid
-    rgba(
-      255,
-      255,
-      255,
-      0.16
-    );
-
-  border-radius: 13px;
-
-  background:
-    rgba(
-      255,
-      255,
-      255,
-      0.07
-    );
-}
-
-.successId small {
-  color:
-    rgba(
-      255,
-      255,
-      255,
-      0.55
-    );
-
-  font-size: 10px;
-}
-
-.successId strong {
-  color: #ffffff;
-
-  font-size: 18px;
-
-  letter-spacing: 1.5px;
-}
-
-.successButton {
-  width: 100%;
-  min-height: 55px;
-
+/* Guide specific */
+.guideTitle {
+  font-size: 13px;
+  font-weight: 750;
+  color: #7dd3fc;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 16px 0 10px;
   display: flex;
   align-items: center;
-  justify-content: center;
-
-  gap: 12px;
-
-  border-radius: 13px;
-
-  background: #ffffff;
-
-  color: #0b4568;
-
-  text-decoration: none;
-
-  font-size: 14px;
-  font-weight: 800;
+  gap: 8px;
 }
 
-@media (max-width: 600px) {
-  .roleSelector {
-    grid-template-columns: 1fr;
-  }
+.guideTitle::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(56, 189, 248, 0.2);
 }
-/* =========================
-   LANGUAGE MULTI SELECT
-========================= */
 
 .languageSelector {
   position: relative;
-  width: 100%;
 }
 
 .languageTrigger {
   width: 100%;
-  min-height: 48px;
-
+  min-height: 46px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  gap: 12px;
-
   padding: 0 14px;
-
-  border: 1px solid
-    rgba(255, 255, 255, 0.24);
-
-  border-radius: 13px;
-
-  background:
-    rgba(255, 255, 255, 0.095);
-
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
-
-  cursor: pointer;
-
   font-family: inherit;
-
-  transition:
-    border-color 0.2s ease,
-    background 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.languageTrigger:hover {
-  background:
-    rgba(255, 255, 255, 0.12);
-
-  border-color:
-    rgba(255, 255, 255, 0.35);
-}
-
-.languageTrigger:focus {
-  outline: none;
-
-  border-color:
-    rgba(104, 220, 247, 0.9);
-
-  box-shadow:
-    0 0 0 3px
-    rgba(104, 220, 247, 0.11);
+  font-size: 12.5px;
+  cursor: pointer;
 }
 
 .languageTriggerLeft {
-  min-width: 0;
-
   display: flex;
   align-items: center;
-
   gap: 10px;
-}
-
-.languageTriggerLeft svg {
-  flex: 0 0 auto;
-
-  color: rgba(
-    255,
-    255,
-    255,
-    0.65
-  );
+  color: rgba(56, 189, 248, 0.85);
 }
 
 .languageTriggerLeft span {
-  overflow: hidden;
-
-  color: rgba(
-    255,
-    255,
-    255,
-    0.78
-  );
-
-  font-size: 12px;
-
-  text-overflow: ellipsis;
-
-  white-space: nowrap;
+  color: #ffffff;
 }
 
 .chevronOpen {
   transform: rotate(180deg);
 }
 
-.languageTrigger > svg {
-  transition:
-    transform 0.2s ease;
-}
-
-/* =========================
-   DROPDOWN
-========================= */
-
 .languageDropdown {
   position: absolute;
-
-  top: calc(100% + 8px);
+  top: calc(100% + 6px);
   left: 0;
-
   width: 100%;
-
+  max-height: 220px;
+  background: #0b1726;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5);
   z-index: 50;
-
   overflow: hidden;
-
-  border: 1px solid
-    rgba(255, 255, 255, 0.2);
-
-  border-radius: 14px;
-
-  background:
-    rgba(11, 34, 50, 0.97);
-
-  box-shadow:
-    0 20px 50px
-    rgba(0, 0, 0, 0.35);
-
-  backdrop-filter:
-    blur(24px);
+  display: flex;
+  flex-direction: column;
 }
-
-/* =========================
-   SEARCH
-========================= */
 
 .languageSearch {
   display: flex;
   align-items: center;
-
-  gap: 10px;
-
+  gap: 8px;
   padding: 10px 12px;
-
-  border-bottom: 1px solid
-    rgba(255, 255, 255, 0.12);
-}
-
-.languageSearch svg {
-  flex: 0 0 auto;
-
-  color: rgba(
-    255,
-    255,
-    255,
-    0.55
-  );
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .languageSearch input {
   width: 100%;
-
+  background: transparent;
   border: 0;
-  outline: 0;
-
-  background:
-    transparent;
-
+  outline: none;
   color: #ffffff;
-
-  font-family: inherit;
-
   font-size: 12px;
 }
 
-.languageSearch input::placeholder {
-  color: rgba(
-    255,
-    255,
-    255,
-    0.42
-  );
-}
-
-/* =========================
-   OPTIONS
-========================= */
-
 .languageOptions {
-  max-height: 230px;
-
   overflow-y: auto;
-
-  padding: 6px;
+  max-height: 160px;
 }
 
 .languageOption {
   width: 100%;
-
   display: flex;
   align-items: center;
   justify-content: space-between;
-
-  gap: 12px;
-
-  padding: 10px 11px;
-
+  padding: 8px 12px;
   border: 0;
-
-  border-radius: 9px;
-
-  background:
-    transparent;
-
-  color: rgba(
-    255,
-    255,
-    255,
-    0.78
-  );
-
-  cursor: pointer;
-
-  font-family: inherit;
-
+  background: transparent;
+  color: rgba(255, 255, 255, 0.8);
   font-size: 12px;
-
+  cursor: pointer;
   text-align: left;
-
-  transition:
-    background 0.18s ease,
-    color 0.18s ease;
 }
 
 .languageOption:hover {
-  background:
-    rgba(255, 255, 255, 0.08);
-
+  background: rgba(56, 189, 248, 0.12);
   color: #ffffff;
 }
 
 .languageOptionActive {
-  background:
-    rgba(104, 220, 247, 0.12);
-
-  color: #73e0f8;
+  background: rgba(56, 189, 248, 0.18);
+  color: #38bdf8;
+  font-weight: 600;
 }
-
-.languageCheck {
-  width: 20px;
-  height: 20px;
-
-  display: grid;
-  place-items: center;
-
-  flex: 0 0 auto;
-
-  border: 1px solid
-    rgba(255, 255, 255, 0.18);
-
-  border-radius: 6px;
-}
-
-.languageOptionActive
-.languageCheck {
-  border-color:
-    rgba(104, 220, 247, 0.55);
-
-  background:
-    rgba(104, 220, 247, 0.15);
-
-  color: #73e0f8;
-}
-
-.noLanguages {
-  padding: 18px 12px;
-
-  color:
-    rgba(255, 255, 255, 0.5);
-
-  font-size: 11px;
-
-  text-align: center;
-}
-
-/* =========================
-   CHIPS
-========================= */
 
 .languageChips {
   display: flex;
   flex-wrap: wrap;
-
-  gap: 7px;
-
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .languageChip {
   display: inline-flex;
   align-items: center;
-
   gap: 6px;
-
-  padding:
-    6px 8px
-    6px 10px;
-
-  border: 1px solid
-    rgba(104, 220, 247, 0.25);
-
-  border-radius: 999px;
-
-  background:
-    rgba(104, 220, 247, 0.1);
-
-  color: #dff9ff;
-
-  font-size: 10px;
-  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #7dd3fc;
+  font-size: 11px;
 }
 
 .languageChip button {
-  width: 18px;
-  height: 18px;
-
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
   display: grid;
   place-items: center;
-
-  padding: 0;
-
-  border: 0;
-
-  border-radius: 50%;
-
-  background:
-    rgba(255, 255, 255, 0.08);
-
-  color:
-    rgba(255, 255, 255, 0.7);
-
-  cursor: pointer;
 }
-
-.languageChip button:hover {
-  background:
-    rgba(255, 255, 255, 0.16);
-
-  color: #ffffff;
-}
-
-/* =========================
-   OTHER LANGUAGE
-========================= */
 
 .otherLanguageBox {
-  width: 100%;
-
   display: flex;
   align-items: center;
-
-  gap: 10px;
-
-  margin-top: 10px;
-
-  padding: 0 12px;
-
-  border: 1px solid
-    rgba(104, 220, 247, 0.25);
-
-  border-radius: 12px;
-
-  background:
-    rgba(104, 220, 247, 0.07);
-}
-
-.otherLanguageBox > svg {
-  flex: 0 0 auto;
-
-  color: #73e0f8;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
 }
 
 .otherLanguageBox input {
-  width: 100%;
-
-  padding: 12px 0;
-
+  flex: 1;
+  background: transparent;
   border: 0;
-  outline: 0;
-
-  background:
-    transparent;
-
+  outline: none;
   color: #ffffff;
-
-  font-family: inherit;
-
   font-size: 12px;
-}
-
-.otherLanguageBox input::placeholder {
-  color:
-    rgba(255, 255, 255, 0.45);
 }
 
 .otherLanguageBox button {
-  width: 28px;
-  height: 28px;
-
-  display: grid;
-  place-items: center;
-
-  flex: 0 0 auto;
-
-  padding: 0;
-
   border: 0;
-
-  border-radius: 50%;
-
-  background:
-    transparent;
-
-  color:
-    rgba(255, 255, 255, 0.6);
-
+  background: transparent;
+  color: rgba(255, 255, 255, 0.6);
   cursor: pointer;
 }
 
-.otherLanguageBox button:hover {
-  background:
-    rgba(255, 255, 255, 0.08);
-
-  color: #ffffff;
-}
-
-/* GUIDE PRIVATE DOCUMENT PICKER: native input launched by an explicit button */
 .documentPicker {
-  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
-  width: 100%;
-  padding: 17px;
-  border: 1px dashed rgba(255, 255, 255, 0.47);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* Keep the input in the DOM for its value and native file selection,
-   but let the visible button launch the picker from a direct user click. */
-.registerCard input[type="file"][hidden] {
-  display: none !important;
 }
 
 .documentPickerButton {
-  position: relative;
-  z-index: 1;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  gap: 9px;
-  max-width: 100%;
-  padding: 12px 15px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  gap: 8px;
+  padding: 9px 14px;
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 750;
-  line-height: 1.4;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  pointer-events: auto;
+  transition: all 0.2s ease;
 }
 
-.documentPickerButton:hover,
-.documentPickerButton:focus-visible {
-  background: rgba(112, 222, 247, 0.23);
-  border-color: #70def7;
-  outline-color: #70def7;
+.documentPickerButton:hover {
+  background: rgba(56, 189, 248, 0.2);
+  border-color: #38bdf8;
 }
 
 .documentPickerFilename {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.6);
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  color: rgba(255, 255, 255, 0.82);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.error {
+  margin: 6px 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  border-radius: 11px;
+  background: rgba(244, 63, 94, 0.12);
+  color: #fecdd3;
   font-size: 12px;
+  line-height: 1.45;
+}
+
+.error a {
+  color: #ffffff;
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+.registerButton {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(2, 132, 199, 0.35);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.registerButton:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #60a5fa 0%, #0369a1 100%);
+  box-shadow: 0 14px 28px rgba(2, 132, 199, 0.45);
+}
+
+.registerButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.loginText {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12.5px;
+}
+
+.loginText a {
+  color: #38bdf8;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.loginText a:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+@media (max-width: 1080px) {
+  .container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .brandSide {
+    align-items: center;
+    text-align: center;
+  }
+  .eyebrow::before {
+    display: none;
+  }
+  .featureList {
+    display: none;
+  }
+  .registerCard {
+    justify-self: center;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 80px 18px 30px;
+  }
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+  .registerCard {
+    padding: 28px 18px 22px;
+    border-radius: 22px;
+  }
+  .brandContent h1 {
+    font-size: 38px;
+  }
 }

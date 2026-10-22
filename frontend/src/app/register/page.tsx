@@ -5,13 +5,12 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ArrowRight, BadgeCheck, BriefcaseBusiness, Check,
-  CheckCircle2, ChevronDown, Eye, EyeOff, FileImage, Globe2, IdCard,
-  Languages, LockKeyhole, Mail, MapPin, Phone, Plane, Search,
-  ShieldCheck, UploadCloud, UserRound, X,
+  CheckCircle2, ChevronDown, Compass, Eye, EyeOff, FileCheck2, FileImage,
+  Globe2, IdCard, Languages, LockKeyhole, Mail, MapPin, Phone, Plane,
+  Search, ShieldCheck, Sparkles, UploadCloud, UserRound, X,
 } from 'lucide-react';
 import styles from './register.module.css';
 
-// Local NestJS backend. Avoid an incorrectly configured frontend API URL.
 const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 
@@ -100,7 +99,6 @@ export default function RegisterPage() {
   const [uploadPassword, setUploadPassword] = useState('');
   const [uploadIdType, setUploadIdType] = useState<GovernmentIdType>('NIC');
 
-  // Existing language dropdown behaviour is preserved.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (languageRef.current && !languageRef.current.contains(event.target as Node)) {
@@ -205,7 +203,7 @@ export default function RegisterPage() {
           governmentIdType,
           governmentIdNumber: governmentIdNumber.trim(),
           about: about.trim(),
-          acceptGuideTerms, // Must be the boolean true; required by RegisterDto.
+          acceptGuideTerms,
         }
       : commonPayload;
 
@@ -232,7 +230,6 @@ export default function RegisterPage() {
         return;
       }
 
-      // Preserve the original Traveller registration redirect.
       localStorage.removeItem('globalvista_token');
       localStorage.removeItem('globalvista_user');
       localStorage.removeItem('token');
@@ -286,7 +283,7 @@ export default function RegisterPage() {
     try {
       const response = await fetch(`${API_URL}/auth/guide/documents`, {
         method: 'POST',
-        body: formData, // Do NOT set Content-Type; the browser adds the multipart boundary.
+        body: formData,
       });
       if (!response.ok) {
         setError(await responseMessage(response));
@@ -316,28 +313,78 @@ export default function RegisterPage() {
         <source src="/videos/globalvista-hero-1.mp4" type="video/mp4" />
       </video>
       <div className={styles.overlay} />
-      <Link href="/" className={styles.backButton}><ArrowLeft size={18} /> Back to Home</Link>
+      <Link href="/" className={styles.backButton}><ArrowLeft size={16} /> <span>Back to Home</span></Link>
 
       <div className={styles.container}>
         <section className={styles.brandSide}>
-          <Link href="/" className={styles.logo}>Global<span>Vista</span></Link>
+          <div className={styles.logoRow}>
+            <Link href="/" className={styles.logo}>Global<span>Vista</span></Link>
+            <div className={styles.brandPill}>
+              <Sparkles size={12} />
+              <span>Luxury Expeditions</span>
+            </div>
+          </div>
           <div className={styles.brandContent}>
-            <span className={styles.brandLine} />
-            <span className={styles.eyebrow}>YOUR JOURNEY STARTS HERE</span>
-            <h1>Discover More.<br /><em>Travel Better.</em></h1>
-            <p>Create your GlobalVista account as a traveller or apply to join our network of tour guides.</p>
+            <span className={styles.eyebrow}>Your Journey Starts Here</span>
+            <h1>Discover More.<br /><span className={styles.heroGradient}>Travel Beyond.</span></h1>
+            <p className={styles.brandDesc}>
+              Create your GlobalVista account as a luxury traveler to reserve bespoke expeditions,
+              or apply as a certified tour guide to lead private expeditions.
+            </p>
+
+            <div className={styles.featureList}>
+              <div className={styles.featureItem}>
+                <div className={styles.featureIconBox}>
+                  <Compass size={18} />
+                </div>
+                <div className={styles.featureText}>
+                  <span className={styles.featureTitle}>Curated Luxury Expeditions</span>
+                  <span className={styles.featureSubtitle}>Handpicked 5-star sanctuaries across 7+ global regions</span>
+                </div>
+              </div>
+
+              <div className={styles.featureItem}>
+                <div className={styles.featureIconBox}>
+                  <MapPin size={18} />
+                </div>
+                <div className={styles.featureText}>
+                  <span className={styles.featureTitle}>Geospatial Route Mapping</span>
+                  <span className={styles.featureSubtitle}>Interactive Leaflet GPS waypoints &amp; expedition elevations</span>
+                </div>
+              </div>
+
+              <div className={styles.featureItem}>
+                <div className={styles.featureIconBox}>
+                  <FileCheck2 size={18} />
+                </div>
+                <div className={styles.featureText}>
+                  <span className={styles.featureTitle}>Automated Digital Vouchers</span>
+                  <span className={styles.featureSubtitle}>Print-ready traveler manifests with unique reference validation</span>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.trustPill}>
+              <div className={styles.avatarGroup}>
+                <div className={styles.avatarCircle}>GV</div>
+                <div className={styles.avatarCircle}>LU</div>
+                <div className={styles.avatarCircle}>EX</div>
+              </div>
+              <span className={styles.stars}>★★★★★</span>
+              <span>Trusted by 12,000+ luxury travelers worldwide</span>
+            </div>
           </div>
         </section>
 
         <section className={styles.registerCard}>
-          <div className={styles.cardLabel}><Plane size={17} /> Join GlobalVista</div>
+          <div className={styles.cardLabel}><Plane size={14} /> <span>Join GlobalVista</span></div>
           <div className={styles.registerHeader}>
             {step === 'register' ? (
-              <><h2>Create your<br />account</h2><p>Choose how you want to use GlobalVista.</p></>
+              <><h2>Create your account</h2><p>Choose your account type to begin.</p></>
             ) : step === 'documents' ? (
-              <><h2>Identity<br />documents</h2><p>Complete your secure Tour Guide application.</p></>
+              <><h2>Identity verification</h2><p>Complete your certified Tour Guide application.</p></>
             ) : (
-              <><h2>Application<br />submitted</h2><p>Your guide application is awaiting Admin review.</p></>
+              <><h2>Application submitted</h2><p>Your guide application is awaiting Admin review.</p></>
             )}
           </div>
 
@@ -345,7 +392,7 @@ export default function RegisterPage() {
             <>
               <div className={styles.roleSelector}>
                 <button type="button" className={`${styles.roleButton} ${role === 'USER' ? styles.roleButtonActive : ''}`} onClick={() => changeRole('USER')}>
-                  <UserRound size={19} /><div><strong>Traveller</strong><span>Book and explore trips</span></div>
+                  <UserRound size={19} /><div><strong>Traveller</strong><span>Book &amp; explore trips</span></div>
                 </button>
                 <button type="button" className={`${styles.roleButton} ${role === 'GUIDE' ? styles.roleButtonActive : ''}`} onClick={() => changeRole('GUIDE')}>
                   <BadgeCheck size={19} /><div><strong>Tour Guide</strong><span>Apply as a guide</span></div>
@@ -357,13 +404,13 @@ export default function RegisterPage() {
                   <div className={styles.fieldGroup}>
                     <label htmlFor="name">Full Name</label>
                     <div className={styles.inputBox}><UserRound size={18} />
-                      <input id="name" type="text" placeholder="Full name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={100} required />
+                      <input id="name" type="text" placeholder="Your full name" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" maxLength={100} required />
                     </div>
                   </div>
                   <div className={styles.fieldGroup}>
                     <label htmlFor="country">Country</label>
                     <div className={styles.inputBox}><Globe2 size={18} />
-                      <input id="country" type="text" placeholder="Country" value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" maxLength={100} required />
+                      <input id="country" type="text" placeholder="e.g. Sri Lanka, Japan" value={country} onChange={(e) => setCountry(e.target.value)} autoComplete="country-name" maxLength={100} required />
                     </div>
                   </div>
                 </div>
@@ -384,16 +431,16 @@ export default function RegisterPage() {
 
                 {role === 'GUIDE' && (
                   <>
-                    <div className={styles.guideTitle}>Guide Information</div>
+                    <div className={styles.guideTitle}>Guide Credentials &amp; Experience</div>
                     <div className={styles.formGrid}>
                       <div className={styles.fieldGroup}>
-                        <label htmlFor="city">City</label>
+                        <label htmlFor="city">Operating City</label>
                         <div className={styles.inputBox}><MapPin size={18} />
-                          <input id="city" type="text" placeholder="Your city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={100} required />
+                          <input id="city" type="text" placeholder="e.g. Colombo, Kandy" value={city} onChange={(e) => setCity(e.target.value)} maxLength={100} required />
                         </div>
                       </div>
                       <div className={styles.fieldGroup}>
-                        <label htmlFor="experienceYears">Experience</label>
+                        <label htmlFor="experienceYears">Experience (Years)</label>
                         <div className={styles.inputBox}><BriefcaseBusiness size={18} />
                           <input id="experienceYears" type="number" min={0} max={80} step={1} placeholder="Years" value={experienceYears} onChange={(e) => setExperienceYears(e.target.value)} required />
                         </div>
@@ -401,7 +448,7 @@ export default function RegisterPage() {
                     </div>
 
                     <div className={styles.fieldGroup} ref={languageRef}>
-                      <label>Languages</label>
+                      <label>Languages Spoken</label>
                       <div className={styles.languageSelector}>
                         <button type="button" className={styles.languageTrigger} onClick={() => setLanguageDropdownOpen((current) => !current)} aria-expanded={languageDropdownOpen}>
                           <div className={styles.languageTriggerLeft}><Languages size={18} />
@@ -422,7 +469,7 @@ export default function RegisterPage() {
                                     <span>{language}</span><span className={styles.languageCheck}>{selected && <Check size={15} />}</span>
                                   </button>
                                 );
-                              }) : <div className={styles.noLanguages}>No languages found</div>}
+                              }) : <div style={{ padding: '10px 12px', fontSize: 12, color: 'rgba(255,255,255,0.5)' }}>No languages found</div>}
                               <button type="button" className={`${styles.languageOption} ${showOtherLanguage ? styles.languageOptionActive : ''}`} onClick={() => { setShowOtherLanguage((current) => !current); setOtherLanguage(''); }}>
                                 <span>Other language</span><span className={styles.languageCheck}>{showOtherLanguage && <Check size={15} />}</span>
                               </button>
@@ -457,7 +504,7 @@ export default function RegisterPage() {
                         </div>
                       </div>
                       <div className={styles.fieldGroup}>
-                        <label htmlFor="governmentIdNumber">ID Number</label>
+                        <label htmlFor="governmentIdNumber">ID / Passport Number</label>
                         <div className={styles.inputBox}><IdCard size={18} />
                           <input id="governmentIdNumber" type="text" placeholder="ID number" value={governmentIdNumber} onChange={(e) => setGovernmentIdNumber(e.target.value)} autoComplete="off" minLength={4} maxLength={40} required />
                         </div>
@@ -465,61 +512,62 @@ export default function RegisterPage() {
                     </div>
 
                     <div className={styles.fieldGroup}>
-                      <label htmlFor="about">About You</label>
-                      <textarea id="about" className={styles.textArea} placeholder="Tell us about your guiding experience (at least 20 characters)..." value={about} onChange={(e) => setAbout(e.target.value)} minLength={20} maxLength={2000} required />
+                      <label htmlFor="about">About Your Guiding Background</label>
+                      <textarea id="about" className={styles.textArea} placeholder="Tell travelers and admin about your expedition experience (at least 20 characters)..." value={about} onChange={(e) => setAbout(e.target.value)} minLength={20} maxLength={2000} required />
                     </div>
 
                     <div className={styles.fieldGroup}>
-                      <label style={{ display: 'flex', gap: 11, alignItems: 'flex-start', fontSize: 13, lineHeight: 1.7, cursor: 'pointer', padding: 14, borderRadius: 11, background: 'rgba(99,102,241,0.09)' }}>
-                        <input type="checkbox" checked={acceptGuideTerms} onChange={(e) => setAcceptGuideTerms(e.target.checked)} required style={{ width: 17, height: 17, marginTop: 3, flexShrink: 0, accentColor: '#6366f1' }} />
-                        <span>I have read and agree to the Tour Guide Terms &amp; Conditions and Privacy Policy, including the use of my NIC/Passport information for identity review.</span>
+                      <label style={{ display: 'flex', gap: 11, alignItems: 'flex-start', fontSize: 12, lineHeight: 1.6, cursor: 'pointer', padding: 12, borderRadius: 11, background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.2)' }}>
+                        <input type="checkbox" checked={acceptGuideTerms} onChange={(e) => setAcceptGuideTerms(e.target.checked)} required style={{ width: 16, height: 16, marginTop: 2, flexShrink: 0, accentColor: '#38bdf8' }} />
+                        <span>I have read and agree to the Tour Guide Terms &amp; Conditions and Privacy Policy, including verification of my NIC/Passport for identity compliance.</span>
                       </label>
-                      <small style={{ opacity: 0.8, fontSize: 11, lineHeight: 1.6 }}>Make sure the Terms and Privacy Policy are available to applicants before collecting real identity documents.</small>
                     </div>
                   </>
                 )}
 
-                <div className={styles.fieldGroup}>
-                  <label htmlFor="password">Password</label>
-                  <div className={styles.inputBox}><LockKeyhole size={18} />
-                    <input id="password" type={showPassword ? 'text' : 'password'} placeholder={role === 'GUIDE' ? '10+ characters, upper/lower, number, symbol' : 'Minimum 6 characters'} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={role === 'GUIDE' ? 10 : 6} required />
-                    <button type="button" className={styles.eyeButton} onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                <div className={styles.formGrid}>
+                  <div className={styles.fieldGroup}>
+                    <label htmlFor="password">Password</label>
+                    <div className={styles.inputBox}><LockKeyhole size={18} />
+                      <input id="password" type={showPassword ? 'text' : 'password'} placeholder={role === 'GUIDE' ? '10+ chars, mixed' : 'Min 6 characters'} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={role === 'GUIDE' ? 10 : 6} required />
+                      <button type="button" className={styles.eyeButton} onClick={() => setShowPassword((current) => !current)} aria-label={showPassword ? 'Hide password' : 'Show password'}>{showPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    </div>
                   </div>
-                </div>
-                <div className={styles.fieldGroup}>
-                  <label htmlFor="confirmPassword">Confirm Password</label>
-                  <div className={styles.inputBox}><LockKeyhole size={18} />
-                    <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="Repeat password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" minLength={role === 'GUIDE' ? 10 : 6} required />
-                    <button type="button" className={styles.eyeButton} onClick={() => setShowConfirmPassword((current) => !current)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                  <div className={styles.fieldGroup}>
+                    <label htmlFor="confirmPassword">Confirm Password</label>
+                    <div className={styles.inputBox}><LockKeyhole size={18} />
+                      <input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} placeholder="Repeat password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" minLength={role === 'GUIDE' ? 10 : 6} required />
+                      <button type="button" className={styles.eyeButton} onClick={() => setShowConfirmPassword((current) => !current)} aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>{showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}</button>
+                    </div>
                   </div>
                 </div>
 
                 {error && <div className={styles.error} role="alert"><span>{error}</span>{emailAlreadyExists && <> <Link href="/login">Sign in</Link></>}</div>}
 
                 <button type="submit" className={styles.registerButton} disabled={loading}>
-                  <span>{loading ? (role === 'GUIDE' ? 'Creating Guide Account...' : 'Creating Account...') : (role === 'GUIDE' ? 'Continue to ID Upload' : 'Create Account')}</span>
-                  {!loading && <ArrowRight size={20} />}
+                  <span>{loading ? (role === 'GUIDE' ? 'Creating Guide Account...' : 'Creating Account...') : (role === 'GUIDE' ? 'Continue to Document Upload' : 'Create Account')}</span>
+                  {!loading && <ArrowRight size={18} />}
                 </button>
               </form>
 
               <div className={styles.loginText}>
                 <span>Already have an account?</span><Link href="/login">Sign In</Link>
               </div>
-              <div className={styles.loginText}>
-                <span>Created a Guide account but need to upload documents?</span>
-                <button type="button" onClick={beginResumeUpload} style={{ border: 0, background: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: '#6366f1', fontWeight: 700 }}>Resume Upload</button>
+              <div className={styles.loginText} style={{ marginTop: 8, fontSize: 12 }}>
+                <span style={{ opacity: 0.7 }}>Created a Guide account and need to upload documents?</span>
+                <button type="button" onClick={beginResumeUpload} style={{ border: 0, background: 'none', padding: 0, font: 'inherit', cursor: 'pointer', color: '#38bdf8', fontWeight: 700 }}>Resume Upload</button>
               </div>
             </>
           )}
 
           {step === 'documents' && (
             <form onSubmit={handleDocumentUpload} className={styles.form}>
-              <div style={{ padding: 14, borderRadius: 11, background: 'rgba(99,102,241,0.09)', marginBottom: 17, fontSize: 13, lineHeight: 1.7 }}>
-                <ShieldCheck size={20} style={{ verticalAlign: 'middle', marginRight: 7 }} />
-                {resumeUpload ? 'Enter your existing pending Guide account details to upload your documents.' : 'Your Guide account has been created with PENDING status.'}
-                {!!registeredPublicId && <div style={{ marginTop: 8, fontWeight: 700 }}>Guide ID: {registeredPublicId}</div>}
+              <div style={{ padding: 14, borderRadius: 12, background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.25)', marginBottom: 17, fontSize: 13, lineHeight: 1.6 }}>
+                <ShieldCheck size={20} style={{ verticalAlign: 'middle', marginRight: 7, color: '#38bdf8' }} />
+                {resumeUpload ? 'Enter your registered Guide credentials to upload your identity documents.' : 'Your Guide account has been created with PENDING status.'}
+                {!!registeredPublicId && <div style={{ marginTop: 8, fontWeight: 700, color: '#7dd3fc' }}>Guide ID: {registeredPublicId}</div>}
               </div>
-              {success && <div role="status" style={{ color: '#047857', fontSize: 13, marginBottom: 12 }}><CheckCircle2 size={16} style={{ verticalAlign: 'middle', marginRight: 7 }} />{success}</div>}
+              {success && <div role="status" style={{ color: '#34d399', fontSize: 13, marginBottom: 12 }}><CheckCircle2 size={16} style={{ verticalAlign: 'middle', marginRight: 7 }} />{success}</div>}
 
               {resumeUpload && (
                 <>
@@ -554,7 +602,7 @@ export default function RegisterPage() {
                     ref={frontFileInputRef}
                     type="file"
                     accept="image/jpeg,image/png"
-                                        hidden
+                    hidden
                     onChange={(event) => {
                       setIdFront(event.target.files?.[0] || null);
                       setError('');
@@ -566,11 +614,11 @@ export default function RegisterPage() {
                     onClick={() => frontFileInputRef.current?.click()}
                     aria-label={isNicUpload ? 'Choose NIC front image' : 'Choose passport photo page'}
                   >
-                    <UploadCloud size={20} />
-                    {isNicUpload ? 'Choose NIC Front Image' : 'Choose Passport Photo'}
+                    <UploadCloud size={18} />
+                    {isNicUpload ? 'Upload NIC Front' : 'Upload Passport Photo'}
                   </button>
                   <span className={styles.documentPickerFilename}>
-                    {idFront ? <><FileImage size={14} /> {idFront.name}</> : 'No image selected'}
+                    {idFront ? <><FileImage size={14} /> {idFront.name}</> : 'No file selected'}
                   </span>
                 </div>
               </div>
@@ -584,7 +632,7 @@ export default function RegisterPage() {
                       ref={backFileInputRef}
                       type="file"
                       accept="image/jpeg,image/png"
-                                            hidden
+                      hidden
                       onChange={(event) => {
                         setIdBack(event.target.files?.[0] || null);
                         setError('');
@@ -596,34 +644,34 @@ export default function RegisterPage() {
                       onClick={() => backFileInputRef.current?.click()}
                       aria-label="Choose NIC back image"
                     >
-                      <UploadCloud size={20} />
-                      Choose NIC Back Image
+                      <UploadCloud size={18} />
+                      Upload NIC Back
                     </button>
                     <span className={styles.documentPickerFilename}>
-                      {idBack ? <><FileImage size={14} /> {idBack.name}</> : 'No image selected'}
+                      {idBack ? <><FileImage size={14} /> {idBack.name}</> : 'No file selected'}
                     </span>
                   </div>
                 </div>
               )}
 
-              <p style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.8 }}>Upload JPG or PNG files, maximum 5 MB per image. Images are sent to the private identity document endpoint, not to public uploads.</p>
+              <p style={{ fontSize: 11.5, lineHeight: 1.6, opacity: 0.7 }}>JPG or PNG files only (up to 5 MB). Documents are encrypted and sent to private admin verification endpoints.</p>
               {error && <div className={styles.error} role="alert"><span>{error}</span></div>}
               <button type="submit" className={styles.registerButton} disabled={loading}>
                 <span>{loading ? 'Uploading Documents...' : 'Submit Identity Documents'}</span>
-                {!loading && <ArrowRight size={20} />}
+                {!loading && <ArrowRight size={18} />}
               </button>
               <div className={styles.loginText}><span>Already completed verification?</span><Link href="/login">Sign In</Link></div>
             </form>
           )}
 
           {step === 'complete' && (
-            <div className={styles.form} style={{ textAlign: 'center' }}>
-              <CheckCircle2 size={53} style={{ margin: '10px auto', color: '#059669' }} />
-              <h3 style={{ fontSize: 21, margin: '10px 0' }}>Documents Submitted!</h3>
-              <p style={{ fontSize: 13, lineHeight: 1.8 }}>Your Tour Guide account is <strong>PENDING</strong>. An Admin must review your application before you can sign in as a Guide.</p>
-              {!!registeredPublicId && <p style={{ fontSize: 13, fontWeight: 750 }}>Guide ID: {registeredPublicId}</p>}
-              <button type="button" className={styles.registerButton} onClick={() => router.replace('/login')}>
-                <span>Go to Login</span><ArrowRight size={20} />
+            <div className={styles.form} style={{ textAlign: 'center', padding: '16px 0' }}>
+              <CheckCircle2 size={50} style={{ margin: '0 auto 12px', color: '#10b981' }} />
+              <h3 style={{ fontSize: 22, margin: '0 0 10px', color: '#ffffff' }}>Documents Submitted!</h3>
+              <p style={{ fontSize: 13, lineHeight: 1.6, color: 'rgba(255,255,255,0.75)' }}>Your Tour Guide account is now <strong>PENDING</strong>. An administrator will review your application before activating your account.</p>
+              {!!registeredPublicId && <p style={{ fontSize: 13, fontWeight: 750, color: '#38bdf8', marginTop: 12 }}>Guide ID: {registeredPublicId}</p>}
+              <button type="button" className={styles.registerButton} onClick={() => router.replace('/login')} style={{ marginTop: 20 }}>
+                <span>Proceed to Login</span><ArrowRight size={18} />
               </button>
             </div>
           )}
