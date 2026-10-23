@@ -208,6 +208,8 @@ export default function RegisterPage() {
           governmentIdNumber: governmentIdNumber.trim(),
           about: about.trim(),
           acceptGuideTerms,
+          vehicleType,
+          vehicleNumber: vehicleNumber.trim().toUpperCase(),
         }
       : commonPayload;
 

@@ -9,6 +9,7 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Max,
   MaxLength,
@@ -257,24 +258,17 @@ export class RegisterDto {
   acceptGuideTerms?: boolean;
 
   // ==========================================
-  // GUIDE ONLY - VEHICLE TYPE (CAR, VAN, BUS)
+  // GUIDE VEHICLE TYPE (CAR, VAN, BUS)
   // ==========================================
-  @ValidateIf(
-    (data: RegisterDto) =>
-      data.role === Role.GUIDE,
-  )
+  @IsOptional()
   @IsIn(['CAR', 'VAN', 'BUS'])
   vehicleType?: string;
 
   // ==========================================
-  // GUIDE ONLY - VEHICLE NUMBER PLATE
+  // GUIDE VEHICLE NUMBER PLATE
   // ==========================================
-  @ValidateIf(
-    (data: RegisterDto) =>
-      data.role === Role.GUIDE,
-  )
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   @MaxLength(30)
   vehicleNumber?: string;
 
