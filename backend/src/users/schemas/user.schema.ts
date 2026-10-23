@@ -181,6 +181,18 @@ export class User {
     type: String,
     select: false,
   })
+  guideIdFrontData?: string;
+
+  @Prop({
+    type: String,
+    select: false,
+  })
+  guideIdBackData?: string;
+
+  @Prop({
+    type: String,
+    select: false,
+  })
   guideLicensePath?: string;
 
   // =========================

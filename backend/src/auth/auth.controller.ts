@@ -682,14 +682,20 @@ export class AuthController {
       // SAVE DOCUMENT REFERENCES
       // ====================================
 
-      user.guideIdFrontPath =
-        frontFilename;
+      const encryptedFront = this.encryptDocument(frontFile.buffer);
+      user.guideIdFrontPath = frontFilename;
+      user.guideIdFrontData = encryptedFront.toString('base64');
 
       // Clear previous back reference
       // for single-page passport uploads.
 
-      user.guideIdBackPath =
-        backFilename;
+      user.guideIdBackPath = backFilename;
+      if (backFile) {
+        const encryptedBack = this.encryptDocument(backFile.buffer);
+        user.guideIdBackData = encryptedBack.toString('base64');
+      } else {
+        user.guideIdBackData = undefined;
+      }
 
       // Keep application pending until
       // manual admin verification.

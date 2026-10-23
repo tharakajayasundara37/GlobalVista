@@ -31,6 +31,7 @@ import {
 } from 'crypto';
 
 import {
+  mkdir,
   lstat,
   readFile,
   realpath,
@@ -252,12 +253,11 @@ export class AdminDashboardController {
     let actualDirectory: string;
 
     try {
+      await mkdir(directory, { recursive: true, mode: 0o700 });
       actualDirectory =
         await realpath(directory);
     } catch {
-      throw new NotFoundException(
-        'Guide identity document storage not found',
-      );
+      actualDirectory = directory;
     }
 
     const publicUploads = resolve(
@@ -344,82 +344,91 @@ export class AdminDashboardController {
 
   private async decryptPrivateDocument(
     filename: string,
+    base64Data?: string,
   ): Promise<{
     buffer: Buffer;
     mimeType: string;
   }> {
-    if (
-      typeof filename !== 'string' ||
-      !PRIVATE_FILENAME_PATTERN.test(
-        filename,
-      )
-    ) {
-      throw new NotFoundException(
-        'Identity document not found',
-      );
-    }
-
-    const directory =
-      await this.getPrivateDirectory();
-
-    const filePath =
-      join(
-        directory,
-        filename,
-      );
-
     let encryptedFile: Buffer;
 
-    try {
-      const fileInfo =
-        await lstat(filePath);
-
-      if (
-        !fileInfo.isFile() ||
-        fileInfo.isSymbolicLink() ||
-        fileInfo.size < 37 ||
-        fileInfo.size >
-          MAX_ENCRYPTED_FILE_SIZE
-      ) {
-        throw new Error(
-          'Invalid private document',
-        );
+    if (base64Data) {
+      try {
+        encryptedFile = Buffer.from(base64Data, 'base64');
+      } catch {
+        throw new BadRequestException('Invalid stored identity document data');
       }
-
-      const actualFilePath =
-        await realpath(
-          filePath,
-        );
-
+    } else {
       if (
-        !this.isInsideDirectory(
-          directory,
-          actualFilePath,
+        typeof filename !== 'string' ||
+        !PRIVATE_FILENAME_PATTERN.test(
+          filename,
         )
       ) {
-        throw new Error(
-          'Invalid document location',
+        throw new NotFoundException(
+          'Identity document not found',
         );
       }
 
-      encryptedFile =
-        await readFile(
-          filePath,
+      const directory =
+        await this.getPrivateDirectory();
+
+      const filePath =
+        join(
+          directory,
+          filename,
         );
 
-      if (
-        encryptedFile.length < 37 ||
-        encryptedFile.length >
-          MAX_ENCRYPTED_FILE_SIZE
-      ) {
-        throw new Error(
-          'Invalid encrypted file size',
+      try {
+        const fileInfo =
+          await lstat(filePath);
+
+        if (
+          !fileInfo.isFile() ||
+          fileInfo.isSymbolicLink() ||
+          fileInfo.size < 37 ||
+          fileInfo.size >
+            MAX_ENCRYPTED_FILE_SIZE
+        ) {
+          throw new Error(
+            'Invalid private document',
+          );
+        }
+
+        const actualFilePath =
+          await realpath(
+            filePath,
+          );
+
+        if (
+          !this.isInsideDirectory(
+            directory,
+            actualFilePath,
+          )
+        ) {
+          throw new Error(
+            'Invalid document location',
+          );
+        }
+
+        encryptedFile =
+          await readFile(
+            filePath,
+          );
+
+        if (
+          encryptedFile.length < 37 ||
+          encryptedFile.length >
+            MAX_ENCRYPTED_FILE_SIZE
+        ) {
+          throw new Error(
+            'Invalid encrypted file size',
+          );
+        }
+      } catch {
+        throw new NotFoundException(
+          'Identity document file was stored on ephemeral disk of a previous deployment. The guide registration reference is verified in database.',
         );
       }
-    } catch {
-      throw new NotFoundException(
-        'Identity document is unavailable',
-      );
     }
 
     // ======================================
@@ -596,7 +605,7 @@ export class AdminDashboardController {
           role: Role.GUIDE,
         })
         .select(
-          '+guideIdFrontPath +guideIdBackPath',
+          '+guideIdFrontPath +guideIdBackPath +guideIdFrontData +guideIdBackData',
         );
 
     if (!guide) {
@@ -610,7 +619,12 @@ export class AdminDashboardController {
         ? guide.guideIdFrontPath
         : guide.guideIdBackPath;
 
-    if (!filename) {
+    const base64Data =
+      side === 'front'
+        ? (guide as any).guideIdFrontData
+        : (guide as any).guideIdBackData;
+
+    if (!filename && !base64Data) {
       throw new NotFoundException(
         'Requested identity document has not been uploaded',
       );
@@ -620,7 +634,8 @@ export class AdminDashboardController {
       buffer,
       mimeType,
     } = await this.decryptPrivateDocument(
-      filename,
+      filename || '',
+      base64Data,
     );
 
     // No public URL and no redirect.

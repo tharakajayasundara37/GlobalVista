@@ -20,6 +20,7 @@ import {
 import * as bcrypt from 'bcrypt';
 
 import {
+  mkdir,
   open,
   realpath,
   stat,
@@ -182,7 +183,7 @@ export class UsersService {
     return this.userModel
       .find()
       .select(
-        '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideLicensePath',
+        '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideIdFrontData -guideIdBackData -guideLicensePath',
       )
       .sort({
         createdAt: -1,
@@ -205,7 +206,7 @@ export class UsersService {
       await this.userModel
         .findById(id)
         .select(
-          '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideLicensePath',
+          '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideIdFrontData -guideIdBackData -guideLicensePath',
         );
 
     if (!user) {
@@ -546,7 +547,7 @@ export class UsersService {
           GuideStatus.PENDING,
       })
       .select(
-        '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideLicensePath',
+        '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideIdFrontData -guideIdBackData -guideLicensePath',
       )
       .sort({
         createdAt: -1,
@@ -564,7 +565,7 @@ export class UsersService {
           Role.GUIDE,
       })
       .select(
-        '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideLicensePath',
+        '-password -governmentIdNumber -guideIdFrontPath -guideIdBackPath -guideIdFrontData -guideIdBackData -guideLicensePath',
       )
       .sort({
         createdAt: -1,
@@ -594,12 +595,11 @@ export class UsersService {
     let actualDirectory: string;
 
     try {
+      await mkdir(directory, { recursive: true, mode: 0o700 });
       actualDirectory =
         await realpath(directory);
     } catch {
-      throw new BadRequestException(
-        'Guide identity documents have not been uploaded',
-      );
+      actualDirectory = directory;
     }
 
     const publicDirectory =

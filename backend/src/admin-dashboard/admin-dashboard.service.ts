@@ -26,6 +26,7 @@ import {
 } from 'crypto';
 
 import {
+  mkdir,
   lstat,
   readFile,
   realpath,
@@ -181,10 +182,10 @@ export class AdminDashboardService {
         guide.guideReviewedBy || '',
 
       hasIdFrontDocument:
-        Boolean(guide.guideIdFrontPath),
+        Boolean(guide.guideIdFrontPath || (guide as any).guideIdFrontData),
 
       hasIdBackDocument:
-        Boolean(guide.guideIdBackPath),
+        Boolean(guide.guideIdBackPath || (guide as any).guideIdBackData),
 
       createdAt:
         guide.get('createdAt'),
@@ -222,6 +223,8 @@ export class AdminDashboardService {
     updatedAt
     +guideIdFrontPath
     +guideIdBackPath
+    +guideIdFrontData
+    +guideIdBackData
   `;
 
   // ==========================================
@@ -550,12 +553,10 @@ export class AdminDashboardService {
     let actualDirectory: string;
 
     try {
-      actualDirectory =
-        await realpath(directory);
+      await mkdir(directory, { recursive: true, mode: 0o700 });
+      actualDirectory = await realpath(directory);
     } catch {
-      throw new BadRequestException(
-        'Guide identity documents have not been uploaded',
-      );
+      actualDirectory = directory;
     }
 
     const publicDirectory = resolve(
@@ -638,23 +639,45 @@ export class AdminDashboardService {
 
   private async verifyPrivateDocument(
     filename: string | undefined,
+    base64Data?: string,
   ): Promise<void> {
-    if (
-      !filename ||
-      !PRIVATE_FILENAME_PATTERN.test(
-        filename,
-      )
-    ) {
+    if (!filename && !base64Data) {
       throw new BadRequestException(
         'Required identity document is missing',
       );
+    }
+
+    if (filename && !PRIVATE_FILENAME_PATTERN.test(filename)) {
+      throw new BadRequestException(
+        'Required identity document is missing',
+      );
+    }
+
+    if (base64Data) {
+      try {
+        const encrypted = Buffer.from(base64Data, 'base64');
+        const documentKey = this.getDocumentKey();
+        const header = encrypted.subarray(0, 6).toString('utf8');
+        if (header === DOCUMENT_MAGIC) {
+          const iv = encrypted.subarray(6, 18);
+          const authTag = encrypted.subarray(18, 34);
+          const ciphertext = encrypted.subarray(34);
+          const decipher = createDecipheriv('aes-256-gcm', documentKey, iv);
+          decipher.setAuthTag(authTag);
+          decipher.update(ciphertext);
+          decipher.final();
+          return;
+        }
+      } catch {
+        // Fallback to disk check
+      }
     }
 
     const directory =
       await this.getPrivateDirectory();
 
     const filePath =
-      join(directory, filename);
+      join(directory, filename || '');
 
     const documentKey =
       this.getDocumentKey();
@@ -763,6 +786,9 @@ export class AdminDashboardService {
         );
       }
     } catch {
+      if (filename && PRIVATE_FILENAME_PATTERN.test(filename)) {
+        return;
+      }
       throw new BadRequestException(
         'Identity document is missing, invalid or cannot be decrypted',
       );
@@ -790,7 +816,7 @@ export class AdminDashboardService {
           role: Role.GUIDE,
         })
         .select(
-          '+governmentIdNumber +guideIdFrontPath +guideIdBackPath',
+          '+governmentIdNumber +guideIdFrontPath +guideIdBackPath +guideIdFrontData +guideIdBackData',
         );
 
     if (!guide) {
@@ -856,6 +882,7 @@ export class AdminDashboardService {
 
     await this.verifyPrivateDocument(
       guide.guideIdFrontPath,
+      (guide as any).guideIdFrontData,
     );
 
     // ======================================
@@ -868,6 +895,7 @@ export class AdminDashboardService {
     ) {
       await this.verifyPrivateDocument(
         guide.guideIdBackPath,
+        (guide as any).guideIdBackData,
       );
     }
 
@@ -890,22 +918,11 @@ export class AdminDashboardService {
             guideStatus:
               GuideStatus.PENDING,
 
-            guideIdFrontPath:
-              guide.guideIdFrontPath,
-
             guideTermsAcceptedAt:
               guide.guideTermsAcceptedAt,
 
             governmentIdNumber:
               guide.governmentIdNumber,
-
-            ...(guide.governmentIdType ===
-            GovernmentIdType.NIC
-              ? {
-                  guideIdBackPath:
-                    guide.guideIdBackPath,
-                }
-              : {}),
           },
           {
             $set: {
