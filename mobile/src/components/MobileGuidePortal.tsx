@@ -144,7 +144,7 @@ export const MobileGuidePortal: React.FC<Props> = ({ visible, onClose, user: pro
     if (!token) return;
     setBookingsLoading(true);
     try {
-      const data = await api.getUserBookings(token);
+      const data = await api.getGuideAssignedTours(token);
       setBookings(data);
     } catch (err) {
       console.warn('Failed to load guide bookings', err);

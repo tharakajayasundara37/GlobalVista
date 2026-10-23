@@ -358,6 +358,9 @@ export class AuthService {
             .toUpperCase(),
         );
 
+      userData.vehicleType = data.vehicleType ? (data.vehicleType.toUpperCase() as any) : null;
+      userData.vehicleNumber = data.vehicleNumber ? data.vehicleNumber.trim().toUpperCase() : '';
+
       userData.about =
         data.about!.trim();
 

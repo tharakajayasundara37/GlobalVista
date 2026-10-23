@@ -73,6 +73,13 @@ type Booking = {
   numberOfPeople?: number;
 
   totalPrice?: number;
+  vehicleType?: string;
+  vehicleNumber?: string;
+  assignedGuideId?: any;
+  guideName?: string;
+  distanceKm?: number;
+  pricePerKm?: number;
+  vehicleFare?: number;
 
   status?: BookingStatus;
 

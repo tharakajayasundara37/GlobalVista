@@ -1,3 +1,7 @@
+import {
+  SystemSetting,
+  SystemSettingDocument,
+} from './schemas/system-setting.schema';
 
 import {
   BadRequestException,
@@ -92,6 +96,9 @@ export class AdminDashboardService {
     @InjectModel(Payment.name)
     private readonly paymentModel:
       Model<PaymentDocument>,
+    @InjectModel(SystemSetting.name)
+    private readonly systemSettingModel:
+      Model<SystemSettingDocument>,
   ) {}
 
   // ==========================================
@@ -1019,4 +1026,52 @@ export class AdminDashboardService {
         this.toSafeGuide(guide),
     };
   }
+
+  /* ==========================================
+     VEHICLE PRICING SETTINGS
+  ========================================== */
+
+  async getVehiclePricing() {
+    let setting = await this.systemSettingModel.findOne({ key: 'DEFAULT_SETTINGS' });
+    if (!setting) {
+      setting = await this.systemSettingModel.create({
+        key: 'DEFAULT_SETTINGS',
+        pricePerKm: 100,
+        carRatePerKm: 100,
+        vanRatePerKm: 150,
+        busRatePerKm: 250,
+      });
+    }
+    return {
+      pricePerKm: setting.pricePerKm ?? 100,
+      carRatePerKm: setting.carRatePerKm ?? 100,
+      vanRatePerKm: setting.vanRatePerKm ?? 150,
+      busRatePerKm: setting.busRatePerKm ?? 250,
+    };
+  }
+
+  async updateVehiclePricing(body: {
+    pricePerKm?: number;
+    carRatePerKm?: number;
+    vanRatePerKm?: number;
+    busRatePerKm?: number;
+  }) {
+    let setting = await this.systemSettingModel.findOne({ key: 'DEFAULT_SETTINGS' });
+    if (!setting) {
+      setting = new this.systemSettingModel({ key: 'DEFAULT_SETTINGS' });
+    }
+    if (body.pricePerKm !== undefined && body.pricePerKm >= 0) setting.pricePerKm = body.pricePerKm;
+    if (body.carRatePerKm !== undefined && body.carRatePerKm >= 0) setting.carRatePerKm = body.carRatePerKm;
+    if (body.vanRatePerKm !== undefined && body.vanRatePerKm >= 0) setting.vanRatePerKm = body.vanRatePerKm;
+    if (body.busRatePerKm !== undefined && body.busRatePerKm >= 0) setting.busRatePerKm = body.busRatePerKm;
+    await setting.save();
+    return {
+      message: 'Vehicle pricing updated successfully',
+      pricePerKm: setting.pricePerKm,
+      carRatePerKm: setting.carRatePerKm,
+      vanRatePerKm: setting.vanRatePerKm,
+      busRatePerKm: setting.busRatePerKm,
+    };
+  }
+
 }

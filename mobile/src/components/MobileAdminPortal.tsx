@@ -87,6 +87,41 @@ type TabType =
   | 'PLANS';
 
 export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
+
+  const [kmRate, setKmRate] = useState<number>(100);
+  const [carKmRate, setCarKmRate] = useState<number>(100);
+  const [vanKmRate, setVanKmRate] = useState<number>(150);
+  const [busKmRate, setBusKmRate] = useState<number>(250);
+  const [pricingSaving, setPricingSaving] = useState<boolean>(false);
+
+  useEffect(() => {
+    api.getVehiclePricing().then((p) => {
+      if (p) {
+        setKmRate(p.pricePerKm);
+        setCarKmRate(p.carRatePerKm || p.pricePerKm);
+        setVanKmRate(p.vanRatePerKm || 150);
+        setBusKmRate(p.busRatePerKm || 250);
+      }
+    }).catch(() => {});
+  }, [visible]);
+
+  const saveKmRates = async () => {
+    setPricingSaving(true);
+    try {
+      if (!token) return;
+      await api.updateVehiclePricing(token, {
+        pricePerKm: kmRate,
+        carRatePerKm: carKmRate,
+        vanRatePerKm: vanKmRate,
+        busRatePerKm: busKmRate,
+      });
+      Alert.alert('Success', 'Vehicle pricing rates updated successfully!');
+    } catch {
+      Alert.alert('Error', 'Failed to update rates');
+    }
+    setPricingSaving(false);
+  };
+
   const { token, user, updateUser } = useAuth();
   const { formatPrice } = useCurrency();
 

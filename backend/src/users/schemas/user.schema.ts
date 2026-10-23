@@ -22,6 +22,12 @@ export enum GuideStatus {
   SUSPENDED = 'SUSPENDED',
 }
 
+export enum VehicleType {
+  CAR = 'CAR',
+  VAN = 'VAN',
+  BUS = 'BUS',
+}
+
 export enum GovernmentIdType {
   NIC = 'NIC',
   PASSPORT = 'PASSPORT',
@@ -111,6 +117,20 @@ export class User {
     type: String,
   })
   about?: string;
+
+  @Prop({
+    type: String,
+    enum: Object.values(VehicleType),
+    default: null,
+  })
+  vehicleType?: VehicleType | null;
+
+  @Prop({
+    type: String,
+    default: '',
+    trim: true,
+  })
+  vehicleNumber?: string;
 
   // =========================
   // GOVERNMENT IDENTITY

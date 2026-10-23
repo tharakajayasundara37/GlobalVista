@@ -54,6 +54,8 @@ type ProfileUpdateData = {
   about?: string;
   languages?: string[];
   experienceYears?: number;
+  vehicleType?: string;
+  vehicleNumber?: string;
 };
 
 @Injectable()
@@ -306,6 +308,17 @@ export class UsersService {
 
     if (data.languages !== undefined && Array.isArray(data.languages)) {
       updates.languages = data.languages.map((l) => String(l).trim()).filter(Boolean);
+    }
+
+    if (data.vehicleType !== undefined && typeof data.vehicleType === 'string') {
+      const v = data.vehicleType.trim().toUpperCase();
+      if (['CAR', 'VAN', 'BUS'].includes(v)) {
+        updates.vehicleType = v as any;
+      }
+    }
+
+    if (data.vehicleNumber !== undefined && typeof data.vehicleNumber === 'string') {
+      updates.vehicleNumber = data.vehicleNumber.trim().toUpperCase();
     }
 
     if (data.experienceYears !== undefined) {
@@ -974,4 +987,25 @@ export class UsersService {
         'User deleted successfully',
     };
   }
+
+  /* ==========================================
+     PUBLIC: APPROVED GUIDES FILTERED BY VEHICLE
+  ========================================== */
+
+  async findApprovedGuides(vehicleType?: string) {
+    const filter: Record<string, any> = {
+      role: Role.GUIDE,
+      guideStatus: GuideStatus.APPROVED,
+    };
+    if (vehicleType && typeof vehicleType === 'string' && vehicleType.trim()) {
+      filter.vehicleType = vehicleType.trim().toUpperCase();
+    }
+    return this.userModel
+      .find(filter)
+      .select(
+        '_id name publicId email mobile country city languages experienceYears profileImage about vehicleType vehicleNumber guideStatus createdAt',
+      )
+      .sort({ experienceYears: -1, createdAt: -1 });
+  }
+
 }

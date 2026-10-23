@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, ArrowRight, BadgeCheck, BriefcaseBusiness, Check,
+  ArrowLeft, ArrowRight, BadgeCheck, BriefcaseBusiness, Car, Hash, Check,
   CheckCircle2, ChevronDown, Compass, Eye, EyeOff, FileCheck2, FileImage,
   Globe2, IdCard, Languages, LockKeyhole, Mail, MapPin, Phone, Plane,
   Search, ShieldCheck, Sparkles, UploadCloud, UserRound, X,
@@ -73,6 +73,8 @@ export default function RegisterPage() {
   const [governmentIdType, setGovernmentIdType] = useState<GovernmentIdType>('NIC');
   const [governmentIdNumber, setGovernmentIdNumber] = useState('');
   const [about, setAbout] = useState('');
+  const [vehicleType, setVehicleType] = useState<'CAR' | 'VAN' | 'BUS'>('CAR');
+  const [vehicleNumber, setVehicleNumber] = useState('');
   const [acceptGuideTerms, setAcceptGuideTerms] = useState(false);
 
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
@@ -181,6 +183,8 @@ export default function RegisterPage() {
       if (about.trim().length < 20) {
         return setError('Please provide at least 20 characters about your guide experience.');
       }
+      if (!vehicleType) return setError('Please select your vehicle type (Car, Van, or Bus).');
+      if (!vehicleNumber.trim()) return setError('Please enter your vehicle number plate.');
       if (!acceptGuideTerms) {
         return setError('Please accept the Tour Guide Terms and Privacy Policy.');
       }
@@ -448,7 +452,32 @@ export default function RegisterPage() {
                     </div>
 
                     <div className={styles.fieldGroup} ref={languageRef}>
-                      <label>Languages Spoken</label>
+                      <div className={styles.formGrid}>
+                      <div className={styles.fieldGroup}>
+                        <label htmlFor="vehicleType">Vehicle Type</label>
+                        <div className={styles.inputBox}><Car size={18} />
+                          <select
+                            id="vehicleType"
+                            value={vehicleType}
+                            onChange={(e) => setVehicleType(e.target.value as any)}
+                            style={{ background: 'transparent', color: '#fff', border: 'none', width: '100%', outline: 'none', cursor: 'pointer' }}
+                            required
+                          >
+                            <option value="CAR" style={{ background: '#0b1329', color: '#fff' }}>Car (1-4 Seats)</option>
+                            <option value="VAN" style={{ background: '#0b1329', color: '#fff' }}>Van (5-10 Seats)</option>
+                            <option value="BUS" style={{ background: '#0b1329', color: '#fff' }}>Bus (15+ Seats)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div className={styles.fieldGroup}>
+                        <label htmlFor="vehicleNumber">Vehicle Number Plate</label>
+                        <div className={styles.inputBox}><Hash size={18} />
+                          <input id="vehicleNumber" type="text" placeholder="e.g. WP CAC-1234" value={vehicleNumber} onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())} maxLength={30} required />
+                        </div>
+                      </div>
+                    </div>
+
+                    <label>Languages Spoken</label>
                       <div className={styles.languageSelector}>
                         <button type="button" className={styles.languageTrigger} onClick={() => setLanguageDropdownOpen((current) => !current)} aria-expanded={languageDropdownOpen}>
                           <div className={styles.languageTriggerLeft}><Languages size={18} />

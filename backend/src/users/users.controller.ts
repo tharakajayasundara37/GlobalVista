@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -118,6 +119,8 @@ export class UsersController {
       about?: string;
       languages?: string[];
       experienceYears?: number;
+      vehicleType?: string;
+      vehicleNumber?: string;
     },
   ) {
 
@@ -140,6 +143,8 @@ export class UsersController {
       about?: string;
       languages?: string[];
       experienceYears?: number;
+      vehicleType?: string;
+      vehicleNumber?: string;
     } = {};
 
     if (
@@ -205,6 +210,12 @@ export class UsersController {
 
     if (body.experienceYears !== undefined && typeof body.experienceYears === 'number') {
       updates.experienceYears = body.experienceYears;
+    }
+    if (body.vehicleType !== undefined && typeof body.vehicleType === 'string') {
+      updates.vehicleType = body.vehicleType;
+    }
+    if (body.vehicleNumber !== undefined && typeof body.vehicleNumber === 'string') {
+      updates.vehicleNumber = body.vehicleNumber;
     }
 
     if (
@@ -459,6 +470,18 @@ export class UsersController {
     return this.usersService.remove(
       id,
     );
+  }
+
+
+  /* =========================
+     PUBLIC - APPROVED GUIDES (OPTIONAL VEHICLE FILTER)
+  ========================= */
+
+  @Get('guides')
+  findApprovedGuides(
+    @Query('vehicleType') vehicleType?: string,
+  ) {
+    return this.usersService.findApprovedGuides(vehicleType);
   }
 
 }

@@ -83,6 +83,8 @@ export const ProfileScreen: React.FC = () => {
   const [experienceYears, setExperienceYears] = useState('3');
   const [governmentIdType, setGovernmentIdType] = useState<'NIC' | 'PASSPORT'>('NIC');
   const [idNumber, setIdNumber] = useState('');
+  const [vehicleType, setVehicleType] = useState<'CAR' | 'VAN' | 'BUS'>('CAR');
+  const [vehicleNumber, setVehicleNumber] = useState('');
   const [about, setAbout] = useState('');
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(['English', 'Sinhala']);
   const [acceptGuideTerms, setAcceptGuideTerms] = useState(false);
@@ -873,6 +875,43 @@ export const ProfileScreen: React.FC = () => {
                         </View>
                       </>
                     )}
+
+                    {/* Vehicle Type Selector */}
+                        <View style={styles.inputGroup}>
+                          <Text style={styles.inputLabel}>REGISTERED VEHICLE TYPE *</Text>
+                          <View style={styles.idTypeRow}>
+                            {(['CAR', 'VAN', 'BUS'] as const).map((vt) => {
+                              const active = vehicleType === vt;
+                              return (
+                                <TouchableOpacity
+                                  key={vt}
+                                  style={[styles.idTypeBtn, active && styles.idTypeBtnActive]}
+                                  onPress={() => setVehicleType(vt)}
+                                >
+                                  <Text style={[styles.idTypeText, active && styles.idTypeTextActive]}>
+                                    {vt === 'CAR' ? '🚗 Car (1-4)' : vt === 'VAN' ? '🚐 Van (5-10)' : '🚌 Bus (15+)'}
+                                  </Text>
+                                </TouchableOpacity>
+                              );
+                            })}
+                          </View>
+                        </View>
+
+                        {/* Vehicle Number Plate */}
+                        <View style={styles.inputGroup}>
+                          <Text style={styles.inputLabel}>VEHICLE NUMBER PLATE *</Text>
+                          <View style={styles.inputWrap}>
+                            <Briefcase size={16} color={COLORS.textMuted} />
+                            <TextInput
+                              style={styles.textInput}
+                              placeholder="e.g. WP CAC-1234"
+                              placeholderTextColor={COLORS.textMuted}
+                              value={vehicleNumber}
+                              onChangeText={setVehicleNumber}
+                              autoCapitalize="characters"
+                            />
+                          </View>
+                        </View>
 
                     {/* Email Address */}
                     <View style={styles.inputGroup}>

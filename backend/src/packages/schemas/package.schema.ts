@@ -99,6 +99,13 @@ export class Package {
   duration: string;
 
   @Prop({
+    type: Number,
+    default: 150,
+    min: 0,
+  })
+  distanceKm?: number;
+
+  @Prop({
     required: true,
     min: 0,
   })

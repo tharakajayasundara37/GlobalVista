@@ -1079,6 +1079,13 @@ export default function Home() {
       '',
     );
 
+  
+  const [vehicleType, setVehicleType] = useState<'CAR' | 'VAN' | 'BUS' | 'NONE'>('CAR');
+  const [availableGuides, setAvailableGuides] = useState<any[]>([]);
+  const [selectedGuideId, setSelectedGuideId] = useState<string>('');
+  const [guidesLoading, setGuidesLoading] = useState<boolean>(false);
+  const [vehiclePricing, setVehiclePricing] = useState<{ pricePerKm: number; carRatePerKm: number; vanRatePerKm: number; busRatePerKm: number }>({ pricePerKm: 100, carRatePerKm: 100, vanRatePerKm: 150, busRatePerKm: 250 });
+
   const [
     createdBookingId,
     setCreatedBookingId,
@@ -1520,9 +1527,9 @@ export default function Home() {
         '',
       );
 
-      setBookingSuccess(
-        '',
-      );
+      setBookingSuccess('');
+      setVehicleType('CAR');
+      setSelectedGuideId('');
       setCreatedBookingId('');
     };
 
@@ -1627,6 +1634,36 @@ export default function Home() {
         nextVideo,
       );
     };
+
+  
+  useEffect(() => {
+    if (Boolean(selectedPackage) && vehicleType !== 'NONE') {
+      setGuidesLoading(true);
+      fetch(`${API_URL}/users/guides?vehicleType=${vehicleType}`)
+        .then(r => r.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setAvailableGuides(data);
+            if (data.length > 0 && !selectedGuideId) {
+              setSelectedGuideId(data[0]._id);
+            }
+          }
+        })
+        .catch(() => {})
+        .finally(() => setGuidesLoading(false));
+    }
+  }, [Boolean(selectedPackage), vehicleType]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/bookings/vehicle-pricing`)
+      .then(r => r.json())
+      .then(p => {
+        if (p && typeof p.pricePerKm === 'number') {
+          setVehiclePricing(p);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const openBooking =
     async (
@@ -1843,10 +1880,14 @@ export default function Home() {
           )
       : 0;
 
+  const tripDistance = (selectedPackage as any)?.distanceKm || 150;
+  const ratePerKm = vehicleType === 'BUS' ? vehiclePricing.busRatePerKm : vehicleType === 'VAN' ? vehiclePricing.vanRatePerKm : vehiclePricing.carRatePerKm;
+  const vehicleFare = vehicleType !== 'NONE' ? Math.round(tripDistance * ratePerKm) : 0;
   const estimatedTotal =
     baseTotal +
     travelPlanTotal +
-    addOnsTotal;
+    addOnsTotal +
+    vehicleFare;
 
   const createBooking =
     async () => {
@@ -1977,6 +2018,10 @@ export default function Home() {
                     numberOfPeople,
 
                     selectedAddOnIds,
+                    vehicleType: vehicleType !== 'NONE' ? vehicleType : undefined,
+                    vehicleNumber: vehicleType !== 'NONE' ? (availableGuides.find(g => g._id === selectedGuideId)?.vehicleNumber || 'WP CAC-1234') : undefined,
+                    assignedGuideId: vehicleType !== 'NONE' ? selectedGuideId || undefined : undefined,
+                    distanceKm: tripDistance,
                   },
                 ),
             },
@@ -5852,6 +5897,100 @@ export default function Home() {
                 </div>
               </div>
 
+              
+              {/* VEHICLE & TOUR GUIDE SELECTION */}
+              <div style={{ marginTop: '20px', marginBottom: '20px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0 }}>
+                    🚗 Vehicle &amp; Tour Guide Transport
+                  </h4>
+                  <span style={{ fontSize: '12px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                    {tripDistance} km · {formatPrice(ratePerKm)}/km
+                  </span>
+                </div>
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px', lineHeight: 1.5 }}>
+                  Choose your vehicle type. An approved licensed guide with this registered vehicle will be assigned.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '14px' }}>
+                  {[
+                    { type: 'CAR', label: 'Car (1-4 Seats)', icon: '🚗' },
+                    { type: 'VAN', label: 'Van (5-10 Seats)', icon: '🚐' },
+                    { type: 'BUS', label: 'Bus (15+ Seats)', icon: '🚌' },
+                    { type: 'NONE', label: 'No Vehicle', icon: '🚶' },
+                  ].map((v) => {
+                    const active = vehicleType === v.type;
+                    return (
+                      <button
+                        key={v.type}
+                        type="button"
+                        onClick={() => setVehicleType(v.type as any)}
+                        style={{
+                          background: active ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.15))' : 'rgba(255,255,255,0.03)',
+                          border: active ? '1.5px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)',
+                          borderRadius: '10px',
+                          padding: '10px 6px',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>{v.icon}</div>
+                        <div style={{ fontSize: '12px', fontWeight: '700', color: active ? '#38bdf8' : '#f1f5f9' }}>{v.label}</div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {vehicleType !== 'NONE' && (
+                  <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '8px' }}>
+                      Suggested Verified Guides:
+                    </div>
+                    {guidesLoading ? (
+                      <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Finding guides...</div>
+                    ) : availableGuides.length === 0 ? (
+                      <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+                        A licensed guide &amp; driver with a registered {vehicleType} will be assigned automatically.
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {availableGuides.map(g => {
+                          const isSel = selectedGuideId === g._id;
+                          return (
+                            <div
+                              key={g._id}
+                              onClick={() => setSelectedGuideId(g._id)}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '8px 12px',
+                                borderRadius: '8px',
+                                background: isSel ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
+                                border: isSel ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.05)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div>
+                                <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#fff' }}>{g.name}</div>
+                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
+                                  {g.experienceYears || 1} yrs exp · {g.languages?.slice(0, 2).join(', ') || 'English'}
+                                </div>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+                                  Plate: {g.vehicleNumber || 'WP CAC-1234'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div
                 className="bookingPriceSummary"
               >
@@ -5910,6 +6049,18 @@ export default function Home() {
                     )}
                   </strong>
                 </div>
+
+                {vehicleType !== 'NONE' && (
+                  <div>
+                    <span>
+                      Vehicle &amp; Guide Transport ({vehicleType} · {tripDistance} km @ {formatPrice(ratePerKm)}/km)
+                    </span>
+                    <strong style={{ color: '#10b981' }}>
+                      +{formatPrice(vehicleFare)}
+                    </strong>
+                  </div>
+                )}
+
 
                 <div
                   className="bookingGrandTotal"

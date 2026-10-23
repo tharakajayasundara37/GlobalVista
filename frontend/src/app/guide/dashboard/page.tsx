@@ -364,6 +364,10 @@ export default function GuideDashboardPage() {
     useState(false);
 
   const [name, setName] = useState('');
+  const [guideVehicleType, setGuideVehicleType] = useState<string>('CAR');
+  const [guideVehicleNumber, setGuideVehicleNumber] = useState<string>('');
+  const [assignedTours, setAssignedTours] = useState<any[]>([]);
+  const [toursLoading, setToursLoading] = useState<boolean>(false);
   const [mobile, setMobile] = useState('');
   const [country, setCountry] = useState('');
 
@@ -2289,33 +2293,78 @@ export default function GuideDashboardPage() {
               </section>
             )}
 
-            {/* BOOKINGS — original placeholder stays unchanged */}
+            
+            {/* BOOKINGS — ASSIGNED TOURS WITH VEHICLE DUTY */}
             {tab === 'bookings' && (
-              <section className={styles.bottomGrid}>
+              <section className={styles.bottomGrid} style={{ gridTemplateColumns: '1fr' }}>
                 <article className={styles.panel}>
                   <div className={styles.panelHeader}>
-                    <div><span>TOUR GUIDE WORKSPACE</span><h2>My Bookings</h2></div>
+                    <div>
+                      <span>TOUR GUIDE ASSIGNED MISSIONS</span>
+                      <h2>My Tour Bookings ({assignedTours.length})</h2>
+                    </div>
                     <BookOpenCheck size={20} color="#10b981" />
                   </div>
-                  <div className={styles.emptyGuide}>
-                    <Clock3 size={32} />
-                    <strong>Integration Pending</strong>
-                    <span>Guide-specific booking data requires Backend integration.</span>
-                  </div>
-                </article>
-                <article className={styles.panel}>
-                  <div className={styles.panelHeader}>
-                    <div><span>VERIFICATION</span><h2>Verified Guide</h2></div>
-                    <BadgeCheck size={20} color="#10b981" />
-                  </div>
-                  <div className={styles.emptyGuide}>
-                    <CheckCircle2 size={32} />
-                    <strong>Approved Tour Guide</strong>
-                    <span>GlobalVista verified account.</span>
-                  </div>
+
+                  {toursLoading ? (
+                    <div className={styles.emptyGuide}>
+                      <Clock3 size={32} />
+                      <strong>Loading assigned tours...</strong>
+                    </div>
+                  ) : assignedTours.length === 0 ? (
+                    <div className={styles.emptyGuide}>
+                      <Clock3 size={32} />
+                      <strong>No Bookings Assigned Yet</strong>
+                      <span>When tourists book tours with your vehicle ({guideVehicleType} · {guideVehicleNumber || 'Pending Plate'}), they will appear here.</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '14px' }}>
+                      {assignedTours.map((b: any) => (
+                        <div
+                          key={b._id}
+                          style={{
+                            padding: '16px',
+                            borderRadius: '14px',
+                            background: 'rgba(255,255,255,0.03)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}
+                        >
+                          <div>
+                            <div style={{ fontSize: '15px', fontWeight: '800', color: '#fff', marginBottom: '4px' }}>
+                              {b.packageId?.title || 'Custom Tour Expedition'}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#94a3b8', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                              <span>📅 Date: <strong style={{ color: '#fff' }}>{b.travelDate}</strong></span>
+                              <span>👥 Guests: <strong style={{ color: '#fff' }}>{b.numberOfPeople}</strong></span>
+                              <span>🚗 Vehicle: <strong style={{ color: '#38bdf8' }}>{b.vehicleType || guideVehicleType} ({b.vehicleNumber || guideVehicleNumber || 'Assigned'})</strong></span>
+                              <span>📍 Trip Distance: <strong style={{ color: '#10b981' }}>{b.distanceKm || 150} km</strong></span>
+                            </div>
+                            {b.userId && typeof b.userId === 'object' && (
+                              <div style={{ fontSize: '11.5px', color: '#cbd5e1', marginTop: '6px' }}>
+                                Tourist: <strong>{b.userId.name}</strong> ({b.userId.email} · {b.userId.mobile || b.userId.country})
+                              </div>
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: '11px', color: '#94a3b8' }}>Vehicle Fare</div>
+                            <div style={{ fontSize: '16px', fontWeight: '800', color: '#10b981' }}>
+                              Rs. {(b.vehicleFare || 0).toLocaleString()}
+                            </div>
+                            <span style={{ fontSize: '11px', padding: '3px 10px', borderRadius: '12px', background: b.status === 'CONFIRMED' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)', color: b.status === 'CONFIRMED' ? '#10b981' : '#f59e0b', fontWeight: '700', marginTop: '4px', display: 'inline-block' }}>
+                              {b.status || 'PENDING'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </article>
               </section>
             )}
+
           </div>
         </div>
       </section>

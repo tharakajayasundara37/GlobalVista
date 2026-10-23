@@ -69,6 +69,8 @@ export interface ApiUser {
   languages?: string[];
   experienceYears?: number;
   guideStatus?: 'PENDING' | 'APPROVED' | 'REJECTED' | 'SUSPENDED' | null;
+  vehicleType?: string;
+  vehicleNumber?: string;
   profileImage?: string;
   about?: string;
   createdAt?: string;
@@ -103,6 +105,13 @@ export interface ApiBooking {
   status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED';
   paymentStatus?: 'UNPAID' | 'PAID' | 'REFUNDED';
   paymentMethod?: string;
+  vehicleType?: string;
+  vehicleNumber?: string;
+  assignedGuideId?: any;
+  guideName?: string;
+  distanceKm?: number;
+  pricePerKm?: number;
+  vehicleFare?: number;
   createdAt?: string;
 }
 
@@ -434,6 +443,10 @@ export const api = {
       travelDate: string;
       numberOfPeople: number;
       selectedAddOnIds?: string[];
+      vehicleType?: string;
+      vehicleNumber?: string;
+      assignedGuideId?: string;
+      distanceKm?: number;
     },
     token: string
   ): Promise<any> {
@@ -517,6 +530,8 @@ export const api = {
     governmentIdType: 'NIC' | 'PASSPORT';
     governmentIdNumber: string;
     about: string;
+    vehicleType?: string;
+    vehicleNumber?: string;
   }): Promise<{ message: string; user?: ApiUser }> {
     const res = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
@@ -934,4 +949,41 @@ export const api = {
     if (!res.ok) throw new Error('Failed to delete destination');
     return await res.json();
   },
+
+  async getApprovedGuides(vehicleType?: string): Promise<ApiUser[]> {
+    const q = vehicleType && vehicleType !== 'NONE' ? `?vehicleType=${encodeURIComponent(vehicleType)}` : '';
+    const res = await fetch(`${API_BASE_URL}/users/guides${q}`);
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async getVehiclePricing(): Promise<{ pricePerKm: number; carRatePerKm: number; vanRatePerKm: number; busRatePerKm: number }> {
+    const res = await fetch(`${API_BASE_URL}/bookings/vehicle-pricing`);
+    if (!res.ok) return { pricePerKm: 100, carRatePerKm: 100, vanRatePerKm: 150, busRatePerKm: 250 };
+    return res.json();
+  },
+
+  async updateVehiclePricing(
+    token: string,
+    body: { pricePerKm?: number; carRatePerKm?: number; vanRatePerKm?: number; busRatePerKm?: number }
+  ): Promise<any> {
+    const res = await fetch(`${API_BASE_URL}/admin-dashboard/settings/vehicle-pricing`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+    return res.json();
+  },
+
+  async getGuideAssignedTours(token: string): Promise<ApiBooking[]> {
+    const res = await fetch(`${API_BASE_URL}/bookings/my-guide-tours`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return [];
+    return res.json();
+  },
+
 };

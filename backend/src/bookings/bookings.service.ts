@@ -1,3 +1,5 @@
+import { User, UserDocument } from '../users/schemas/user.schema';
+import { SystemSetting, SystemSettingDocument } from '../admin-dashboard/schemas/system-setting.schema';
 import {
   BadRequestException,
   ForbiddenException,
@@ -58,6 +60,12 @@ export class BookingsService {
     )
     private readonly travelPlanModel:
       Model<TravelPlanDocument>,
+    @InjectModel(User.name)
+    private readonly userModel:
+      Model<UserDocument>,
+    @InjectModel(SystemSetting.name)
+    private readonly systemSettingModel:
+      Model<SystemSettingDocument>,
   ) {}
 
   private cleanObjectId(
@@ -743,4 +751,38 @@ export class BookingsService {
         'Booking deleted successfully',
     };
   }
+
+  async getVehiclePricingSetting() {
+    let setting = await this.systemSettingModel.findOne({ key: 'DEFAULT_SETTINGS' });
+    if (!setting) {
+      setting = await this.systemSettingModel.create({
+        key: 'DEFAULT_SETTINGS',
+        pricePerKm: 100,
+        carRatePerKm: 100,
+        vanRatePerKm: 150,
+        busRatePerKm: 250,
+      });
+    }
+    return {
+      pricePerKm: setting.pricePerKm ?? 100,
+      carRatePerKm: setting.carRatePerKm ?? 100,
+      vanRatePerKm: setting.vanRatePerKm ?? 150,
+      busRatePerKm: setting.busRatePerKm ?? 250,
+    };
+  }
+
+  /* =========================
+     GUIDE ASSIGNED TOURS
+  ========================= */
+
+  async findGuideBookings(user: any) {
+    const guideId = this.cleanObjectId(user?.id, 'guide ID');
+    return this.bookingModel
+      .find({ assignedGuideId: new Types.ObjectId(guideId) })
+      .populate('packageId')
+      .populate('travelPlanId')
+      .populate('userId', 'name email mobile country')
+      .sort({ createdAt: -1 });
+  }
+
 }

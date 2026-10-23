@@ -255,4 +255,27 @@ export class RegisterDto {
       'of terms and privacy policy',
   })
   acceptGuideTerms?: boolean;
+
+  // ==========================================
+  // GUIDE ONLY - VEHICLE TYPE (CAR, VAN, BUS)
+  // ==========================================
+  @ValidateIf(
+    (data: RegisterDto) =>
+      data.role === Role.GUIDE,
+  )
+  @IsIn(['CAR', 'VAN', 'BUS'])
+  vehicleType?: string;
+
+  // ==========================================
+  // GUIDE ONLY - VEHICLE NUMBER PLATE
+  // ==========================================
+  @ValidateIf(
+    (data: RegisterDto) =>
+      data.role === Role.GUIDE,
+  )
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(30)
+  vehicleNumber?: string;
+
 }

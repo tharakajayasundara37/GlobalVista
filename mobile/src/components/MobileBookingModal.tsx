@@ -48,6 +48,12 @@ export const MobileBookingModal: React.FC<Props> = ({
   const [selectedPlanId, setSelectedPlanId] = useState<string>(preSelectedPlanId || '');
   const [submitting, setSubmitting] = useState<boolean>(false);
 
+  const [vehicleType, setVehicleType] = useState<'CAR' | 'VAN' | 'BUS' | 'NONE'>('CAR');
+  const [availableGuides, setAvailableGuides] = useState<any[]>([]);
+  const [selectedGuideId, setSelectedGuideId] = useState<string>('');
+  const [vehiclePricing, setVehiclePricing] = useState<{ pricePerKm: number; carRatePerKm: number; vanRatePerKm: number; busRatePerKm: number }>({ pricePerKm: 100, carRatePerKm: 100, vanRatePerKm: 150, busRatePerKm: 250 });
+
+
   useEffect(() => {
     if (visible) {
       AsyncStorage.getItem('globalvista_selected_travel_plan').then((stored) => {
@@ -68,6 +74,23 @@ export const MobileBookingModal: React.FC<Props> = ({
     }
   }, [visible, preSelectedPlanId]);
 
+  
+  useEffect(() => {
+    if (visible && vehicleType !== 'NONE') {
+      api.getApprovedGuides(vehicleType).then((guides) => {
+        if (Array.isArray(guides)) {
+          setAvailableGuides(guides);
+          if (guides.length > 0 && !selectedGuideId) {
+            setSelectedGuideId(guides[0]._id || guides[0].id);
+          }
+        }
+      }).catch(() => {});
+      api.getVehiclePricing().then((p) => {
+        if (p) setVehiclePricing(p);
+      }).catch(() => {});
+    }
+  }, [visible, vehicleType]);
+
   if (!pkg) return null;
 
   const toggleAddOn = (id: string) => {
@@ -84,7 +107,12 @@ export const MobileBookingModal: React.FC<Props> = ({
   const addOnsCost = (pkg.addOns || [])
     .filter((a) => selectedAddOns.includes(a._id))
     .reduce((sum, a) => sum + (a.pricingType === 'PER_PERSON' ? a.price * guests : a.price), 0);
-  const totalCost = baseCost + planCost + addOnsCost;
+  const tripDistance = (pkg as any).distanceKm || 150;
+  const ratePerKm = vehicleType === 'BUS' ? vehiclePricing.busRatePerKm : vehicleType === 'VAN' ? vehiclePricing.vanRatePerKm : vehiclePricing.carRatePerKm;
+  const vehicleFare = vehicleType !== 'NONE' ? Math.round(tripDistance * ratePerKm) : 0;
+  const selectedGuide = availableGuides.find((g) => (g._id || g.id) === selectedGuideId);
+  const assignedPlate = selectedGuide?.vehicleNumber || 'WP CAC-1234';
+  const totalCost = baseCost + planCost + addOnsCost + vehicleFare;
 
   const handleSubmit = async () => {
     if (!token) {
@@ -121,6 +149,10 @@ export const MobileBookingModal: React.FC<Props> = ({
           travelDate,
           numberOfPeople: guests,
           selectedAddOnIds: selectedAddOns,
+          vehicleType: vehicleType !== 'NONE' ? vehicleType : undefined,
+          vehicleNumber: vehicleType !== 'NONE' ? assignedPlate : undefined,
+          assignedGuideId: vehicleType !== 'NONE' ? selectedGuideId || undefined : undefined,
+          distanceKm: tripDistance,
         },
         token
       );

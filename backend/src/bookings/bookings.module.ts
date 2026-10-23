@@ -1,3 +1,5 @@
+import { User, UserSchema } from '../users/schemas/user.schema';
+import { SystemSetting, SystemSettingSchema } from '../admin-dashboard/schemas/system-setting.schema';
 import {
   Module,
 } from '@nestjs/common';
@@ -60,6 +62,14 @@ import {
 
         schema:
           TravelPlanSchema,
+      },
+      {
+        name: User.name,
+        schema: UserSchema,
+      },
+      {
+        name: SystemSetting.name,
+        schema: SystemSettingSchema,
       },
     ]),
   ],

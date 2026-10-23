@@ -1,4 +1,8 @@
 import {
+  SystemSetting,
+  SystemSettingSchema,
+} from './schemas/system-setting.schema';
+import {
   Module,
 } from '@nestjs/common';
 
@@ -73,6 +77,10 @@ import {
 
         schema:
           PaymentSchema,
+      },
+      {
+        name: SystemSetting.name,
+        schema: SystemSettingSchema,
       },
     ]),
   ],

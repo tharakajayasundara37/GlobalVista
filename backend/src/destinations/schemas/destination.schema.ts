@@ -59,6 +59,13 @@ export class Destination {
 
   @Prop({
     type: Number,
+    default: 150,
+    min: 0,
+  })
+  distanceKm?: number;
+
+  @Prop({
+    type: Number,
     min: -90,
     max: 90,
     default: null,

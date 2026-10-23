@@ -59,4 +59,22 @@ export class CreateBookingDto {
     each: true,
   })
   selectedAddOnIds?: string[];
+
+  @IsOptional()
+  @IsString()
+  vehicleType?: string;
+
+  @IsOptional()
+  @IsString()
+  vehicleNumber?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  assignedGuideId?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  distanceKm?: number;
+
 }

@@ -188,4 +188,24 @@ export class BookingsController {
       id,
     );
   }
+
+  /* =========================
+     PUBLIC VEHICLE PRICING
+  ========================= */
+
+  @Get('vehicle-pricing')
+  findVehiclePricing() {
+    return this.bookingsService.getVehiclePricingSetting();
+  }
+
+  /* =========================
+     GUIDE ASSIGNED TOURS
+  ========================= */
+
+  @Get('my-guide-tours')
+  @UseGuards(JwtGuard)
+  findMyGuideTours(@Req() req: any) {
+    return this.bookingsService.findGuideBookings(req.user);
+  }
+
 }

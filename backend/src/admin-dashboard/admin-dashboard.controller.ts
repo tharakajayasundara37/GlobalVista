@@ -695,4 +695,31 @@ export class AdminDashboardController {
         reviewedBy,
       );
   }
+
+  /* =========================
+     VEHICLE PRICING SETTINGS
+  ========================= */
+
+  @Get('settings/vehicle-pricing')
+  getVehiclePricing() {
+    return this.adminDashboardService.getVehiclePricing();
+  }
+
+  @Patch('settings/vehicle-pricing')
+  @UseGuards(
+    JwtGuard,
+    AdminGuard,
+  )
+  updateVehiclePricing(
+    @Body()
+    body: {
+      pricePerKm?: number;
+      carRatePerKm?: number;
+      vanRatePerKm?: number;
+      busRatePerKm?: number;
+    },
+  ) {
+    return this.adminDashboardService.updateVehiclePricing(body);
+  }
+
 }
