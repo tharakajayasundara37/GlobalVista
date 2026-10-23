@@ -161,6 +161,10 @@ export class AdminDashboardService {
 
       guideStatus: guide.guideStatus,
 
+      vehicleType: guide.vehicleType ?? null,
+
+      vehicleNumber: guide.vehicleNumber || '',
+
       profileImage:
         guide.profileImage || '',
 
@@ -207,6 +211,8 @@ export class AdminDashboardService {
     governmentIdType
     role
     guideStatus
+    vehicleType
+    vehicleNumber
     profileImage
     guideTermsAcceptedAt
     guideReviewReason

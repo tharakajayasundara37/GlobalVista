@@ -1,2282 +1,1357 @@
-
 'use client';
 
 import {
+  useCallback,
   useEffect,
-  useRef,
+  useMemo,
   useState,
-  type ChangeEvent,
-  type FormEvent,
 } from 'react';
-
 import { useRouter } from 'next/navigation';
-
 import {
-  ArrowUpRight,
-  BadgeCheck,
-  Bell,
-  BookOpenCheck,
-  CalendarDays,
-  Camera,
+  AlertCircle,
+  ArrowLeft,
+  Bus,
+  Car,
   CheckCircle2,
-  ChevronDown,
-  Clock3,
+  Clock,
+  Eye,
+  FileCheck,
+  FileText,
   Globe2,
-  KeyRound,
-  Languages,
-  LayoutDashboard,
-  LogOut,
   Mail,
-  MapPinned,
-  Pencil,
+  MapPin,
   Phone,
   RefreshCw,
   Search,
-  Settings,
+  ShieldAlert,
   ShieldCheck,
-  UserRound,
+  Truck,
+  UserCheck,
+  UserX,
+  Users,
   X,
-  type LucideIcon,
+  XCircle,
 } from 'lucide-react';
-
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-
-// GUIDE DASHBOARD'S OWN CSS.
-// Does not import Admin CSS.
 import styles from './page.module.css';
 
-const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com');
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || 'https://globalvista-d7uz.onrender.com';
 
-type PageName =
-  | 'dashboard'
-  | 'destinations'
-  | 'bookings'
-  | 'profile';
+type VehicleType = 'CAR' | 'VAN' | 'BUS';
 
 type Guide = {
-  _id?: string;
-  id?: string;
+  _id: string;
+  id: string;
   publicId?: string;
-  name?: string;
-  email?: string;
+  name: string;
+  email: string;
   mobile?: string;
   country?: string;
   city?: string;
   languages?: string[];
   experienceYears?: number;
   about?: string;
+  governmentIdType?: 'NIC' | 'PASSPORT';
+  role: string;
+  guideStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  vehicleType?: VehicleType | null;
+  vehicleNumber?: string;
   profileImage?: string;
+  guideTermsAcceptedAt?: string | null;
+  guideReviewReason?: string;
+  guideReviewedAt?: string | null;
+  guideReviewedBy?: string;
+  hasIdFrontDocument?: boolean;
+  hasIdBackDocument?: boolean;
   createdAt?: string;
-  role?: string;
-  guideStatus?: string;
+  updatedAt?: string;
 };
 
-type MenuItem = {
-  label: string;
-  page: PageName;
-  icon: LucideIcon;
-};
-
-const MENU: MenuItem[] = [
-  {
-    label: 'Dashboard',
-    page: 'dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    label: 'Destinations',
-    page: 'destinations',
-    icon: MapPinned,
-  },
-  {
-    label: 'Bookings',
-    page: 'bookings',
-    icon: BookOpenCheck,
-  },
-  {
-    label: 'My Profile',
-    page: 'profile',
-    icon: UserRound,
-  },
-];
-
-function getToken(): string | null {
-  return (
-    localStorage.getItem('globalvista_token') ||
-    localStorage.getItem('token')
-  );
-}
-
-function clearSession(): void {
-  [
-    'globalvista_token',
-    'globalvista_user',
-    'token',
-    'user',
-  ].forEach((key) => localStorage.removeItem(key));
-}
-
-function saveStoredUser(user: Guide): void {
-  const json = JSON.stringify(user);
-  localStorage.setItem('globalvista_user', json);
-  localStorage.setItem('user', json);
-}
-
-function getMessage(
-  data: unknown,
-  fallback = 'Request failed.',
-): string {
-  if (data && typeof data === 'object') {
-    const value = (data as { message?: unknown }).message;
-
-    if (typeof value === 'string') return value;
-
-    if (Array.isArray(value)) {
-      return value.join(', ');
-    }
-  }
-
-  return fallback;
-}
-
-function unwrapUser(data: unknown): Guide {
-  if (!data || typeof data !== 'object') {
-    throw new Error('Invalid Backend response.');
-  }
-
-  const result = data as Guide & { user?: Guide };
-
-  return result.user &&
-    typeof result.user === 'object'
-    ? result.user
-    : result;
-}
-
-function getPhotoUrl(path?: string): string {
-  if (!path) return '';
-
-  // Only profile photos. Never display
-  // private NIC or passport files.
-
-  const relative = path.startsWith('/')
-    ? path
-    : `/${path}`;
-
-  if (
-    /^\/uploads\/users\/[\w.-]+\.(png|jpg|jpeg|webp)$/i.test(
-      relative,
-    )
-  ) {
-    return `${API_URL}${relative}`;
-  }
-
-  if (
-    /^https?:\/\/(localhost|127\.0\.0\.1):3001\/uploads\/users\/[\w.-]+\.(png|jpg|jpeg|webp)$/i.test(
-      path,
-    )
-  ) {
-    return path;
-  }
-
-  return '';
-}
-
-function formatDate(date?: string): string {
-  if (!date) return 'Not available';
-
-  const parsed = new Date(date);
-
-  if (Number.isNaN(parsed.getTime())) {
-    return 'Not available';
-  }
-
-  return parsed.toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  });
-}
-
-async function fetchGuideProfile(
-  signal?: AbortSignal,
-): Promise<Guide> {
-  const token = getToken();
-
-  if (!token) {
-    throw new Error('NO_SESSION');
-  }
-
-  const response = await fetch(`${API_URL}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-    cache: 'no-store',
-    signal,
-  });
-
-  const data: unknown = await response
-    .json()
-    .catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(
-      `HTTP ${response.status}: ${getMessage(data)}`,
-    );
-  }
-
-  const user = unwrapUser(data);
-
-  if (user.role !== 'GUIDE') {
-    throw new Error(
-      'This account is not a Tour Guide account.',
-    );
-  }
-
-  if (user.guideStatus !== 'APPROVED') {
-    throw new Error(
-      'Your Tour Guide account is not approved.',
-    );
-  }
-
-  return user;
-}
-
-export default function GuideDashboardPage() {
+export default function AdminGuidesPage() {
   const router = useRouter();
 
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const photoRef = useRef<HTMLInputElement | null>(null);
-
-  const [guide, setGuide] = useState<Guide | null>(null);
-  const [page, setPage] = useState<PageName>('dashboard');
-
+  const [guides, setGuides] = useState<Guide[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [logoutOpen, setLogoutOpen] = useState(false);
-  const [dialog, setDialog] =
-    useState<'edit' | 'password' | null>(null);
-
-  const [name, setName] = useState('');
-  const [mobile, setMobile] = useState('');
-  const [country, setCountry] = useState('');
-
-  const [currentPassword, setCurrentPassword] =
-    useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] =
-    useState('');
-
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [formError, setFormError] = useState('');
   const [success, setSuccess] = useState('');
-  const [photoFailed, setPhotoFailed] = useState(false);
 
-  // INITIAL PROFILE LOAD
+  // Filters & Search
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED'
+  >('ALL');
+  const [vehicleFilter, setVehicleFilter] = useState<'ALL' | VehicleType>(
+    'ALL',
+  );
 
-  useEffect(() => {
-    const controller = new AbortController();
+  // Inspection Modal
+  const [selectedGuide, setSelectedGuide] = useState<Guide | null>(null);
+  const [frontDocUrl, setFrontDocUrl] = useState<string | null>(null);
+  const [backDocUrl, setBackDocUrl] = useState<string | null>(null);
+  const [loadingFrontDoc, setLoadingFrontDoc] = useState(false);
+  const [loadingBackDoc, setLoadingBackDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
 
-    if (!getToken()) {
-      router.replace('/login');
-      return () => controller.abort();
-    }
+  // Action states
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [rejectingGuide, setRejectingGuide] = useState<Guide | null>(null);
+  const [rejectReason, setRejectReason] = useState('');
 
-    fetchGuideProfile(controller.signal)
-      .then((user) => {
-        if (controller.signal.aborted) return;
+  const getToken = useCallback(
+    () =>
+      localStorage.getItem('globalvista_token') ||
+      localStorage.getItem('token'),
+    [],
+  );
 
-        setGuide(user);
-        saveStoredUser(user);
-      })
-      .catch((reason: unknown) => {
-        if (controller.signal.aborted) return;
-
-        setError(
-          reason instanceof Error
-            ? reason.message
-            : 'Unable to load Guide account.',
-        );
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) {
-          setLoading(false);
-        }
-      });
-
-    return () => controller.abort();
-  }, [router]);
-
-  // CLOSE PROFILE MENU OUTSIDE
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const closeOutside = (event: MouseEvent) => {
-      if (
-        !menuRef.current?.contains(event.target as Node)
-      ) {
-        setMenuOpen(false);
-      }
-    };
-
-    const closeEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setMenuOpen(false);
-      }
-    };
-
-    document.addEventListener(
-      'mousedown',
-      closeOutside,
-    );
-    document.addEventListener(
-      'keydown',
-      closeEscape,
-    );
-
-    return () => {
-      document.removeEventListener(
-        'mousedown',
-        closeOutside,
-      );
-      document.removeEventListener(
-        'keydown',
-        closeEscape,
-      );
-    };
-  }, [menuOpen]);
-
-  async function refreshProfile() {
-    setRefreshing(true);
-    setError('');
-
+  const getStoredUser = useCallback(() => {
     try {
-      const user = await fetchGuideProfile();
-
-      setGuide(user);
-      saveStoredUser(user);
-      setPhotoFailed(false);
-    } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : 'Unable to refresh Guide profile.',
-      );
-    } finally {
-      setRefreshing(false);
-      setLoading(false);
+      const raw =
+        localStorage.getItem('globalvista_user') ||
+        localStorage.getItem('user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
     }
-  }
+  }, []);
 
-  function logout() {
-    clearSession();
-    setLogoutOpen(false);
-    setMenuOpen(false);
-    router.replace('/login');
-  }
-
-  async function authenticatedRequest(
-    path: string,
-    options: RequestInit,
-  ): Promise<unknown> {
+  // Check Admin Authentication
+  useEffect(() => {
     const token = getToken();
+    const user = getStoredUser();
 
-    if (!token) {
-      throw new Error('Your login session is missing.');
-    }
-
-    const response = await fetch(
-      `${API_URL}${path}`,
-      {
-        ...options,
-        headers: {
-          ...options.headers,
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
-
-    const result: unknown = await response
-      .json()
-      .catch(() => null);
-
-    if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}: ${getMessage(result)}`,
-      );
-    }
-
-    return result;
-  }
-
-  function updateLocalUser(updated: Guide) {
-    setGuide((previous) => {
-      const combined = {
-        ...previous,
-        ...updated,
-      } as Guide;
-
-      saveStoredUser(combined);
-
-      return combined;
-    });
-
-    setPhotoFailed(false);
-  }
-
-  function openDialog(mode: 'edit' | 'password') {
-    setName(guide?.name || '');
-    setMobile(guide?.mobile || '');
-    setCountry(guide?.country || '');
-
-    setCurrentPassword('');
-    setNewPassword('');
-    setConfirmPassword('');
-
-    setFormError('');
-    setSuccess('');
-
-    setMenuOpen(false);
-    setDialog(mode);
-  }
-
-  function closeDialog() {
-    if (saving || uploading) return;
-
-    setDialog(null);
-    setFormError('');
-    setSuccess('');
-  }
-
-  async function saveProfile(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-
-    if (
-      !name.trim() ||
-      !mobile.trim() ||
-      !country.trim()
-    ) {
-      setFormError(
-        'Please enter your name, mobile and country.',
-      );
+    if (!token || !user || user.role !== 'ADMIN') {
+      router.replace('/login');
       return;
     }
 
-    setSaving(true);
-    setFormError('');
+    void fetchGuides();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Cleanup Document Object URLs on modal change
+  useEffect(() => {
+    return () => {
+      if (frontDocUrl) URL.revokeObjectURL(frontDocUrl);
+      if (backDocUrl) URL.revokeObjectURL(backDocUrl);
+    };
+  }, [frontDocUrl, backDocUrl]);
+
+  const fetchGuides = async (isRefresh = false) => {
+    const token = getToken();
+    if (!token) return;
+
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+    setError('');
+
+    try {
+      const res = await fetch(`${API_URL}/admin-dashboard/guides`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        cache: 'no-store',
+      });
+
+      if (res.status === 401 || res.status === 403) {
+        router.replace('/login');
+        return;
+      }
+
+      const data = await res.json().catch(() => []);
+      if (!res.ok) {
+        throw new Error(
+          Array.isArray(data.message)
+            ? data.message.join(', ')
+            : data.message || 'Failed to load tour guides.',
+        );
+      }
+
+      setGuides(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Error loading guide applications.',
+      );
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Approve Guide
+  const handleApprove = async (guideId: string) => {
+    const token = getToken();
+    if (!token) return;
+
+    setActionLoadingId(guideId);
+    setError('');
     setSuccess('');
 
     try {
-      const result = await authenticatedRequest(
-        '/users/me/profile',
+      const res = await fetch(
+        `${API_URL}/admin-dashboard/guides/${guideId}/approve`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          Array.isArray(data.message)
+            ? data.message.join(', ')
+            : data.message || 'Unable to approve guide application.',
+        );
+      }
+
+      setSuccess('Tour Guide approved successfully and is now active!');
+      setGuides((prev) =>
+        prev.map((g) =>
+          g._id === guideId
+            ? {
+                ...g,
+                guideStatus: 'APPROVED',
+                guideReviewedAt: new Date().toISOString(),
+              }
+            : g,
+        ),
+      );
+
+      if (selectedGuide && selectedGuide._id === guideId) {
+        setSelectedGuide((prev) =>
+          prev
+            ? {
+                ...prev,
+                guideStatus: 'APPROVED',
+                guideReviewedAt: new Date().toISOString(),
+              }
+            : null,
+        );
+      }
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Failed to approve guide.',
+      );
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  // Reject Guide
+  const handleRejectConfirm = async () => {
+    if (!rejectingGuide) return;
+    const token = getToken();
+    if (!token) return;
+
+    const guideId = rejectingGuide._id;
+    setActionLoadingId(guideId);
+    setError('');
+    setSuccess('');
+
+    try {
+      const res = await fetch(
+        `${API_URL}/admin-dashboard/guides/${guideId}/reject`,
         {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            name: name.trim(),
-            mobile: mobile.trim(),
-            country: country.trim(),
-          }),
+          body: JSON.stringify({ reason: rejectReason.trim() }),
         },
       );
 
-      updateLocalUser(unwrapUser(result));
-      setSuccess('Profile updated successfully.');
-    } catch (reason) {
-      setFormError(
-        reason instanceof Error
-          ? reason.message
-          : 'Unable to save profile.',
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          Array.isArray(data.message)
+            ? data.message.join(', ')
+            : data.message || 'Unable to reject guide application.',
+        );
+      }
 
-  async function uploadPhoto(
-    event: ChangeEvent<HTMLInputElement>,
-  ) {
-    const file = event.target.files?.[0];
-    event.target.value = '';
-
-    if (!file) return;
-
-    setFormError('');
-    setSuccess('');
-
-    if (
-      ![
-        'image/jpeg',
-        'image/png',
-        'image/webp',
-      ].includes(file.type)
-    ) {
-      setFormError(
-        'Choose JPG, PNG or WEBP.',
-      );
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setFormError(
-        'Photo must be 5 MB or smaller.',
-      );
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append('image', file);
-
-    setUploading(true);
-
-    try {
-      const result = await authenticatedRequest(
-        '/users/me/profile-image',
-        {
-          method: 'POST',
-          body: formData,
-        },
+      setSuccess('Guide application was rejected.');
+      setGuides((prev) =>
+        prev.map((g) =>
+          g._id === guideId
+            ? {
+                ...g,
+                guideStatus: 'REJECTED',
+                guideReviewReason: rejectReason.trim(),
+                guideReviewedAt: new Date().toISOString(),
+              }
+            : g,
+        ),
       );
 
-      updateLocalUser(unwrapUser(result));
-      setSuccess('Photo uploaded successfully.');
-    } catch (reason) {
-      setFormError(
-        reason instanceof Error
-          ? reason.message
-          : 'Photo upload failed.',
-      );
-    } finally {
-      setUploading(false);
-    }
-  }
+      if (selectedGuide && selectedGuide._id === guideId) {
+        setSelectedGuide((prev) =>
+          prev
+            ? {
+                ...prev,
+                guideStatus: 'REJECTED',
+                guideReviewReason: rejectReason.trim(),
+                guideReviewedAt: new Date().toISOString(),
+              }
+            : null,
+        );
+      }
 
-  async function changePassword(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-
-    setFormError('');
-    setSuccess('');
-
-    if (newPassword.length < 8) {
-      setFormError(
-        'New password must have at least 8 characters.',
-      );
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setFormError('Passwords do not match.');
-      return;
-    }
-
-    setSaving(true);
-
-    try {
-      await authenticatedRequest('/users/me/password', {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-      });
-
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-
-      setSuccess('Password changed successfully.');
-    } catch (reason) {
-      setFormError(
-        reason instanceof Error
-          ? reason.message
-          : 'Unable to update password.',
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  function searchSections(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault();
-
-    const query = search.trim().toLowerCase();
-
-    if (!query) return;
-
-    const found = MENU.find((item) =>
-      item.label.toLowerCase().includes(query),
-    );
-
-    if (found) {
-      setPage(found.page);
-      setSearch('');
-      setError('');
-    } else {
+      setRejectingGuide(null);
+      setRejectReason('');
+    } catch (err) {
       setError(
-        'Section not found. Search Dashboard, Destinations, Bookings or My Profile.',
+        err instanceof Error ? err.message : 'Failed to reject guide.',
       );
+    } finally {
+      setActionLoadingId(null);
     }
-  }
+  };
 
-  // LOADING
+  // Inspect Modal Open
+  const handleOpenInspect = (guide: Guide) => {
+    setSelectedGuide(guide);
+    setFrontDocUrl(null);
+    setBackDocUrl(null);
+    setDocError(null);
+  };
+
+  const handleCloseInspect = () => {
+    if (frontDocUrl) URL.revokeObjectURL(frontDocUrl);
+    if (backDocUrl) URL.revokeObjectURL(backDocUrl);
+    setSelectedGuide(null);
+    setFrontDocUrl(null);
+    setBackDocUrl(null);
+    setDocError(null);
+  };
+
+  // Load Decrypted Document Image Stream
+  const handleLoadDoc = async (guideId: string, side: 'front' | 'back') => {
+    const token = getToken();
+    if (!token) return;
+
+    if (side === 'front') {
+      setLoadingFrontDoc(true);
+    } else {
+      setLoadingBackDoc(true);
+    }
+    setDocError(null);
+
+    try {
+      const res = await fetch(
+        `${API_URL}/admin-dashboard/guides/${guideId}/documents/${side}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!res.ok) {
+        const errorJson = await res.json().catch(() => ({}));
+        throw new Error(
+          errorJson.message || `Unable to decrypt or load ${side} document.`,
+        );
+      }
+
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      if (side === 'front') {
+        if (frontDocUrl) URL.revokeObjectURL(frontDocUrl);
+        setFrontDocUrl(objectUrl);
+      } else {
+        if (backDocUrl) URL.revokeObjectURL(backDocUrl);
+        setBackDocUrl(objectUrl);
+      }
+    } catch (err) {
+      setDocError(
+        err instanceof Error
+          ? err.message
+          : `Failed to load ${side} identity document.`,
+      );
+    } finally {
+      if (side === 'front') {
+        setLoadingFrontDoc(false);
+      } else {
+        setLoadingBackDoc(false);
+      }
+    }
+  };
+
+  // Stats calculation
+  const totalCount = guides.length;
+  const pendingCount = useMemo(
+    () => guides.filter((g) => g.guideStatus === 'PENDING').length,
+    [guides],
+  );
+  const approvedCount = useMemo(
+    () => guides.filter((g) => g.guideStatus === 'APPROVED').length,
+    [guides],
+  );
+  const rejectedCount = useMemo(
+    () => guides.filter((g) => g.guideStatus === 'REJECTED').length,
+    [guides],
+  );
+
+  const carCount = useMemo(
+    () => guides.filter((g) => g.vehicleType === 'CAR').length,
+    [guides],
+  );
+  const vanCount = useMemo(
+    () => guides.filter((g) => g.vehicleType === 'VAN').length,
+    [guides],
+  );
+  const busCount = useMemo(
+    () => guides.filter((g) => g.vehicleType === 'BUS').length,
+    [guides],
+  );
+
+  // Filtered Guides list
+  const filteredGuides = useMemo(() => {
+    return guides.filter((guide) => {
+      // Status filter
+      if (statusFilter !== 'ALL' && guide.guideStatus !== statusFilter) {
+        return false;
+      }
+
+      // Vehicle filter
+      if (vehicleFilter !== 'ALL' && guide.vehicleType !== vehicleFilter) {
+        return false;
+      }
+
+      // Search term
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        const nameMatch = guide.name?.toLowerCase().includes(q);
+        const emailMatch = guide.email?.toLowerCase().includes(q);
+        const publicIdMatch = guide.publicId?.toLowerCase().includes(q);
+        const cityMatch = guide.city?.toLowerCase().includes(q);
+        const countryMatch = guide.country?.toLowerCase().includes(q);
+        const plateMatch = guide.vehicleNumber?.toLowerCase().includes(q);
+
+        return (
+          nameMatch ||
+          emailMatch ||
+          publicIdMatch ||
+          cityMatch ||
+          countryMatch ||
+          plateMatch
+        );
+      }
+
+      return true;
+    });
+  }, [guides, statusFilter, vehicleFilter, search]);
 
   if (loading) {
     return (
-      <main className={styles.loadingPage}>
-        <div className={styles.loader} />
-        <span>Preparing your Guide Dashboard...</span>
+      <main className={styles.loadingScreen}>
+        <RefreshCw size={28} className={styles.spin} />
+        <span>Loading Tour Guide Applications & Fleet Data...</span>
       </main>
     );
   }
-
-  if (!guide) {
-    return (
-      <main className={styles.loadingPage}>
-        <ShieldCheck size={34} />
-        <strong>Unable to load Guide Dashboard</strong>
-        <span>
-          {error || 'Guide profile is unavailable.'}
-        </span>
-
-        <button
-          type="button"
-          className={styles.primaryButton}
-          onClick={() => void refreshProfile()}
-        >
-          Try Again
-        </button>
-
-        <button
-          type="button"
-          className={styles.outlineButton}
-          onClick={logout}
-        >
-          Sign Out
-        </button>
-      </main>
-    );
-  }
-
-  // GUIDE INFORMATION
-
-  const displayName = guide.name || 'Tour Guide';
-  const firstName =
-    displayName.trim().split(/\s+/)[0] || 'Guide';
-
-  const avatarLetter =
-    displayName.charAt(0).toUpperCase();
-
-  const photoUrl = photoFailed
-    ? ''
-    : getPhotoUrl(guide.profileImage);
-
-  const languages = Array.isArray(guide.languages)
-    ? guide.languages
-    : [];
-
-  const location =
-    [guide.city, guide.country]
-      .filter(Boolean)
-      .join(', ') || 'Not provided';
-
-  const today = new Date().toLocaleDateString(
-    'en-GB',
-    {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    },
-  );
-
-  const profileFields = [
-    { name: 'Name', done: Boolean(guide.name?.trim()) },
-    { name: 'Email', done: Boolean(guide.email?.trim()) },
-    { name: 'Mobile', done: Boolean(guide.mobile?.trim()) },
-    { name: 'Country', done: Boolean(guide.country?.trim()) },
-    { name: 'City', done: Boolean(guide.city?.trim()) },
-    { name: 'Languages', done: languages.length > 0 },
-    { name: 'About', done: Boolean(guide.about?.trim()) },
-  ];
-
-  const completed = profileFields.filter(
-    (item) => item.done,
-  ).length;
-
-  const completion = Math.round(
-    (completed / profileFields.length) * 100,
-  );
-
-  const activityData = profileFields.map(
-    (item) => ({
-      name: item.name,
-      value: item.done ? 1 : 0,
-    }),
-  );
-
-  const completionData = [
-    {
-      name: 'Complete',
-      value: completed,
-    },
-    {
-      name: 'Missing',
-      value: profileFields.length - completed,
-    },
-  ].filter((item) => item.value > 0);
-
-  // ADMIN-STYLE 8 SUMMARY CARDS
-
-  const cards = [
-    {
-      title: 'Account Status',
-      value: 'Approved',
-      subtitle: 'Admin verified',
-      icon: BadgeCheck,
-      card: styles.greenCard,
-      iconColor: styles.greenIcon,
-      trend: 'ACTIVE',
-    },
-    {
-      title: 'Experience',
-      value: guide.experienceYears ?? '—',
-      subtitle: 'Years of experience',
-      icon: Clock3,
-      card: styles.orangeCard,
-      iconColor: styles.orangeIcon,
-      trend: 'GUIDE',
-    },
-    {
-      title: 'Languages',
-      value: languages.length,
-      subtitle: 'Languages registered',
-      icon: Languages,
-      card: styles.blueCard,
-      iconColor: styles.blueIcon,
-      trend: 'SKILLS',
-    },
-    {
-      title: 'Profile Completion',
-      value: `${completion}%`,
-      subtitle: `${completed} of 7 profile fields`,
-      icon: UserRound,
-      card: styles.pinkCard,
-      iconColor: styles.pinkIcon,
-      trend: 'PROFILE',
-    },
-    {
-      title: 'Destinations',
-      value: '—',
-      subtitle: 'Integration pending',
-      icon: MapPinned,
-      card: styles.purpleCard,
-      iconColor: styles.purpleIcon,
-      trend: 'PENDING',
-    },
-    {
-      title: 'Bookings',
-      value: '—',
-      subtitle: 'Integration pending',
-      icon: BookOpenCheck,
-      card: styles.cyanCard,
-      iconColor: styles.cyanIcon,
-      trend: 'PENDING',
-    },
-    {
-      title: 'Account Type',
-      value: 'Guide',
-      subtitle: 'Verified Tour Guide',
-      icon: ShieldCheck,
-      card: styles.redCard,
-      iconColor: styles.redIcon,
-      trend: 'VERIFIED',
-    },
-    {
-      title: 'Registration',
-      value: guide.createdAt
-        ? new Date(guide.createdAt).getFullYear()
-        : '—',
-      subtitle: formatDate(guide.createdAt),
-      icon: CalendarDays,
-      card: styles.darkCard,
-      iconColor: styles.darkIcon,
-      trend: 'JOINED',
-    },
-  ];
-
-  // PROFILE AVATAR
-
-  const avatar = (className: string) => (
-    <div className={className}>
-      {photoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={photoUrl}
-          alt="Guide profile"
-          className={styles.profileAvatarImage}
-          onError={() => setPhotoFailed(true)}
-        />
-      ) : (
-        avatarLetter
-      )}
-    </div>
-  );
-
-  // PROFILE INFORMATION ITEMS
-
-  const information = [
-    {
-      label: 'Full Name',
-      value: displayName,
-      icon: UserRound,
-    },
-    {
-      label: 'Email',
-      value: guide.email || 'Not provided',
-      icon: Mail,
-    },
-    {
-      label: 'Mobile',
-      value: guide.mobile || 'Not provided',
-      icon: Phone,
-    },
-    {
-      label: 'Location',
-      value: location,
-      icon: MapPinned,
-    },
-    {
-      label: 'Languages',
-      value: languages.join(', ') || 'Not provided',
-      icon: Languages,
-    },
-  ];
-
-  const profileInformation = (
-    <div className={styles.guideList}>
-      {information.map((item) => {
-        const Icon = item.icon;
-
-        return (
-          <div
-            key={item.label}
-            className={styles.guideItem}
-          >
-            <div className={styles.guideAvatar}>
-              <Icon size={17} />
-            </div>
-
-            <div className={styles.guideInfo}>
-              <strong>{item.label}</strong>
-              <span>{item.value}</span>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
 
   return (
     <main className={styles.page}>
-      <section className={styles.shell}>
-        {/* WHITE ICON SIDEBAR */}
-
-        <aside className={styles.sidebar}>
-          <button
-            type="button"
-            title="Guide Dashboard"
-            className={styles.logo}
-            onClick={() => setPage('dashboard')}
-          >
-            <Globe2 size={23} />
-          </button>
-
-          <nav
-            className={styles.sideNav}
-            aria-label="Guide navigation"
-          >
-            {MENU.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <button
-                  key={item.page}
-                  type="button"
-                  title={item.label}
-                  aria-label={item.label}
-                  aria-current={
-                    page === item.page
-                      ? 'page'
-                      : undefined
-                  }
-                  className={[
-                    styles.sideButton,
-                    page === item.page
-                      ? styles.sideButtonActive
-                      : '',
-                  ].join(' ')}
-                  onClick={() => setPage(item.page)}
-                >
-                  <Icon size={18} />
-                </button>
-              );
-            })}
-          </nav>
-
-          <div className={styles.sideBottom}>
+      <div className={styles.shell}>
+        {/* ================= HEADER ================= */}
+        <header className={styles.header}>
+          <div className={styles.headerLeft}>
             <button
               type="button"
-              title="Profile Settings"
-              className={styles.sideButton}
-              onClick={() => openDialog('edit')}
+              className={styles.backButton}
+              onClick={() => router.push('/admin')}
+              title="Return to Admin Overview"
             >
-              <Settings size={18} />
+              <ArrowLeft size={20} />
             </button>
+            <div className={styles.headerMeta}>
+              <span className={styles.superTitle}>GLOBALVISTA ADMINISTRATION</span>
+              <h1 className={styles.title}>Tour Guide Applications & Fleets</h1>
+              <p className={styles.subtitle}>
+                Review guide registration requests, inspect vehicle types and number plates, verify encrypted ID documents, and manage approval status.
+              </p>
+            </div>
+          </div>
 
+          <div className={styles.headerRight}>
             <button
               type="button"
-              title="Logout"
-              className={styles.sideButton}
-              onClick={() => setLogoutOpen(true)}
+              className={styles.refreshButton}
+              disabled={refreshing}
+              onClick={() => void fetchGuides(true)}
             >
-              <LogOut size={18} />
+              <RefreshCw
+                size={16}
+                className={refreshing ? styles.spin : ''}
+              />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
-        </aside>
+        </header>
 
-        {/* MAIN CONTENT */}
-
-        <div className={styles.main}>
-          {/* TOPBAR */}
-
-          <header className={styles.topbar}>
+        {/* ================= ALERTS ================= */}
+        {success && (
+          <div className={styles.alertSuccess}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <CheckCircle2 size={18} />
+              <span>{success}</span>
+            </div>
             <button
               type="button"
-              className={styles.wordmark}
-              onClick={() => setPage('dashboard')}
+              className={styles.alertCloseBtn}
+              onClick={() => setSuccess('')}
             >
-              Global<span>Vista</span>
+              <X size={16} />
             </button>
+          </div>
+        )}
 
-            <nav
-              className={styles.topNav}
-              aria-label="Top navigation"
-            >
-              {MENU.map((item) => (
-                <button
-                  key={item.page}
-                  type="button"
-                  className={
-                    page === item.page
-                      ? styles.topNavActive
-                      : ''
-                  }
-                  onClick={() => setPage(item.page)}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-
-            <div className={styles.topActions}>
-              <form
-                className={styles.searchBox}
-                onSubmit={searchSections}
-              >
-                <Search size={15} />
-
-                <input
-                  type="search"
-                  placeholder="Search"
-                  aria-label="Search dashboard sections"
-                  value={search}
-                  onChange={(event) =>
-                    setSearch(event.target.value)
-                  }
-                />
-              </form>
-
-              <button
-                type="button"
-                title="Guide Verification"
-                aria-label="Guide verification"
-                className={styles.circleButton}
-                onClick={() => setPage('profile')}
-              >
-                <Bell size={17} />
-              </button>
-
-              {/* PROFILE MENU */}
-
-              <div
-                className={styles.profileMenuWrapper}
-                ref={menuRef}
-              >
-                <button
-                  type="button"
-                  className={`${styles.profile} ${styles.profileTrigger}`}
-                  aria-label="Guide account menu"
-                  aria-expanded={menuOpen}
-                  onClick={() =>
-                    setMenuOpen((value) => !value)
-                  }
-                >
-                  {avatar(styles.avatar)}
-
-                  <div className={styles.profileText}>
-                    <strong>{displayName}</strong>
-                    <span>Tour Guide</span>
-                  </div>
-
-                  <ChevronDown
-                    size={14}
-                    className={
-                      menuOpen
-                        ? styles.profileChevronOpen
-                        : ''
-                    }
-                  />
-                </button>
-
-                {menuOpen && (
-                  <div
-                    className={styles.profileDropdown}
-                    role="menu"
-                  >
-                    <div
-                      className={styles.profileDropdownHeader}
-                    >
-                      {avatar(styles.profileDropdownAvatar)}
-
-                      <div>
-                        <strong>{displayName}</strong>
-                        <span>{guide.email}</span>
-                      </div>
-                    </div>
-
-                    <div
-                      className={styles.profileDropdownDivider}
-                    />
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => openDialog('edit')}
-                    >
-                      <Pencil size={17} />
-                      Edit Profile
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      onClick={() => openDialog('password')}
-                    >
-                      <KeyRound size={17} />
-                      Change Password
-                    </button>
-
-                    <div
-                      className={styles.profileDropdownDivider}
-                    />
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={styles.profileDropdownLogout}
-                      onClick={() => {
-                        setMenuOpen(false);
-                        setLogoutOpen(true);
-                      }}
-                    >
-                      <LogOut size={17} />
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+        {error && (
+          <div className={styles.alertError}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <AlertCircle size={18} />
+              <span>{error}</span>
             </div>
-          </header>
+            <button
+              type="button"
+              className={styles.alertCloseBtn}
+              onClick={() => setError('')}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
 
-          <div className={styles.content}>
-            {/* WELCOME */}
+        {/* ================= SUMMARY CARDS ================= */}
+        <section className={styles.summaryGrid}>
+          <article className={styles.summaryCard}>
+            <div className={styles.summaryIconBlue}>
+              <Users size={24} />
+            </div>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryLabel}>Total Guides</span>
+              <strong className={styles.summaryValue}>{totalCount}</strong>
+              <p className={styles.summaryDesc}>Registered tour guides</p>
+            </div>
+          </article>
 
-            <section className={styles.welcome}>
-              <div>
-                <span className={styles.welcomeLabel}>
-                  TOUR GUIDE DASHBOARD
-                </span>
+          <article className={styles.summaryCard}>
+            <div className={styles.summaryIconAmber}>
+              <Clock size={24} />
+            </div>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryLabel}>
+                Pending Review
+                {pendingCount > 0 && (
+                  <span className={styles.pendingBadgeGlow}>Action Required</span>
+                )}
+              </span>
+              <strong className={styles.summaryValue}>{pendingCount}</strong>
+              <p className={styles.summaryDesc}>Awaiting admin verification</p>
+            </div>
+          </article>
 
-                <h1>
-                  {page === 'dashboard' ? (
-                    <>
-                      Welcome Back,{' '}
-                      <strong>{firstName}</strong>
-                    </>
-                  ) : (
-                    <strong>
-                      {
-                        MENU.find(
-                          (item) => item.page === page,
-                        )?.label
-                      }
-                    </strong>
-                  )}
-                </h1>
+          <article className={styles.summaryCard}>
+            <div className={styles.summaryIconGreen}>
+              <ShieldCheck size={24} />
+            </div>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryLabel}>Approved & Active</span>
+              <strong className={styles.summaryValue}>{approvedCount}</strong>
+              <p className={styles.summaryDesc}>Verified guides ready for tours</p>
+            </div>
+          </article>
 
-                <p>
-                  Here&apos;s what&apos;s happening
-                  with your GlobalVista guide
-                  account today.
-                </p>
-              </div>
+          <article className={styles.summaryCard}>
+            <div className={styles.summaryIconPurple}>
+              <Car size={24} />
+            </div>
+            <div className={styles.summaryContent}>
+              <span className={styles.summaryLabel}>Registered Fleets</span>
+              <strong className={styles.summaryValue}>
+                {carCount + vanCount + busCount}
+              </strong>
+              <p className={styles.summaryDesc}>
+                {carCount} Cars • {vanCount} Vans • {busCount} Buses
+              </p>
+            </div>
+          </article>
+        </section>
 
-              <div className={styles.welcomeActions}>
-                <div className={styles.datePill}>
-                  <CalendarDays size={15} />
-                  {today}
-                </div>
+        {/* ================= TOOLBAR & FILTERS ================= */}
+        <section className={styles.toolbar}>
+          <div className={styles.toolbarTop}>
+            <div className={styles.searchBox}>
+              <Search size={18} />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search guide name, email, plate number, city..."
+              />
+              {search && (
+                <button
+                  type="button"
+                  className={styles.clearSearchBtn}
+                  onClick={() => setSearch('')}
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
+
+            <div className={styles.filterGroup}>
+              {/* Status Tabs */}
+              <div className={styles.statusTabs}>
+                <button
+                  type="button"
+                  className={`${styles.statusTab} ${
+                    statusFilter === 'ALL' ? styles.statusTabActive : ''
+                  }`}
+                  onClick={() => setStatusFilter('ALL')}
+                >
+                  All
+                  <span className={styles.tabCountBadge}>{totalCount}</span>
+                </button>
 
                 <button
                   type="button"
-                  className={styles.refresh}
-                  disabled={refreshing}
-                  onClick={() =>
-                    void refreshProfile()
-                  }
+                  className={`${styles.statusTab} ${
+                    statusFilter === 'PENDING' ? styles.statusTabActive : ''
+                  }`}
+                  onClick={() => setStatusFilter('PENDING')}
                 >
-                  <RefreshCw
-                    size={15}
-                    className={
-                      refreshing ? styles.spin : ''
-                    }
-                  />
-                  Refresh
+                  Pending
+                  <span className={styles.tabCountBadge}>{pendingCount}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.statusTab} ${
+                    statusFilter === 'APPROVED' ? styles.statusTabActive : ''
+                  }`}
+                  onClick={() => setStatusFilter('APPROVED')}
+                >
+                  Approved
+                  <span className={styles.tabCountBadge}>{approvedCount}</span>
+                </button>
+
+                <button
+                  type="button"
+                  className={`${styles.statusTab} ${
+                    statusFilter === 'REJECTED' ? styles.statusTabActive : ''
+                  }`}
+                  onClick={() => setStatusFilter('REJECTED')}
+                >
+                  Rejected
+                  <span className={styles.tabCountBadge}>{rejectedCount}</span>
                 </button>
               </div>
-            </section>
 
-            {/* ERROR */}
-
-            {error && (
-              <div
-                className={styles.errorBox}
-                role="alert"
+              {/* Vehicle Filter */}
+              <select
+                className={styles.vehicleFilterSelect}
+                value={vehicleFilter}
+                onChange={(e) =>
+                  setVehicleFilter(e.target.value as 'ALL' | VehicleType)
+                }
               >
-                <strong>Notice</strong>
-                <span>{error}</span>
-                <button
-                  type="button"
-                  onClick={() => setError('')}
-                  aria-label="Dismiss notice"
-                >
-                  <X size={15} />
-                </button>
+                <option value="ALL">All Vehicles</option>
+                <option value="CAR">Cars Only</option>
+                <option value="VAN">Vans Only</option>
+                <option value="BUS">Buses Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.resultsMeta}>
+            <span>
+              Showing {filteredGuides.length} of {totalCount} guide registrations
+            </span>
+            {vehicleFilter !== 'ALL' && (
+              <span>Filter: Vehicle {vehicleFilter}</span>
+            )}
+          </div>
+        </section>
+
+        {/* ================= GUIDES TABLE ================= */}
+        <section className={styles.tableCard}>
+          <div className={styles.tableHeader}>
+            <span>Guide Profile</span>
+            <span>Contact Details</span>
+            <span>Vehicle & Plate</span>
+            <span>Govt ID Status</span>
+            <span>Status</span>
+            <span style={{ textAlign: 'right' }}>Actions</span>
+          </div>
+
+          {filteredGuides.length === 0 ? (
+            <div className={styles.emptyState}>
+              <div className={styles.emptyIcon}>
+                <UserCheck size={32} />
               </div>
-            )}
+              <h3>No Guide Registrations Found</h3>
+              <p>
+                {search || statusFilter !== 'ALL' || vehicleFilter !== 'ALL'
+                  ? 'No tour guides match your search or filter criteria. Try resetting filters.'
+                  : 'There are currently no tour guide applications in the system.'}
+              </p>
+            </div>
+          ) : (
+            filteredGuides.map((guide) => {
+              const isActionRunning = actionLoadingId === guide._id;
 
-            {/* DASHBOARD OVERVIEW */}
-
-            {page === 'dashboard' && (
-              <>
-                {/* EIGHT SUMMARY CARDS */}
-
-                <section className={styles.summaryGrid}>
-                  {cards.map((item) => {
-                    const Icon = item.icon;
-
-                    return (
-                      <article
-                        key={item.title}
-                        className={`${styles.summaryCard} ${item.card}`}
-                      >
-                        <div
-                          className={styles.summaryCardTop}
-                        >
-                          <div
-                            className={`${styles.summaryIcon} ${item.iconColor}`}
-                          >
-                            <Icon size={19} />
-                          </div>
-
-                          <span
-                            className={styles.summaryTrend}
-                          >
-                            {item.trend}
-                          </span>
-                        </div>
-
-                        <div
-                          className={styles.summaryValue}
-                        >
-                          {item.value}
-                        </div>
-
-                        <strong
-                          className={styles.summaryTitle}
-                        >
-                          {item.title}
-                        </strong>
-
-                        <span
-                          className={styles.summarySubtitle}
-                        >
-                          {item.subtitle}
-                        </span>
-                      </article>
-                    );
-                  })}
-                </section>
-
-                {/* THREE CHART PANELS */}
-
-                <section className={styles.chartGrid}>
-                  {/* ACTIVITY BAR CHART */}
-
-                  <article
-                    className={`${styles.panel} ${styles.activityPanel}`}
-                  >
-                    <div
-                      className={styles.panelHeader}
-                    >
-                      <div>
-                        <span>GUIDE PROFILE</span>
-                        <h2>Profile Readiness</h2>
-                      </div>
-
-                      <div className={styles.liveBadge}>
-                        <i />
-                        Verified
-                      </div>
-                    </div>
-
-                    <div
-                      className={styles.largeChart}
-                    >
-                      <ResponsiveContainer
-                        width="100%"
-                        height="100%"
-                      >
-                        <BarChart
-                          data={activityData}
-                          barCategoryGap="28%"
-                        >
-                          <CartesianGrid
-                            strokeDasharray="4 4"
-                            vertical={false}
-                            stroke="#edf0f4"
-                          />
-
-                          <XAxis
-                            dataKey="name"
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{
-                              fill: '#7c8795',
-                              fontSize: 9,
-                            }}
-                          />
-
-                          <YAxis
-                            domain={[0, 1]}
-                            ticks={[0, 1]}
-                            axisLine={false}
-                            tickLine={false}
-                            tick={{
-                              fill: '#9aa4af',
-                              fontSize: 9,
-                            }}
-                          />
-
-                          <Tooltip
-                            formatter={(value) =>
-                              Number(value) === 1
-                                ? 'Complete'
-                                : 'Missing'
-                            }
-                          />
-
-                          <Bar
-                            dataKey="value"
-                            radius={[9, 9, 2, 2]}
-                          >
-                            {activityData.map(
-                              (entry) => (
-                                <Cell
-                                  key={entry.name}
-                                  fill={
-                                    entry.value
-                                      ? '#10b981'
-                                      : '#e5e7eb'
-                                  }
-                                />
-                              ),
-                            )}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </article>
-
-                  {/* COMPLETION PIE CHART */}
-
-                  <article className={styles.panel}>
-                    <div
-                      className={styles.panelHeader}
-                    >
-                      <div>
-                        <span>YOUR PROFILE</span>
-                        <h2>Profile Completion</h2>
-                      </div>
-
-                      <UserRound
-                        size={20}
-                        className={styles.orangeText}
-                      />
-                    </div>
-
-                    <div className={styles.pieChart}>
-                      <ResponsiveContainer
-                        width="100%"
-                        height="100%"
-                      >
-                        <PieChart>
-                          <Pie
-                            data={completionData}
-                            dataKey="value"
-                            nameKey="name"
-                            innerRadius={52}
-                            outerRadius={80}
-                            paddingAngle={
-                              completionData.length > 1
-                                ? 5
-                                : 0
-                            }
-                          >
-                            {completionData.map(
-                              (entry) => (
-                                <Cell
-                                  key={entry.name}
-                                  fill={
-                                    entry.name === 'Complete'
-                                      ? '#10b981'
-                                      : '#e5e7eb'
-                                  }
-                                />
-                              ),
-                            )}
-                          </Pie>
-
-                          <Tooltip />
-
-                          <Legend
-                            iconType="circle"
-                            wrapperStyle={{
-                              fontSize: '10px',
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-
-                      <div className={styles.pieCenter}>
-                        <strong>{completion}%</strong>
-                        <span>Completed</span>
-                      </div>
-                    </div>
-                  </article>
-
-                  {/* GUIDE APPROVAL PIE CHART */}
-
-                  <article className={styles.panel}>
-                    <div
-                      className={styles.panelHeader}
-                    >
-                      <div>
-                        <span>VERIFICATION</span>
-                        <h2>Guide Status</h2>
-                      </div>
-
-                      <ShieldCheck
-                        size={20}
-                        className={styles.greenText}
-                      />
-                    </div>
-
-                    <div className={styles.pieChart}>
-                      <ResponsiveContainer
-                        width="100%"
-                        height="100%"
-                      >
-                        <PieChart>
-                          <Pie
-                            data={[
-                              {
-                                name: 'Approved',
-                                value: 1,
-                              },
-                            ]}
-                            dataKey="value"
-                            nameKey="name"
-                            innerRadius={52}
-                            outerRadius={80}
-                          >
-                            <Cell fill="#22c55e" />
-                          </Pie>
-
-                          <Tooltip />
-
-                          <Legend
-                            iconType="circle"
-                            wrapperStyle={{
-                              fontSize: '10px',
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
-
-                      <div className={styles.pieCenter}>
-                        <strong>
-                          <CheckCircle2
-                            size={25}
-                            color="#10b981"
-                          />
-                        </strong>
-
-                        <span>Approved</span>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-
-                {/* PROFILE + DARK PANEL */}
-
-                <section className={styles.revenueGrid}>
-                  <article
-                    className={`${styles.panel} ${styles.revenuePanel}`}
-                  >
-                    <div
-                      className={styles.panelHeader}
-                    >
-                      <div>
-                        <span>
-                          PERSONAL INFORMATION
-                        </span>
-                        <h2>Guide Information</h2>
-                      </div>
-
-                      <button
-                        type="button"
-                        className={styles.viewButton}
-                        onClick={() =>
-                          setPage('profile')
-                        }
-                      >
-                        View Profile
-                        <ArrowUpRight size={14} />
-                      </button>
-                    </div>
-
-                    {profileInformation}
-                  </article>
-
-                  <article
-                    className={styles.financialPanel}
-                  >
-                    <div className={styles.financeIcon}>
-                      <BadgeCheck size={25} />
-                    </div>
-
-                    <span
-                      className={styles.financeLabel}
-                    >
-                      VERIFIED TOUR GUIDE
-                    </span>
-
-                    <h2>Approved</h2>
-
-                    <p>
-                      Your Tour Guide account
-                      is active and approved
-                      by GlobalVista.
-                    </p>
-
-                    <div
-                      className={styles.financeStats}
-                    >
-                      <div>
-                        <span>Languages</span>
-                        <strong>
-                          {languages.length}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>Experience</span>
-                        <strong>
-                          {
-                            guide.experienceYears ??
-                            '—'
-                          }{' '}
-                          years
-                        </strong>
-                      </div>
-                    </div>
-                  </article>
-                </section>
-
-                {/* BOTTOM PANELS */}
-
-                <section className={styles.bottomGrid}>
-                  <article className={styles.panel}>
-                    <div
-                      className={styles.panelHeader}
-                    >
-                      <div>
-                        <span>GUIDE WORKSPACE</span>
-                        <h2>
-                          Destinations & Bookings
-                        </h2>
-                      </div>
-
-                      <MapPinned
-                        size={20}
-                        className={styles.greenText}
-                      />
-                    </div>
-
-                    <div className={styles.guideList}>
-                      <button
-                        type="button"
-                        className={styles.guideItem}
-                        onClick={() =>
-                          setPage('destinations')
-                        }
-                      >
-                        <div
-                          className={styles.guideAvatar}
-                        >
-                          <MapPinned size={17} />
-                        </div>
-
-                        <div
-                          className={styles.guideInfo}
-                        >
-                          <strong>
-                            My Destinations
-                          </strong>
-
-                          <span>
-                            Backend integration pending
-                          </span>
-                        </div>
-
-                        <ArrowUpRight size={15} />
-                      </button>
-
-                      <button
-                        type="button"
-                        className={styles.guideItem}
-                        onClick={() =>
-                          setPage('bookings')
-                        }
-                      >
-                        <div
-                          className={styles.guideAvatar}
-                        >
-                          <BookOpenCheck size={17} />
-                        </div>
-
-                        <div
-                          className={styles.guideInfo}
-                        >
-                          <strong>My Bookings</strong>
-
-                          <span>
-                            Backend integration pending
-                          </span>
-                        </div>
-
-                        <ArrowUpRight size={15} />
-                      </button>
-                    </div>
-                  </article>
-
-                  <article className={styles.panel}>
-                    <div
-                      className={styles.panelHeader}
-                    >
-                      <div>
-                        <span>MEMBERSHIP</span>
-                        <h2>Account Details</h2>
-                      </div>
-
-                      <ShieldCheck
-                        size={20}
-                        className={styles.greenText}
-                      />
-                    </div>
-
-                    <div className={styles.guideList}>
-                      <div className={styles.guideItem}>
-                        <div
-                          className={styles.guideInfo}
-                        >
-                          <strong>Guide ID</strong>
-
-                          <span>
-                            {guide.publicId ||
-                              'Not assigned'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className={styles.guideItem}>
-                        <div
-                          className={styles.guideInfo}
-                        >
-                          <strong>Joined</strong>
-
-                          <span>
-                            {formatDate(
-                              guide.createdAt,
-                            )}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className={styles.guideItem}>
-                        <div
-                          className={styles.guideInfo}
-                        >
-                          <strong>Status</strong>
-                          <span>Approved</span>
-                        </div>
-
-                        <CheckCircle2
-                          size={16}
-                          className={styles.greenText}
+              return (
+                <div key={guide._id} className={styles.tableRow}>
+                  {/* Guide Profile */}
+                  <div className={styles.guideCol}>
+                    <div className={styles.avatar}>
+                      {guide.profileImage ? (
+                        <img
+                          src={guide.profileImage}
+                          alt={guide.name}
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = 'none';
+                          }}
                         />
-                      </div>
+                      ) : (
+                        guide.name?.charAt(0)?.toUpperCase() || 'G'
+                      )}
                     </div>
-                  </article>
-                </section>
-              </>
-            )}
-
-            {/* PROFILE TAB */}
-
-            {page === 'profile' && (
-              <section className={styles.revenueGrid}>
-                <article className={styles.panel}>
-                  <div
-                    className={styles.panelHeader}
-                  >
-                    <div>
-                      <span>MY ACCOUNT</span>
-                      <h2>Tour Guide Profile</h2>
-                    </div>
-
-                    <button
-                      type="button"
-                      className={styles.viewButton}
-                      onClick={() =>
-                        openDialog('edit')
-                      }
-                    >
-                      <Pencil size={14} />
-                      Edit Profile
-                    </button>
-                  </div>
-
-                  <div className={styles.profileIdentity}>
-                    {avatar(styles.profileBigAvatar)}
-
-                    <div>
-                      <h3>{displayName}</h3>
-                      <span>
-                        {guide.publicId ||
-                          'Tour Guide'}
+                    <div className={styles.guideMeta}>
+                      <span className={styles.guideName}>{guide.name}</span>
+                      <span className={styles.guideIdBadge}>
+                        {guide.publicId || `#${guide._id.slice(-6)}`}
                       </span>
-
-                      <div
-                        className={styles.liveBadge}
-                      >
-                        <i />
-                        Approved
-                      </div>
                     </div>
                   </div>
 
-                  {profileInformation}
-
-                  <div className={styles.aboutBox}>
-                    <span>ABOUT ME</span>
-
-                    <p>
-                      {guide.about ||
-                        'No description provided.'}
-                    </p>
-                  </div>
-                </article>
-
-                <article className={styles.financialPanel}>
-                  <div className={styles.financeIcon}>
-                    <ShieldCheck size={25} />
-                  </div>
-
-                  <span className={styles.financeLabel}>
-                    ACCOUNT SECURITY
-                  </span>
-
-                  <h2>Verified</h2>
-
-                  <p>
-                    Your NIC and Passport
-                    identity information
-                    remains private.
-                  </p>
-
-                  <div className={styles.financeStats}>
-                    <div>
-                      <span>Account Role</span>
-                      <strong>GUIDE</strong>
-                    </div>
-
-                    <div>
-                      <span>Approval</span>
-                      <strong>APPROVED</strong>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className={styles.darkPanelButton}
-                    onClick={() =>
-                      openDialog('password')
-                    }
-                  >
-                    <KeyRound size={15} />
-                    Change Password
-                  </button>
-                </article>
-              </section>
-            )}
-
-            {/* DESTINATIONS / BOOKINGS */}
-
-            {(page === 'destinations' ||
-              page === 'bookings') && (
-              <section className={styles.bottomGrid}>
-                <article className={styles.panel}>
-                  <div
-                    className={styles.panelHeader}
-                  >
-                    <div>
-                      <span>
-                        TOUR GUIDE WORKSPACE
+                  {/* Contact */}
+                  <div className={styles.contactCol}>
+                    <span className={styles.contactItem} title={guide.email}>
+                      <Mail size={13} />
+                      {guide.email}
+                    </span>
+                    {guide.mobile && (
+                      <span className={styles.contactItem}>
+                        <Phone size={13} />
+                        {guide.mobile}
                       </span>
-
-                      <h2>
-                        {page === 'destinations'
-                          ? 'My Destinations'
-                          : 'My Bookings'}
-                      </h2>
-                    </div>
-
-                    {page === 'destinations' ? (
-                      <MapPinned
-                        size={20}
-                        className={styles.greenText}
-                      />
-                    ) : (
-                      <BookOpenCheck
-                        size={20}
-                        className={styles.greenText}
-                      />
+                    )}
+                    {guide.city && (
+                      <span className={styles.contactItem}>
+                        <MapPin size={13} />
+                        {guide.city}, {guide.country || 'LK'}
+                      </span>
                     )}
                   </div>
 
-                  <div className={styles.emptyGuide}>
-                    <Clock3 size={32} />
+                  {/* Vehicle */}
+                  <div className={styles.vehicleCol}>
+                    {guide.vehicleType ? (
+                      <>
+                        <span
+                          className={`${styles.vehicleTypeBadge} ${
+                            guide.vehicleType === 'CAR'
+                              ? styles.vehicleBadgeCar
+                              : guide.vehicleType === 'VAN'
+                              ? styles.vehicleBadgeVan
+                              : styles.vehicleBadgeBus
+                          }`}
+                        >
+                          {guide.vehicleType === 'CAR' && <Car size={13} />}
+                          {guide.vehicleType === 'VAN' && <Truck size={13} />}
+                          {guide.vehicleType === 'BUS' && <Bus size={13} />}
+                          {guide.vehicleType}
+                        </span>
+                        {guide.vehicleNumber ? (
+                          <span className={styles.licensePlate}>
+                            {guide.vehicleNumber}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                            Plate not set
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span
+                        className={`${styles.vehicleTypeBadge} ${styles.vehicleBadgeNone}`}
+                      >
+                        No Vehicle
+                      </span>
+                    )}
+                  </div>
 
-                    <strong>
-                      Integration Pending
-                    </strong>
-
-                    <span>
-                      {page === 'destinations'
-                        ? 'Guide destination submission and Admin approval API is not connected yet.'
-                        : 'Guide-specific booking API is not connected yet.'}
+                  {/* Govt ID Verification */}
+                  <div className={styles.govIdCol}>
+                    <span className={styles.govIdTypeBadge}>
+                      <FileText size={13} />
+                      {guide.governmentIdType || 'NIC'}
                     </span>
+                    {guide.hasIdFrontDocument ? (
+                      <span className={styles.docVerifiedPill}>
+                        <CheckCircle2 size={12} /> Front Uploaded
+                      </span>
+                    ) : (
+                      <span className={styles.docMissingPill}>
+                        <AlertCircle size={12} /> Front Missing
+                      </span>
+                    )}
+                    {guide.governmentIdType === 'NIC' && (
+                      guide.hasIdBackDocument ? (
+                        <span className={styles.docVerifiedPill}>
+                          <CheckCircle2 size={12} /> Back Uploaded
+                        </span>
+                      ) : (
+                        <span className={styles.docMissingPill}>
+                          <AlertCircle size={12} /> Back Missing
+                        </span>
+                      )
+                    )}
                   </div>
-                </article>
 
-                <article className={styles.panel}>
-                  <div
-                    className={styles.panelHeader}
-                  >
-                    <div>
-                      <span>ACCOUNT STATUS</span>
-                      <h2>Verified Guide</h2>
-                    </div>
-
-                    <BadgeCheck
-                      size={20}
-                      className={styles.greenText}
-                    />
+                  {/* Status Badge */}
+                  <div className={styles.statusCol}>
+                    {guide.guideStatus === 'PENDING' && (
+                      <span className={styles.statusBadgePending}>
+                        <Clock size={13} /> Pending Review
+                      </span>
+                    )}
+                    {guide.guideStatus === 'APPROVED' && (
+                      <span className={styles.statusBadgeApproved}>
+                        <ShieldCheck size={13} /> Approved
+                      </span>
+                    )}
+                    {guide.guideStatus === 'REJECTED' && (
+                      <span className={styles.statusBadgeRejected}>
+                        <XCircle size={13} /> Rejected
+                      </span>
+                    )}
                   </div>
 
-                  <div className={styles.emptyGuide}>
-                    <CheckCircle2 size={32} />
+                  {/* Actions */}
+                  <div className={styles.actionsCol}>
+                    <button
+                      type="button"
+                      className={styles.actionBtnInspect}
+                      onClick={() => handleOpenInspect(guide)}
+                      title="Inspect Profile & Documents"
+                    >
+                      <Eye size={14} />
+                      Inspect
+                    </button>
 
-                    <strong>
-                      Approved Tour Guide
-                    </strong>
+                    {guide.guideStatus === 'PENDING' && (
+                      <>
+                        <button
+                          type="button"
+                          className={styles.actionBtnApprove}
+                          disabled={isActionRunning}
+                          onClick={() => void handleApprove(guide._id)}
+                          title="Approve Guide Application"
+                        >
+                          <CheckCircle2 size={14} />
+                          Approve
+                        </button>
 
-                    <span>
-                      GlobalVista verified account.
-                    </span>
+                        <button
+                          type="button"
+                          className={styles.actionBtnReject}
+                          disabled={isActionRunning}
+                          onClick={() => {
+                            setRejectingGuide(guide);
+                            setRejectReason('');
+                          }}
+                          title="Reject Guide Application"
+                        >
+                          <X size={14} />
+                          Reject
+                        </button>
+                      </>
+                    )}
                   </div>
-                </article>
-              </section>
-            )}
-          </div>
-        </div>
-      </section>
+                </div>
+              );
+            })
+          )}
+        </section>
+      </div>
 
-      {/* EDIT PROFILE / PASSWORD MODAL */}
-
-      {dialog && (
-        <div
-          className={styles.adminProfileOverlay}
-          onMouseDown={closeDialog}
-        >
-          <section
-            className={styles.adminProfileModal}
-            role="dialog"
-            aria-modal="true"
-            aria-label={
-              dialog === 'edit'
-                ? 'Edit Guide Profile'
-                : 'Change Guide Password'
-            }
-            onMouseDown={(event) =>
-              event.stopPropagation()
-            }
+      {/* ================= INSPECTION MODAL ================= */}
+      {selectedGuide && (
+        <div className={styles.modalBackdrop} onClick={handleCloseInspect}>
+          <div
+            className={styles.modalCard}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className={styles.adminProfileModalHeader}
-            >
-              <div>
-                <span>GLOBALVISTA GUIDE</span>
-
-                <h2>
-                  {dialog === 'edit'
-                    ? 'My Profile'
-                    : 'Change Password'}
-                </h2>
-
-                <p>
-                  Manage your Tour Guide account.
-                </p>
+            {/* Modal Header */}
+            <div className={styles.modalHeader}>
+              <div className={styles.modalHeaderLeft}>
+                <h2 className={styles.modalTitle}>Guide Application Inspection</h2>
+                <span className={styles.guideIdBadge}>
+                  {selectedGuide.publicId || `#${selectedGuide._id}`}
+                </span>
               </div>
-
               <button
                 type="button"
-                aria-label="Close profile dialog"
-                disabled={saving || uploading}
-                onClick={closeDialog}
+                className={styles.closeModalBtn}
+                onClick={handleCloseInspect}
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
 
-            {dialog === 'edit' ? (
-              <form
-                className={styles.adminProfileForm}
-                onSubmit={(event) =>
-                  void saveProfile(event)
-                }
-              >
-                <div
-                  className={styles.adminProfilePhotoRow}
-                >
-                  {avatar(
-                    styles.adminProfileBigAvatar,
+            {/* Modal Body */}
+            <div className={styles.modalBody}>
+              {/* Hero */}
+              <div className={styles.guideHero}>
+                <div className={styles.largeAvatar}>
+                  {selectedGuide.profileImage ? (
+                    <img
+                      src={selectedGuide.profileImage}
+                      alt={selectedGuide.name}
+                    />
+                  ) : (
+                    selectedGuide.name?.charAt(0)?.toUpperCase() || 'G'
                   )}
+                </div>
+
+                <div className={styles.heroDetails}>
+                  <h3 className={styles.heroName}>{selectedGuide.name}</h3>
+                  <div className={styles.heroMetaRow}>
+                    <span
+                      className={
+                        selectedGuide.guideStatus === 'PENDING'
+                          ? styles.statusBadgePending
+                          : selectedGuide.guideStatus === 'APPROVED'
+                          ? styles.statusBadgeApproved
+                          : styles.statusBadgeRejected
+                      }
+                    >
+                      {selectedGuide.guideStatus}
+                    </span>
+                    <span style={{ fontSize: '12px', color: '#64748b' }}>
+                      Registered on{' '}
+                      {selectedGuide.createdAt
+                        ? new Date(selectedGuide.createdAt).toLocaleDateString()
+                        : 'N/A'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Vehicle Highlight Card */}
+              <div className={styles.modalSection}>
+                <div className={styles.sectionHeader}>
+                  <Car size={16} />
+                  <span>Assigned Vehicle & Fleet Registration</span>
+                </div>
+
+                <div className={styles.vehicleCardBox}>
+                  <div className={styles.vehicleCardLeft}>
+                    <div className={styles.vehicleTypeIconBox}>
+                      {selectedGuide.vehicleType === 'CAR' && <Car size={26} />}
+                      {selectedGuide.vehicleType === 'VAN' && <Truck size={26} />}
+                      {selectedGuide.vehicleType === 'BUS' && <Bus size={26} />}
+                      {!selectedGuide.vehicleType && <Car size={26} />}
+                    </div>
+                    <div>
+                      <span
+                        style={{
+                          fontSize: '11px',
+                          color: '#64748b',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Vehicle Category
+                      </span>
+                      <h4
+                        style={{
+                          margin: '2px 0 0',
+                          fontSize: '18px',
+                          color: '#0f172a',
+                          fontWeight: 800,
+                        }}
+                      >
+                        {selectedGuide.vehicleType || 'No Vehicle Specified'}
+                      </h4>
+                    </div>
+                  </div>
 
                   <div>
-                    <strong>Profile Photo</strong>
-
-                    <span>
-                      JPG, PNG or WEBP.
-                      Maximum 5 MB.
+                    <span
+                      style={{
+                        display: 'block',
+                        fontSize: '11px',
+                        color: '#64748b',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      Registered License Plate
                     </span>
+                    {selectedGuide.vehicleNumber ? (
+                      <span className={styles.vehiclePlateBig}>
+                        {selectedGuide.vehicleNumber}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: '13px', color: '#94a3b8' }}>
+                        No plate number registered
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Personal & Contact Grid */}
+              <div className={styles.modalSection}>
+                <div className={styles.sectionHeader}>
+                  <UserCheck size={16} />
+                  <span>Guide Profile & Details</span>
+                </div>
+
+                <div className={styles.infoGrid}>
+                  <div className={styles.infoItem}>
+                    <div className={styles.infoItemIcon}>
+                      <Mail size={16} />
+                    </div>
+                    <div className={styles.infoItemMeta}>
+                      <span className={styles.infoItemLabel}>Email</span>
+                      <span className={styles.infoItemValue} title={selectedGuide.email}>
+                        {selectedGuide.email}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.infoItem}>
+                    <div className={styles.infoItemIcon}>
+                      <Phone size={16} />
+                    </div>
+                    <div className={styles.infoItemMeta}>
+                      <span className={styles.infoItemLabel}>Mobile Phone</span>
+                      <span className={styles.infoItemValue}>
+                        {selectedGuide.mobile || 'Not provided'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.infoItem}>
+                    <div className={styles.infoItemIcon}>
+                      <MapPin size={16} />
+                    </div>
+                    <div className={styles.infoItemMeta}>
+                      <span className={styles.infoItemLabel}>Location</span>
+                      <span className={styles.infoItemValue}>
+                        {selectedGuide.city || 'N/A'}, {selectedGuide.country || 'LK'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className={styles.infoItem}>
+                    <div className={styles.infoItemIcon}>
+                      <Clock size={16} />
+                    </div>
+                    <div className={styles.infoItemMeta}>
+                      <span className={styles.infoItemLabel}>Experience</span>
+                      <span className={styles.infoItemValue}>
+                        {selectedGuide.experienceYears || 0} Years Experience
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Languages */}
+                <div style={{ marginTop: '14px' }}>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: '#64748b',
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                    }}
+                  >
+                    Spoken Languages
+                  </span>
+                  <div className={styles.langTags}>
+                    {selectedGuide.languages && selectedGuide.languages.length > 0 ? (
+                      selectedGuide.languages.map((lang, idx) => (
+                        <span key={idx} className={styles.langTag}>
+                          {lang}
+                        </span>
+                      ))
+                    ) : (
+                      <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                        None specified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* About Bio */}
+                {selectedGuide.about && (
+                  <div style={{ marginTop: '14px' }}>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        color: '#64748b',
+                        fontWeight: 700,
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      About & Bio
+                    </span>
+                    <p
+                      style={{
+                        margin: '4px 0 0',
+                        fontSize: '13px',
+                        color: '#334155',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {selectedGuide.about}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Identity Documents Inspection */}
+              <div className={styles.modalSection}>
+                <div className={styles.sectionHeader}>
+                  <FileCheck size={16} />
+                  <span>
+                    Government Identity Verification ({selectedGuide.governmentIdType || 'NIC'})
+                  </span>
+                </div>
+
+                {docError && (
+                  <div className={styles.alertError} style={{ marginBottom: '12px' }}>
+                    <span>{docError}</span>
+                  </div>
+                )}
+
+                <div className={styles.documentsRow}>
+                  {/* Front Side */}
+                  <div className={styles.docBox}>
+                    <div className={styles.docBoxTitle}>
+                      <span>Identity Document (Front)</span>
+                      {selectedGuide.hasIdFrontDocument ? (
+                        <span className={styles.docVerifiedPill}>
+                          <CheckCircle2 size={12} /> Available
+                        </span>
+                      ) : (
+                        <span className={styles.docMissingPill}>
+                          <AlertCircle size={12} /> Not Uploaded
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.docPreviewBox}>
+                      {loadingFrontDoc ? (
+                        <RefreshCw size={24} className={styles.spin} />
+                      ) : frontDocUrl ? (
+                        <img
+                          src={frontDocUrl}
+                          alt="Front Document"
+                          className={styles.docPreviewImg}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                          Click inspect below to decrypt & preview
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedGuide.hasIdFrontDocument && (
+                      <button
+                        type="button"
+                        className={styles.viewDocBtn}
+                        disabled={loadingFrontDoc}
+                        onClick={() =>
+                          void handleLoadDoc(selectedGuide._id, 'front')
+                        }
+                      >
+                        <Eye size={14} />
+                        {frontDocUrl ? 'Reload Front ID' : 'Inspect Front ID'}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Back Side (for NIC) */}
+                  <div className={styles.docBox}>
+                    <div className={styles.docBoxTitle}>
+                      <span>Identity Document (Back)</span>
+                      {selectedGuide.hasIdBackDocument ? (
+                        <span className={styles.docVerifiedPill}>
+                          <CheckCircle2 size={12} /> Available
+                        </span>
+                      ) : (
+                        <span className={styles.docMissingPill}>
+                          <AlertCircle size={12} /> Not Uploaded
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.docPreviewBox}>
+                      {loadingBackDoc ? (
+                        <RefreshCw size={24} className={styles.spin} />
+                      ) : backDocUrl ? (
+                        <img
+                          src={backDocUrl}
+                          alt="Back Document"
+                          className={styles.docPreviewImg}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+                          {selectedGuide.governmentIdType === 'PASSPORT'
+                            ? 'Passport does not require a back document'
+                            : 'Click inspect below to decrypt & preview'}
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedGuide.hasIdBackDocument && (
+                      <button
+                        type="button"
+                        className={styles.viewDocBtn}
+                        disabled={loadingBackDoc}
+                        onClick={() =>
+                          void handleLoadDoc(selectedGuide._id, 'back')
+                        }
+                      >
+                        <Eye size={14} />
+                        {backDocUrl ? 'Reload Back ID' : 'Inspect Back ID'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {selectedGuide.guideTermsAcceptedAt && (
+                  <p
+                    style={{
+                      margin: '12px 0 0',
+                      fontSize: '11px',
+                      color: '#64748b',
+                    }}
+                  >
+                    Guide Terms & Identity Consent accepted on:{' '}
+                    {new Date(selectedGuide.guideTermsAcceptedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+
+              {/* Rejection notice if rejected */}
+              {selectedGuide.guideStatus === 'REJECTED' &&
+                selectedGuide.guideReviewReason && (
+                  <div className={styles.reasonBox}>
+                    <strong>Rejection Reason:</strong>
+                    <p style={{ margin: '4px 0 0' }}>
+                      {selectedGuide.guideReviewReason}
+                    </p>
+                  </div>
+                )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className={styles.modalFooter}>
+              <button
+                type="button"
+                className={styles.actionBtnInspect}
+                onClick={handleCloseInspect}
+              >
+                Close Inspection
+              </button>
+
+              <div className={styles.modalFooterRight}>
+                {selectedGuide.guideStatus === 'PENDING' && (
+                  <>
+                    <button
+                      type="button"
+                      className={styles.actionBtnReject}
+                      disabled={actionLoadingId === selectedGuide._id}
+                      onClick={() => {
+                        setRejectingGuide(selectedGuide);
+                        setRejectReason('');
+                      }}
+                    >
+                      <X size={15} />
+                      Reject Application
+                    </button>
 
                     <button
                       type="button"
-                      className={
-                        styles.adminProfileUploadBtn
-                      }
-                      disabled={saving || uploading}
-                      onClick={() =>
-                        photoRef.current?.click()
-                      }
+                      className={styles.actionBtnApprove}
+                      disabled={actionLoadingId === selectedGuide._id}
+                      onClick={() => void handleApprove(selectedGuide._id)}
                     >
-                      {uploading ? (
-                        <RefreshCw
-                          size={15}
-                          className={styles.spin}
-                        />
-                      ) : (
-                        <Camera size={15} />
-                      )}
-
-                      {uploading
-                        ? 'Uploading...'
-                        : 'Upload / Change Photo'}
+                      <CheckCircle2 size={15} />
+                      Approve Guide Application
                     </button>
-                  </div>
-
-                  <input
-                    ref={photoRef}
-                    className={
-                      styles.adminProfileHiddenInput
-                    }
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(event) =>
-                      void uploadPhoto(event)
-                    }
-                  />
-                </div>
-
-                <label
-                  className={styles.adminProfileField}
-                >
-                  <span>Full Name</span>
-
-                  <input
-                    required
-                    maxLength={100}
-                    value={name}
-                    onChange={(event) =>
-                      setName(event.target.value)
-                    }
-                  />
-                </label>
-
-                <label
-                  className={styles.adminProfileField}
-                >
-                  <span>Email Address</span>
-
-                  <input
-                    type="email"
-                    value={guide.email || ''}
-                    disabled
-                  />
-                </label>
-
-                <div
-                  className={styles.adminProfileFieldRow}
-                >
-                  <label
-                    className={styles.adminProfileField}
-                  >
-                    <span>Mobile Number</span>
-
-                    <input
-                      type="tel"
-                      required
-                      maxLength={30}
-                      value={mobile}
-                      onChange={(event) =>
-                        setMobile(event.target.value)
-                      }
-                    />
-                  </label>
-
-                  <label
-                    className={styles.adminProfileField}
-                  >
-                    <span>Country</span>
-
-                    <input
-                      required
-                      maxLength={100}
-                      value={country}
-                      onChange={(event) =>
-                        setCountry(event.target.value)
-                      }
-                    />
-                  </label>
-                </div>
-
-                <div
-                  className={styles.adminProfileReadonlyNote}
-                >
-                  <ShieldCheck size={16} />
-
-                  Account role, email and
-                  identity details cannot
-                  be changed here.
-                </div>
-
-                {formError && (
-                  <p
-                    className={styles.adminProfileError}
-                    role="alert"
-                  >
-                    {formError}
-                  </p>
+                  </>
                 )}
-
-                {success && (
-                  <p
-                    className={styles.adminProfileSuccess}
-                    role="status"
-                  >
-                    {success}
-                  </p>
-                )}
-
-                <div
-                  className={styles.adminProfileModalFooter}
-                >
-                  <button
-                    type="button"
-                    className={
-                      styles.adminProfileCancel
-                    }
-                    disabled={saving || uploading}
-                    onClick={closeDialog}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className={
-                      styles.adminProfileSubmit
-                    }
-                    disabled={saving || uploading}
-                  >
-                    {saving
-                      ? 'Saving...'
-                      : 'Save Changes'}
-
-                    <ArrowUpRight size={16} />
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form
-                className={styles.adminProfileForm}
-                onSubmit={(event) =>
-                  void changePassword(event)
-                }
-              >
-                <label
-                  className={styles.adminProfileField}
-                >
-                  <span>Current Password</span>
-
-                  <input
-                    type="password"
-                    autoComplete="current-password"
-                    required
-                    value={currentPassword}
-                    onChange={(event) =>
-                      setCurrentPassword(
-                        event.target.value,
-                      )
-                    }
-                  />
-                </label>
-
-                <label
-                  className={styles.adminProfileField}
-                >
-                  <span>New Password</span>
-
-                  <input
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    required
-                    value={newPassword}
-                    onChange={(event) =>
-                      setNewPassword(
-                        event.target.value,
-                      )
-                    }
-                  />
-                </label>
-
-                <label
-                  className={styles.adminProfileField}
-                >
-                  <span>Confirm New Password</span>
-
-                  <input
-                    type="password"
-                    autoComplete="new-password"
-                    minLength={8}
-                    required
-                    value={confirmPassword}
-                    onChange={(event) =>
-                      setConfirmPassword(
-                        event.target.value,
-                      )
-                    }
-                  />
-                </label>
-
-                <div
-                  className={styles.adminProfileReadonlyNote}
-                >
-                  <ShieldCheck size={16} />
-                  Use at least 8 characters
-                  for the new password.
-                </div>
-
-                {formError && (
-                  <p
-                    className={styles.adminProfileError}
-                    role="alert"
-                  >
-                    {formError}
-                  </p>
-                )}
-
-                {success && (
-                  <p
-                    className={styles.adminProfileSuccess}
-                    role="status"
-                  >
-                    {success}
-                  </p>
-                )}
-
-                <div
-                  className={styles.adminProfileModalFooter}
-                >
-                  <button
-                    type="button"
-                    className={
-                      styles.adminProfileCancel
-                    }
-                    disabled={saving}
-                    onClick={closeDialog}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className={
-                      styles.adminProfileSubmit
-                    }
-                    disabled={saving}
-                  >
-                    {saving
-                      ? 'Updating...'
-                      : 'Update Password'}
-
-                    <KeyRound size={16} />
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* LOGOUT CONFIRMATION */}
-
-      {logoutOpen && (
+      {/* ================= REJECT PROMPT MODAL ================= */}
+      {rejectingGuide && (
         <div
-          className={styles.adminProfileOverlay}
-          onMouseDown={() =>
-            setLogoutOpen(false)
-          }
+          className={styles.modalBackdrop}
+          onClick={() => setRejectingGuide(null)}
         >
-          <section
-            className={styles.adminLogoutDialog}
-            role="alertdialog"
-            aria-modal="true"
-            aria-label="Confirm Logout"
-            onMouseDown={(event) =>
-              event.stopPropagation()
-            }
+          <div
+            className={styles.promptModalCard}
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className={styles.adminLogoutIcon}
-            >
-              <LogOut size={24} />
-            </div>
-
-            <h2>Log out of GlobalVista?</h2>
-
-            <p>
-              You will be signed out
-              of your Tour Guide account.
+            <h3 className={styles.promptTitle}>Reject Guide Application</h3>
+            <p className={styles.promptDesc}>
+              Provide a reason for rejecting <strong>{rejectingGuide.name}</strong>
+              &apos;s guide registration (e.g. invalid vehicle plate, unclear identity card).
             </p>
 
-            <div
-              className={styles.adminProfileModalFooter}
-            >
+            <textarea
+              className={styles.promptTextarea}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Enter rejection reason for the applicant..."
+              maxLength={1000}
+            />
+
+            <div className={styles.promptActions}>
               <button
                 type="button"
-                className={
-                  styles.adminProfileCancel
-                }
-                onClick={() =>
-                  setLogoutOpen(false)
-                }
+                className={styles.cancelBtn}
+                onClick={() => setRejectingGuide(null)}
               >
-                Stay Logged In
+                Cancel
               </button>
 
               <button
                 type="button"
-                className={
-                  styles.adminProfileLogoutConfirm
-                }
-                onClick={logout}
+                className={styles.confirmRejectBtn}
+                disabled={actionLoadingId === rejectingGuide._id}
+                onClick={() => void handleRejectConfirm()}
               >
-                Yes, Logout
+                <X size={15} />
+                {actionLoadingId === rejectingGuide._id
+                  ? 'Rejecting...'
+                  : 'Confirm Rejection'}
               </button>
             </div>
-          </section>
+          </div>
         </div>
       )}
     </main>
