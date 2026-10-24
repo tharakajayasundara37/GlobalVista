@@ -583,6 +583,112 @@ img {
   letter-spacing: 0.04em;
 }
 
+.dealTopControls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dealCounterBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  backdrop-filter: blur(6px);
+}
+
+.dealCounterSep {
+  opacity: 0.45;
+  margin: 0 1px;
+}
+
+.dealNavArrows {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dealNavArrowBtn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s ease;
+}
+
+.dealNavArrowBtn:hover {
+  background: rgba(130, 232, 255, 0.35);
+  border-color: #82e8ff;
+  color: #82e8ff;
+  transform: scale(1.08);
+}
+
+.dealNavArrowBtn:active {
+  transform: scale(0.95);
+}
+
+/* 5-second animated progress bar */
+.dealProgressTrack {
+  width: 100%;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.dealProgressBar {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, #18b8e7, #82e8ff, #ffd153);
+  transform-origin: left center;
+  animation: dealProgressFill 5s linear forwards;
+}
+
+.dealProgressBarPaused {
+  animation-play-state: paused;
+}
+
+@keyframes dealProgressFill {
+  0% {
+    transform: scaleX(0);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+
+.dealSpecialBadge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 209, 83, 0.95);
+  color: #071923;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
 .dealThumbWrap {
   position: relative;
   width: 100%;
@@ -629,10 +735,15 @@ img {
 .dealCardContent h3 {
   margin: 0 0 6px;
   font-family: Georgia, serif;
-  font-size: 21px;
+  font-size: 20px;
   line-height: 1.25;
   color: #fff;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 50px;
 }
 
 .dealDuration {
@@ -711,6 +822,49 @@ img {
   background: linear-gradient(135deg, #a4efff 0%, #7ee0f7 100%);
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(60, 190, 230, 0.45);
+}
+
+.heroDealButtonsRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.dealItineraryBtn {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s ease;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.dealItineraryBtn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: rgba(130, 232, 255, 0.6);
+  color: #82e8ff;
+  transform: translateY(-2px);
+}
+
+.heroDealButtonsRow .dealBookBtn {
+  flex: 1.25;
+  width: auto;
+  min-height: 44px;
+  font-size: 13px;
+  padding: 0 10px;
+  white-space: nowrap;
 }
 
 /* HERO SCENE BAR */

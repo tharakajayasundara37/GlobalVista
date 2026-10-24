@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
-import { motion, useScroll, useSpring } from 'framer-motion';
+import { motion, useScroll, useSpring, AnimatePresence } from 'framer-motion';
 
 import {
   useEffect,
@@ -2260,28 +2260,93 @@ export default function Home() {
         4,
       );
 
-  const heroDealPackage =
-    packages.find(
-      (pkg) =>
-        pkg.availability &&
-        (pkg.destination?.toLowerCase().includes('maldives') ||
-          pkg.country?.toLowerCase().includes('maldives') ||
-          pkg.isSpecialOffer),
-    ) || packages[0];
+  // Carousel of all packages for the hero deal card (rotates every 5 seconds)
+  const heroPackagesList: ApiPackage[] = useMemo(() => {
+    const activePackages = packages.filter((pkg) => pkg && pkg.availability !== false);
+    if (activePackages.length > 0) return activePackages;
+    return [
+      {
+        _id: 'featured-deal-1',
+        title: 'Maldives Overwater Lagoon Sanctuary',
+        destination: 'South Ari Atoll',
+        country: 'Maldives',
+        duration: '7 Days / 6 Nights',
+        price: 3400,
+        category: 'Private Island Sanctuary',
+        description:
+          'Awaken above crystal turquoise lagoons with dedicated butler service, infinity plunge pool, and reef safari.',
+        images: ['/images/maldives-package-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-2',
+        title: 'Swiss Alpine Glacier & Chalet Odyssey',
+        destination: 'Zermatt & St. Moritz',
+        country: 'Switzerland',
+        duration: '8 Days / 7 Nights',
+        price: 4200,
+        category: 'Alpine Luxury',
+        description:
+          'Panoramic glacier express journeys, private ski chalets, and Michelin-star alpine dining.',
+        images: ['/images/switzerland-tour-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-3',
+        title: 'Sigiriya Citadel & Safari Pavilions',
+        destination: 'Cultural Triangle & Yala',
+        country: 'Sri Lanka',
+        duration: '6 Days / 5 Nights',
+        price: 1850,
+        category: 'Royal Heritage & Wildlife',
+        description:
+          'Ascend the fifth-century royal rock fortress in the sky, encounter free-roaming leopards, and unwind in colonial tea bungalows.',
+        images: ['/images/sri-lanka-tour-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-4',
+        title: 'Kyoto Zen Heritage & Bamboo Groves',
+        destination: 'Kyoto & Arashiyama',
+        country: 'Japan',
+        duration: '7 Days / 6 Nights',
+        price: 3100,
+        category: 'Cultural Immersion',
+        description:
+          'Ancient tea ceremonies, golden pavilions, and private ryokan retreats nestled amidst bamboo forests.',
+        images: ['/images/japan-tour-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-5',
+        title: 'Bali Sunset Clifftop Villa & Sacred Temples',
+        destination: 'Uluwatu & Ubud',
+        country: 'Indonesia',
+        duration: '6 Days / 5 Nights',
+        price: 2250,
+        category: 'Tropical Sanctuary',
+        description:
+          'Dramatic ocean clifftop luxury villas, private sunset yoga, and sacred volcanic temple journeys.',
+        images: ['/images/bali-honeymoon-1.jpg'],
+        availability: true,
+      },
+    ] as ApiPackage[];
+  }, [packages]);
 
-  const dealPackageToDisplay = heroDealPackage || {
-    _id: 'featured-deal',
-    title: 'Maldives Overwater Lagoon Sanctuary',
-    destination: 'South Ari Atoll',
-    country: 'Maldives',
-    duration: '7 Days / 6 Nights',
-    price: 3400,
-    category: 'Private Island Sanctuary',
-    description:
-      'Awaken above crystal turquoise lagoons with dedicated butler service, infinity plunge pool, and reef safari.',
-    images: ['/images/maldives-package-1.jpg'],
-    availability: true,
-  };
+  const [heroPackageIndex, setHeroPackageIndex] = useState(0);
+  const [isHeroHovered, setIsHeroHovered] = useState(false);
+
+  useEffect(() => {
+    if (heroPackagesList.length <= 1 || isHeroHovered) return;
+    const interval = setInterval(() => {
+      setHeroPackageIndex((prev) => (prev + 1) % heroPackagesList.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroPackagesList.length, isHeroHovered]);
+
+  const dealPackageToDisplay =
+    heroPackagesList[heroPackageIndex % heroPackagesList.length] || heroPackagesList[0];
+  const heroDealPackage = dealPackageToDisplay;
 
   return (
     <main>
@@ -2736,114 +2801,151 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
             whileHover={{ y: -6, transition: { duration: 0.25 } }}
+            onMouseEnter={() => setIsHeroHovered(true)}
+            onMouseLeave={() => setIsHeroHovered(false)}
           >
             <div className="dealCardTop">
-              <div
-                className="dealLabel"
-              >
+              <div className="dealLabel">
                 <Sparkles
-                  size={
-                    14
-                  }
+                  size={14}
                   className="dealSparkleIcon"
                 />
-
                 <span>{t.hero.featuredEscape}</span>
               </div>
-              <span className="dealBadgePill">Limited Offer</span>
+
+              <div className="dealTopControls">
+                <div className="dealCounterBadge" title="Package rotating every 5 seconds">
+                  <span>{String(heroPackageIndex + 1).padStart(2, '0')}</span>
+                  <span className="dealCounterSep">/</span>
+                  <span>{String(heroPackagesList.length).padStart(2, '0')}</span>
+                </div>
+                <div className="dealNavArrows">
+                  <button
+                    type="button"
+                    className="dealNavArrowBtn"
+                    aria-label="Previous package"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHeroPackageIndex((prev) => (prev - 1 + heroPackagesList.length) % heroPackagesList.length);
+                    }}
+                  >
+                    <ChevronLeft size={13} />
+                  </button>
+                  <button
+                    type="button"
+                    className="dealNavArrowBtn"
+                    aria-label="Next package"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setHeroPackageIndex((prev) => (prev + 1) % heroPackagesList.length);
+                    }}
+                  >
+                    <ChevronRight size={13} />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="dealThumbWrap">
-              <img
-                src={getPackageImage(dealPackageToDisplay as ApiPackage)}
-                alt={dealPackageToDisplay.title}
-                className="dealThumbImg"
-                onError={(e) => {
-                  e.currentTarget.onerror = null;
-                  e.currentTarget.src = '/images/maldives-package-1.jpg';
-                }}
+            {/* 5-second animated progress bar */}
+            <div className="dealProgressTrack" aria-hidden="true" title="Auto-rotating every 5 seconds (pauses on hover)">
+              <div
+                key={heroPackageIndex}
+                className={`dealProgressBar ${isHeroHovered ? 'dealProgressBarPaused' : ''}`}
               />
-              <div className="dealThumbOverlay" />
-              <span className="dealThumbLocation">
-                <MapPin size={12} />
-                {dealPackageToDisplay.destination}, {dealPackageToDisplay.country}
-              </span>
             </div>
 
-            <div className="dealCardContent">
-              <h3>
-                {dealPackageToDisplay.title}
-              </h3>
-
-              <p className="dealDuration">
-                <Clock3 size={13} />
-                {dealPackageToDisplay.duration} · All Inclusive
-              </p>
-
-              <div className="dealPriceRow">
-                <div
-                  className="dealPrice"
-                >
-                  <span>
-                    {t.hero.startingFrom}
-                  </span>
-
-                  <strong>
-                    {formatPrice(dealPackageToDisplay.price)}
-                  </strong>
-
-                  <small>
-                    {t.hero.perPerson}
-                  </small>
-                </div>
-
-                <div className="dealRatingBadge">
-                  <div className="dealRatingStars">
-                    <Star size={12} fill="#ffd153" stroke="#ffd153" />
-                    <Star size={12} fill="#ffd153" stroke="#ffd153" />
-                    <Star size={12} fill="#ffd153" stroke="#ffd153" />
-                    <Star size={12} fill="#ffd153" stroke="#ffd153" />
-                    <Star size={12} fill="#ffd153" stroke="#ffd153" />
-                  </div>
-                  <span>{t.hero.topRated}</span>
-                </div>
-              </div>
-
-              <div className="heroDealButtonsRow">
-                <button
-                  type="button"
-                  className="dealItineraryBtn"
-                  onClick={() => {
-                    const targetPkg = heroDealPackage || packages[0];
-                    if (targetPkg) openItinerary(targetPkg);
-                  }}
-                >
-                  <Compass size={14} />
-                  <span>{t.hero.viewItinerary}</span>
-                </button>
-
-                <button
-                  type="button"
-                  className="dealBookBtn"
-                  onClick={() => {
-                    if (heroDealPackage && heroDealPackage.availability) {
-                      void openBooking(heroDealPackage);
-                    } else if (packages.length > 0) {
-                      void openBooking(packages[0]);
-                    } else {
-                      router.push('/packages');
-                    }
-                  }}
-                >
-                  {t.hero.reserveTrip}
-                  <ArrowRight
-                    size={
-                      17
-                    }
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={dealPackageToDisplay._id || `deal-item-${heroPackageIndex}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="dealAnimatedContent"
+              >
+                <div className="dealThumbWrap">
+                  <img
+                    src={getPackageImage(dealPackageToDisplay as ApiPackage)}
+                    alt={dealPackageToDisplay.title}
+                    className="dealThumbImg"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = '/images/maldives-package-1.jpg';
+                    }}
                   />
-                </button>
-              </div>
-            </div>
+                  <div className="dealThumbOverlay" />
+                  <span className="dealThumbLocation">
+                    <MapPin size={12} />
+                    {dealPackageToDisplay.destination}, {dealPackageToDisplay.country}
+                  </span>
+                  {dealPackageToDisplay.isSpecialOffer && (
+                    <span className="dealSpecialBadge">Special Offer</span>
+                  )}
+                </div>
+
+                <div className="dealCardContent">
+                  <h3 title={dealPackageToDisplay.title}>
+                    {dealPackageToDisplay.title}
+                  </h3>
+
+                  <p className="dealDuration">
+                    <Clock3 size={13} />
+                    {dealPackageToDisplay.duration || '7 Days / 6 Nights'} · All Inclusive
+                  </p>
+
+                  <div className="dealPriceRow">
+                    <div className="dealPrice">
+                      <span>
+                        {t.hero.startingFrom}
+                      </span>
+
+                      <strong>
+                        {formatPrice(dealPackageToDisplay.price)}
+                      </strong>
+
+                      <small>
+                        {t.hero.perPerson}
+                      </small>
+                    </div>
+
+                    <div className="dealRatingBadge">
+                      <div className="dealRatingStars">
+                        <Star size={12} fill="#ffd153" stroke="#ffd153" />
+                        <Star size={12} fill="#ffd153" stroke="#ffd153" />
+                        <Star size={12} fill="#ffd153" stroke="#ffd153" />
+                        <Star size={12} fill="#ffd153" stroke="#ffd153" />
+                        <Star size={12} fill="#ffd153" stroke="#ffd153" />
+                      </div>
+                      <span>{t.hero.topRated}</span>
+                    </div>
+                  </div>
+
+                  <div className="heroDealButtonsRow">
+                    <button
+                      type="button"
+                      className="dealItineraryBtn"
+                      onClick={() => {
+                        openItinerary(dealPackageToDisplay);
+                      }}
+                    >
+                      <Compass size={14} />
+                      <span>{t.hero.viewItinerary}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="dealBookBtn"
+                      onClick={() => {
+                        void openBooking(dealPackageToDisplay);
+                      }}
+                    >
+                      {t.hero.reserveTrip}
+                      <ArrowRight size={17} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </motion.aside>
         </div>
 
