@@ -654,8 +654,10 @@ export class AdminDashboardService {
     }
 
     if (base64Data) {
+      if (base64Data.startsWith('data:image/')) return;
       try {
         const encrypted = Buffer.from(base64Data, 'base64');
+        if ((encrypted.length >= 3 && encrypted[0] === 0xff && encrypted[1] === 0xd8) || (encrypted.length >= 8 && encrypted[0] === 137 && encrypted[1] === 80)) return;
         const documentKey = this.getDocumentKey();
         const header = encrypted.subarray(0, 6).toString('utf8');
         if (header === DOCUMENT_MAGIC) {

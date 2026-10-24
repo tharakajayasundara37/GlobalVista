@@ -19,6 +19,7 @@ import {
   createCipheriv,
   randomBytes,
   randomInt,
+  randomUUID,
 } from 'crypto';
 
 import {
@@ -360,6 +361,15 @@ export class AuthService {
 
       userData.vehicleType = data.vehicleType ? (data.vehicleType.toUpperCase() as any) : null;
       userData.vehicleNumber = data.vehicleNumber ? data.vehicleNumber.trim().toUpperCase() : '';
+
+      if (data.idFrontData) {
+        userData.guideIdFrontData = data.idFrontData;
+        userData.guideIdFrontPath = `${randomUUID()}.gvid`;
+      }
+      if (data.idBackData) {
+        userData.guideIdBackData = data.idBackData;
+        userData.guideIdBackPath = `${randomUUID()}.gvid`;
+      }
 
       userData.about =
         data.about!.trim();

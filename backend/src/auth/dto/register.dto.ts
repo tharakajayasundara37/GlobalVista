@@ -272,4 +272,12 @@ export class RegisterDto {
   @MaxLength(30)
   vehicleNumber?: string;
 
+  @IsOptional()
+  @IsString()
+  idFrontData?: string;
+
+  @IsOptional()
+  @IsString()
+  idBackData?: string;
+
 }

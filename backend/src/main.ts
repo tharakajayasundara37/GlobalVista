@@ -23,6 +23,7 @@ import {
 import {
   mkdirSync,
 } from 'fs';
+import { json, urlencoded } from 'express';
 
 import {
   AppModule,
@@ -39,6 +40,9 @@ async function bootstrap() {
   // ==========================================
 
   app.enableCors();
+
+  app.use(json({ limit: '15mb' }));
+  app.use(urlencoded({ extended: true, limit: '15mb' }));
 
   // ==========================================
   // GLOBAL VALIDATION

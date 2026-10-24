@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ArrowRight, BadgeCheck, BriefcaseBusiness, Car, Hash, Check,
@@ -93,6 +93,40 @@ export default function RegisterPage() {
 
   const [idFront, setIdFront] = useState<File | null>(null);
   const [idBack, setIdBack] = useState<File | null>(null);
+  const [idFrontBase64, setIdFrontBase64] = useState('');
+  const [idBackBase64, setIdBackBase64] = useState('');
+
+  const handleFrontImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be under 5 MB');
+        return;
+      }
+      setIdFront(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setIdFrontBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBackImageSelect = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be under 5 MB');
+        return;
+      }
+      setIdBack(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setIdBackBase64(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   const frontFileInputRef = useRef<HTMLInputElement>(null);
   const backFileInputRef = useRef<HTMLInputElement>(null);
   const [registeredEmail, setRegisteredEmail] = useState('');
@@ -210,6 +244,8 @@ export default function RegisterPage() {
           acceptGuideTerms,
           vehicleType,
           vehicleNumber: vehicleNumber.trim().toUpperCase(),
+          idFrontData: idFrontBase64 || undefined,
+          idBackData: idBackBase64 || undefined,
         }
       : commonPayload;
 
@@ -248,6 +284,11 @@ export default function RegisterPage() {
       if (data.user.role === 'GUIDE') {
         setRegisteredEmail(data.user.email);
         setRegisteredPublicId(data.user.publicId || '');
+        if (idFrontBase64) {
+          setStep('complete');
+          setSuccess('Guide application & identity documents submitted successfully! Your application is awaiting Admin review.');
+          return;
+        }
         setResumeUpload(false);
         setGovernmentIdNumber('');
         setStep('documents');
@@ -540,6 +581,54 @@ export default function RegisterPage() {
                           <input id="governmentIdNumber" type="text" placeholder="ID number" value={governmentIdNumber} onChange={(e) => setGovernmentIdNumber(e.target.value)} autoComplete="off" minLength={4} maxLength={40} required />
                         </div>
                       </div>
+                    </div>
+
+                    <div className={styles.formGrid}>
+                      <div className={styles.fieldGroup}>
+                        <label htmlFor="idFrontPicker">{governmentIdType === 'NIC' ? 'NIC Front Image' : 'Passport Photo Page'}</label>
+                        <div className={styles.documentPicker}>
+                          <input
+                            id="idFrontPicker"
+                            type="file"
+                            accept="image/jpeg,image/png"
+                            onChange={handleFrontImageSelect}
+                            style={{ display: 'none' }}
+                            ref={frontFileInputRef}
+                          />
+                          <button
+                            type="button"
+                            className={styles.documentPickerButton}
+                            onClick={() => frontFileInputRef.current?.click()}
+                          >
+                            <UploadCloud size={18} />
+                            {idFront ? idFront.name : (governmentIdType === 'NIC' ? 'Upload NIC Front' : 'Upload Passport Photo')}
+                          </button>
+                        </div>
+                      </div>
+
+                      {governmentIdType === 'NIC' && (
+                        <div className={styles.fieldGroup}>
+                          <label htmlFor="idBackPicker">NIC Back Image</label>
+                          <div className={styles.documentPicker}>
+                            <input
+                              id="idBackPicker"
+                              type="file"
+                              accept="image/jpeg,image/png"
+                              onChange={handleBackImageSelect}
+                              style={{ display: 'none' }}
+                              ref={backFileInputRef}
+                            />
+                            <button
+                              type="button"
+                              className={styles.documentPickerButton}
+                              onClick={() => backFileInputRef.current?.click()}
+                            >
+                              <UploadCloud size={18} />
+                              {idBack ? idBack.name : 'Upload NIC Back'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className={styles.fieldGroup}>
