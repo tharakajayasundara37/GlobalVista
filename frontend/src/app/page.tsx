@@ -2927,9 +2927,11 @@ export default function Home() {
                       onClick={() => {
                         openItinerary(dealPackageToDisplay);
                       }}
+                      title={t.hero.viewItinerary}
+                      aria-label={t.hero.viewItinerary}
                     >
-                      <Compass size={14} />
-                      <span>{t.hero.viewItinerary}</span>
+                      <Compass size={14} style={{ flexShrink: 0 }} />
+                      <span>{t.hero.viewItinerary.replace(/Day-by-Day /i, '')}</span>
                     </button>
 
                     <button
@@ -2938,9 +2940,11 @@ export default function Home() {
                       onClick={() => {
                         void openBooking(dealPackageToDisplay);
                       }}
+                      title={t.hero.reserveTrip}
+                      aria-label={t.hero.reserveTrip}
                     >
-                      {t.hero.reserveTrip}
-                      <ArrowRight size={17} />
+                      <span>{t.hero.reserveTrip}</span>
+                      <ArrowRight size={15} style={{ flexShrink: 0 }} />
                     </button>
                   </div>
                 </div>
