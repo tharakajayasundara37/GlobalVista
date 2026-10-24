@@ -2803,6 +2803,8 @@ export default function Home() {
             whileHover={{ y: -6, transition: { duration: 0.25 } }}
             onMouseEnter={() => setIsHeroHovered(true)}
             onMouseLeave={() => setIsHeroHovered(false)}
+            onTouchStart={() => setIsHeroHovered(true)}
+            onTouchEnd={() => setIsHeroHovered(false)}
           >
             <div className="dealCardTop">
               <div className="dealLabel">

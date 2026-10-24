@@ -2997,9 +2997,9 @@ footer {
   .heroDealCard {
     display: block;
     width: 100%;
-    max-width: 440px;
-    margin: 28px 0 0;
-    background: rgba(8, 26, 42, 0.72);
+    max-width: 420px;
+    margin: 28px auto 0;
+    background: rgba(8, 26, 42, 0.75);
   }
 
   .heroSceneBar {
@@ -3101,6 +3101,24 @@ footer {
 }
 
 @media (max-width: 500px) {
+  .heroDealCard {
+    padding: 16px 14px;
+    border-radius: 18px;
+  }
+
+  .dealThumbWrap {
+    height: 148px;
+    margin-bottom: 10px;
+  }
+
+  .dealCardContent h3 {
+    font-size: 18px;
+  }
+
+  .dealPrice strong {
+    font-size: 24px;
+  }
+
   .logo {
     font-size: 22px;
   }
@@ -9271,3 +9289,27 @@ footer {
   }
 }
 
+
+@media (max-width: 380px) {
+  .heroDealButtonsRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .heroDealButtonsRow .dealBookBtn {
+    order: 1;
+  }
+
+  .dealItineraryBtn {
+    order: 2;
+  }
+
+  .dealTopControls {
+    gap: 4px;
+  }
+
+  .dealNavArrowBtn {
+    width: 22px;
+    height: 22px;
+  }
+}
