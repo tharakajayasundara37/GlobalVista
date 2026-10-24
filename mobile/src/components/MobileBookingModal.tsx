@@ -23,6 +23,7 @@ interface Props {
   pkg: ApiPackage | null;
   onSuccess: () => void;
   onNavigateToAuth?: () => void;
+  onPayNow?: (booking: any) => void;
   preSelectedPlanId?: string;
 }
 
@@ -32,6 +33,7 @@ export const MobileBookingModal: React.FC<Props> = ({
   pkg,
   onSuccess,
   onNavigateToAuth,
+  onPayNow,
   preSelectedPlanId,
 }) => {
   const { user, token } = useAuth();
@@ -224,7 +226,7 @@ export const MobileBookingModal: React.FC<Props> = ({
 
     try {
       setSubmitting(true);
-      await api.createBooking(
+      const createdBooking = await api.createBooking(
         {
           packageId: pkg._id,
           travelPlanId: planIdToSubmit,
@@ -240,13 +242,25 @@ export const MobileBookingModal: React.FC<Props> = ({
       );
       Alert.alert(
         'Expedition Confirmed! 🎉',
-        `Your reservation for ${pkg.title} has been received. Our VIP concierge team will reach out to you shortly.`,
+        `Your reservation for ${pkg.title} has been received. You can complete payment now or settle later in My Trips.`,
         [
           {
-            text: 'View My Trips',
+            text: 'Pay Later',
+            style: 'cancel',
             onPress: () => {
               onClose();
               onSuccess();
+            },
+          },
+          {
+            text: 'Pay Now 💳',
+            onPress: () => {
+              onClose();
+              if (onPayNow) {
+                onPayNow(createdBooking);
+              } else {
+                onSuccess();
+              }
             },
           },
         ]

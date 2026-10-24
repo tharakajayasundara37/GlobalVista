@@ -59,6 +59,7 @@ import { API_BASE_URL, WEB_BASE_URL, WHATSAPP_NUMBER, WHATSAPP_DEFAULT_MSG } fro
 import { SafeImage } from '../components/SafeImage';
 import { MobileItineraryModal } from '../components/MobileItineraryModal';
 import { MobileBookingModal } from '../components/MobileBookingModal';
+import { MobilePaymentModal } from '../components/MobilePaymentModal';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -289,6 +290,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   // Modals
   const [itineraryPkg, setItineraryPkg] = useState<ApiPackage | null>(null);
   const [bookingPkg, setBookingPkg] = useState<ApiPackage | null>(null);
+  const [paymentBooking, setPaymentBooking] = useState<any>(null);
   const [savedPackageIds, setSavedPackageIds] = useState<string[]>([]);
 
   // Guest Reflections State (Matching Web / Lansakara Interactive Review System)
@@ -1765,6 +1767,18 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
         onClose={() => setBookingPkg(null)}
         onSuccess={() => navigation.navigate('My Trips')}
         onNavigateToAuth={() => navigation.navigate('Profile')}
+        onPayNow={(created) => setPaymentBooking(created)}
+      />
+
+      {/* Payment Gateway Modal */}
+      <MobilePaymentModal
+        visible={!!paymentBooking}
+        booking={paymentBooking}
+        onClose={() => setPaymentBooking(null)}
+        onPaymentSuccess={() => {
+          setPaymentBooking(null);
+          navigation.navigate('My Trips');
+        }}
       />
 
       {/* ========================================================

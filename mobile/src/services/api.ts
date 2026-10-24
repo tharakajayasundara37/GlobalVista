@@ -485,7 +485,7 @@ export const api = {
   },
 
   async createPayment(
-    data: { bookingId: string; paymentMethod: string; transactionId: string },
+    data: { bookingId: string; paymentMethod: string; transactionId: string; bankReference?: string; [key: string]: any },
     token: string
   ): Promise<any> {
     const res = await fetch(`${API_BASE_URL}/payments`, {

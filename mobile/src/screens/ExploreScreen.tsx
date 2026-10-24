@@ -39,6 +39,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { WEB_BASE_URL } from '../constants/config';
 import { MobileItineraryModal } from '../components/MobileItineraryModal';
 import { MobileBookingModal } from '../components/MobileBookingModal';
+import { MobilePaymentModal } from '../components/MobilePaymentModal';
 
 const HERO_VIDEOS = [
   `${WEB_BASE_URL}/videos/globalvista-hero-2.mp4`,
@@ -99,6 +100,7 @@ export const ExploreScreen: React.FC<Props> = ({ route, navigation }) => {
   // Modals
   const [itineraryPkg, setItineraryPkg] = useState<ApiPackage | null>(null);
   const [bookingPkg, setBookingPkg] = useState<ApiPackage | null>(null);
+  const [paymentBooking, setPaymentBooking] = useState<any>(null);
   const [savedIds, setSavedIds] = useState<string[]>([]);
 
   // Cycle hero videos every 8 seconds
@@ -722,6 +724,18 @@ export const ExploreScreen: React.FC<Props> = ({ route, navigation }) => {
         pkg={bookingPkg}
         onClose={() => setBookingPkg(null)}
         onSuccess={() => navigation.navigate('My Trips')}
+        onPayNow={(created) => setPaymentBooking(created)}
+      />
+
+      {/* Payment Gateway Modal */}
+      <MobilePaymentModal
+        visible={!!paymentBooking}
+        booking={paymentBooking}
+        onClose={() => setPaymentBooking(null)}
+        onPaymentSuccess={() => {
+          setPaymentBooking(null);
+          navigation.navigate('My Trips');
+        }}
       />
     </SafeAreaView>
   );

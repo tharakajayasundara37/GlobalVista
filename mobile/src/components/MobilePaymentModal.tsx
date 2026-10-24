@@ -40,7 +40,8 @@ export const MobilePaymentModal: React.FC<Props> = ({
   const { token } = useAuth();
   const { formatPrice, currentCurrency } = useCurrency();
 
-  const [method, setMethod] = useState<'CARD' | 'WALLET' | 'ARRIVAL'>('CARD');
+  const [method, setMethod] = useState<'CARD' | 'WALLET' | 'BANK' | 'CRYPTO' | 'ARRIVAL'>('CARD');
+  const [bankRef, setBankRef] = useState('');
   const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
   const [expiry, setExpiry] = useState('12/28');
   const [cvc, setCvc] = useState('888');
@@ -64,6 +65,10 @@ export const MobilePaymentModal: React.FC<Props> = ({
           ? 'CREDIT_CARD'
           : method === 'WALLET'
           ? 'APPLE_PAY'
+          : method === 'BANK'
+          ? 'BANK_TRANSFER'
+          : method === 'CRYPTO'
+          ? 'CRYPTO_USDT'
           : 'PAY_AT_ARRIVAL';
 
       await api.createPayment(
@@ -71,6 +76,7 @@ export const MobilePaymentModal: React.FC<Props> = ({
           bookingId: booking._id,
           paymentMethod: paymentMethodStr,
           transactionId: txnId,
+          bankReference: method === 'BANK' ? bankRef || txnId : undefined,
         },
         token
       );
@@ -122,7 +128,7 @@ export const MobilePaymentModal: React.FC<Props> = ({
 
             {/* Payment Method Selector */}
             <Text style={styles.sectionTitle}>SELECT PAYMENT METHOD</Text>
-            <View style={styles.methodsRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.methodsRow}>
               <TouchableOpacity
                 style={[styles.methodPill, method === 'CARD' && styles.methodPillActive]}
                 onPress={() => setMethod('CARD')}
@@ -141,7 +147,29 @@ export const MobilePaymentModal: React.FC<Props> = ({
               >
                 <Wallet size={15} color={method === 'WALLET' ? COLORS.accentDark : COLORS.textMuted} />
                 <Text style={[styles.methodText, method === 'WALLET' && styles.methodTextActive]}>
-                  Digital Wallet
+                  Apple / Google Pay
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.methodPill, method === 'BANK' && styles.methodPillActive]}
+                onPress={() => setMethod('BANK')}
+                activeOpacity={0.8}
+              >
+                <Building2 size={15} color={method === 'BANK' ? COLORS.accentDark : COLORS.textMuted} />
+                <Text style={[styles.methodText, method === 'BANK' && styles.methodTextActive]}>
+                  Bank Transfer
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.methodPill, method === 'CRYPTO' && styles.methodPillActive]}
+                onPress={() => setMethod('CRYPTO')}
+                activeOpacity={0.8}
+              >
+                <ShieldCheck size={15} color={method === 'CRYPTO' ? COLORS.accentDark : COLORS.textMuted} />
+                <Text style={[styles.methodText, method === 'CRYPTO' && styles.methodTextActive]}>
+                  Crypto USDT
                 </Text>
               </TouchableOpacity>
 
@@ -150,12 +178,12 @@ export const MobilePaymentModal: React.FC<Props> = ({
                 onPress={() => setMethod('ARRIVAL')}
                 activeOpacity={0.8}
               >
-                <Building2 size={15} color={method === 'ARRIVAL' ? COLORS.accentDark : COLORS.textMuted} />
+                <CheckCircle2 size={15} color={method === 'ARRIVAL' ? COLORS.accentDark : COLORS.textMuted} />
                 <Text style={[styles.methodText, method === 'ARRIVAL' && styles.methodTextActive]}>
                   On Arrival
                 </Text>
               </TouchableOpacity>
-            </View>
+            </ScrollView>
 
             {/* Card Inputs */}
             {method === 'CARD' && (
@@ -203,6 +231,55 @@ export const MobilePaymentModal: React.FC<Props> = ({
                 <Text style={styles.infoBoxText}>
                   Instant 1-touch checkout with Apple Pay / Google Wallet. 256-bit encryption verified.
                 </Text>
+              </View>
+            )}
+
+            {method === 'BANK' && (
+              <View style={styles.bankForm}>
+                <View style={styles.bankAccountCard}>
+                  <Text style={styles.bankName}>Commercial Bank of Ceylon</Text>
+                  <Text style={styles.bankDetail}>Account: 1000 4829 1102 (LKR / USD)</Text>
+                  <Text style={styles.bankDetail}>Branch: World Trade Center, Colombo</Text>
+                  <Text style={styles.bankDetail}>SWIFT: CCEYLKLX</Text>
+                </View>
+
+                <View style={styles.bankAccountCard}>
+                  <Text style={styles.bankName}>HSBC Premier Sri Lanka</Text>
+                  <Text style={styles.bankDetail}>Account: 001 884729 001</Text>
+                  <Text style={styles.bankDetail}>Branch: Colombo Fort</Text>
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.inputLabel}>BANK SLIP REFERENCE / TRANSACTION NO.</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={bankRef}
+                    onChangeText={setBankRef}
+                    placeholder="e.g. REF-9847291 or Bank Transfer ID"
+                  />
+                </View>
+              </View>
+            )}
+
+            {method === 'CRYPTO' && (
+              <View style={styles.bankForm}>
+                <View style={styles.bankAccountCard}>
+                  <Text style={styles.bankName}>USDT (Tether) Official Deposit</Text>
+                  <Text style={styles.bankDetail}>Network: TRC20 (Tron) or ERC20</Text>
+                  <Text style={[styles.bankDetail, { fontFamily: 'monospace', fontSize: 10, marginTop: 4 }]}>
+                    TX8yR2b9Nk5aW7V4eL3qM1pZ8xJ9sH2cV1
+                  </Text>
+                </View>
+
+                <View style={styles.inputWrap}>
+                  <Text style={styles.inputLabel}>TRANSACTION HASH / TXID</Text>
+                  <TextInput
+                    style={styles.input}
+                    value={bankRef}
+                    onChangeText={setBankRef}
+                    placeholder="Paste your Blockchain TXID"
+                  />
+                </View>
               </View>
             )}
 
@@ -396,6 +473,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#bbf7d0',
     marginBottom: 12,
+  },
+  bankForm: {
+    marginTop: 8,
+    gap: 10,
+  },
+  bankAccountCard: {
+    backgroundColor: '#f8fafc',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  bankName: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: COLORS.primary,
+    marginBottom: 4,
+  },
+  bankDetail: {
+    fontSize: 11,
+    color: '#475569',
+    marginBottom: 2,
   },
   infoBoxText: {
     flex: 1,
