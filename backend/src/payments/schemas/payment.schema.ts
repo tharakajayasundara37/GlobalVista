@@ -19,13 +19,10 @@ export class Payment {
   @Prop({
     type:
       Types.ObjectId,
-
     ref:
       'Booking',
-
     required:
       true,
-
     index:
       true,
   })
@@ -35,13 +32,10 @@ export class Payment {
   @Prop({
     type:
       Types.ObjectId,
-
     ref:
       'User',
-
     required:
       true,
-
     index:
       true,
   })
@@ -51,10 +45,8 @@ export class Payment {
   @Prop({
     type:
       Number,
-
     required:
       true,
-
     min:
       0,
   })
@@ -64,10 +56,8 @@ export class Payment {
   @Prop({
     type:
       String,
-
     required:
       true,
-
     trim:
       true,
   })
@@ -77,16 +67,12 @@ export class Payment {
   @Prop({
     type:
       String,
-
     required:
       true,
-
     trim:
       true,
-
     unique:
       true,
-
     index:
       true,
   })
@@ -96,21 +82,43 @@ export class Payment {
   @Prop({
     type:
       String,
-
     enum: [
       'PENDING',
       'SUCCESS',
       'FAILED',
     ],
-
     default:
       'PENDING',
-
     index:
       true,
   })
   status:
     string;
+
+  @Prop({
+    type: String,
+    default: '',
+    trim: true,
+  })
+  bankReference?: string;
+
+  @Prop({
+    type: String,
+    default: '',
+  })
+  slipUrl?: string;
+
+  @Prop({
+    type: String,
+    default: '',
+  })
+  notes?: string;
+
+  @Prop({
+    type: String,
+    default: 'USD',
+  })
+  currency?: string;
 }
 
 export const PaymentSchema =

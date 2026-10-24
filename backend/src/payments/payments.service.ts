@@ -216,6 +216,18 @@ export class PaymentsService {
         transactionId:
           data.transactionId,
 
+        bankReference:
+          data.bankReference || '',
+
+        slipUrl:
+          data.slipUrl || '',
+
+        notes:
+          data.notes || '',
+
+        currency:
+          data.currency || 'USD',
+
         status:
           'SUCCESS',
 
@@ -237,6 +249,8 @@ export class PaymentsService {
       {
         paymentStatus:
           'PAID',
+        status:
+          'CONFIRMED',
       },
 
       {
