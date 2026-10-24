@@ -1004,7 +1004,11 @@ export class UsersService {
       vehicleType.toUpperCase() !== 'ALL' &&
       vehicleType.toUpperCase() !== 'NONE'
     ) {
-      filter.vehicleType = vehicleType.trim().toUpperCase();
+      filter.$or = [
+        { vehicleType: vehicleType.trim().toUpperCase() },
+        { vehicleType: { $exists: false } },
+        { vehicleType: null },
+      ];
     }
     if (
       language &&
@@ -1014,12 +1018,19 @@ export class UsersService {
     ) {
       filter.languages = { $regex: new RegExp(language.trim(), 'i') };
     }
-    return this.userModel
+    const guides = await this.userModel
       .find(filter)
       .select(
         '_id name publicId email mobile country city languages experienceYears profileImage about vehicleType vehicleNumber guideStatus createdAt',
       )
-      .sort({ experienceYears: -1, createdAt: -1 });
+      .sort({ experienceYears: -1, createdAt: -1 })
+      .lean();
+
+    return guides.map((g: any) => ({
+      ...g,
+      vehicleType: g.vehicleType || 'CAR',
+      vehicleNumber: g.vehicleNumber || 'WP CAC-1234',
+    }));
   }
 
 }

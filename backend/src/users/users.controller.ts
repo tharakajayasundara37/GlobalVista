@@ -436,6 +436,19 @@ export class UsersController {
 
 
   /* =========================
+     PUBLIC - APPROVED GUIDES (OPTIONAL VEHICLE FILTER)
+  ========================= */
+
+  @Get('guides')
+  findApprovedGuides(
+    @Query('vehicleType') vehicleType?: string,
+    @Query('language') language?: string,
+  ) {
+    return this.usersService.findApprovedGuides(vehicleType, language);
+  }
+
+
+  /* =========================
      ADMIN - SINGLE USER
   ========================= */
 
@@ -470,19 +483,6 @@ export class UsersController {
     return this.usersService.remove(
       id,
     );
-  }
-
-
-  /* =========================
-     PUBLIC - APPROVED GUIDES (OPTIONAL VEHICLE FILTER)
-  ========================= */
-
-  @Get('guides')
-  findApprovedGuides(
-    @Query('vehicleType') vehicleType?: string,
-    @Query('language') language?: string,
-  ) {
-    return this.usersService.findApprovedGuides(vehicleType, language);
   }
 
 }

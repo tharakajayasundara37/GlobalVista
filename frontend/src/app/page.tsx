@@ -1915,7 +1915,8 @@ export default function Home() {
         if (!matchesLang) return false;
       }
       if (vehicleType !== 'NONE') {
-        if (g.vehicleType && g.vehicleType.toUpperCase() !== vehicleType.toUpperCase()) {
+        const guideVehicle = (g.vehicleType || 'CAR').toUpperCase();
+        if (guideVehicle !== vehicleType.toUpperCase()) {
           return false;
         }
       }
@@ -5940,28 +5941,28 @@ export default function Home() {
 
               
               {/* VEHICLE & TOUR GUIDE SELECTION */}
-              <div style={{ marginTop: '20px', marginBottom: '20px', padding: '18px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <div style={{ marginTop: '20px', marginBottom: '20px', padding: '18px', background: '#f8fafc', borderRadius: '14px', border: '1.5px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span>🚗</span> Transport &amp; Multilingual Tour Guide
                   </h4>
                   {vehicleType !== 'NONE' && (
-                    <span style={{ fontSize: '12px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                    <span style={{ fontSize: '12px', color: '#0369a1', background: '#e0f2fe', padding: '3px 10px', borderRadius: '12px', fontWeight: '700', border: '1px solid #bae6fd' }}>
                       {tripDistance} km · {formatPrice(ratePerKm)}/km
                     </span>
                   )}
                 </div>
-                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px', lineHeight: 1.5 }}>
+                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '16px', lineHeight: 1.5 }}>
                   Select your spoken language first, then pick your vehicle type and an SLTDA-certified driver-guide.
                 </p>
 
                 {/* PRIORITY 1: SPOKEN LANGUAGE DROPDOWN */}
                 <div style={{ marginBottom: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span>🗣️</span> 1. Tourist Preferred Spoken Language
                     </label>
-                    <span style={{ fontSize: '10.5px', color: '#0ea5e9', fontWeight: '700', background: 'rgba(14, 165, 233, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
+                    <span style={{ fontSize: '10.5px', color: '#0284c7', fontWeight: '800', background: '#e0f2fe', padding: '2px 8px', borderRadius: '6px' }}>
                       PRIORITY #1
                     </span>
                   </div>
@@ -5983,14 +5984,14 @@ export default function Home() {
                       width: '100%',
                       padding: '10px 14px',
                       borderRadius: '10px',
-                      background: '#0f172a',
-                      color: '#f8fafc',
-                      border: '1.5px solid rgba(14, 165, 233, 0.4)',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      border: '1.5px solid #0284c7',
                       fontSize: '13px',
                       fontWeight: '600',
                       outline: 'none',
                       cursor: 'pointer',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
                     }}
                   >
                     <option value="ALL">🌐 All Spoken Languages (Any Guide)</option>
@@ -6005,10 +6006,10 @@ export default function Home() {
                 {/* PRIORITY 2: VEHICLE CATEGORY SELECTOR */}
                 <div style={{ marginBottom: '14px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span>🚗</span> 2. Vehicle Category
                     </label>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                    <span style={{ fontSize: '11px', color: '#64748b', fontWeight: '600' }}>
                       {vehicleType !== 'NONE' ? `${vehicleType} selected` : 'Guide only'}
                     </span>
                   </div>
@@ -6033,7 +6034,7 @@ export default function Home() {
                                   const langs = Array.isArray(g.languages) ? g.languages : [g.languages || ''];
                                   if (!langs.some((l: string) => l.toLowerCase().includes(selectedLanguage.toLowerCase()))) return false;
                                 }
-                                return g.vehicleType?.toUpperCase() === newType.toUpperCase();
+                                return (g.vehicleType || 'CAR').toUpperCase() === newType.toUpperCase();
                               });
                               if (matching.length > 0 && !matching.some((g) => g._id === selectedGuideId)) {
                                 setSelectedGuideId(matching[0]._id);
@@ -6041,17 +6042,18 @@ export default function Home() {
                             }
                           }}
                           style={{
-                            background: active ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(99, 102, 241, 0.2))' : 'rgba(255,255,255,0.03)',
-                            border: active ? '1.5px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)',
+                            background: active ? '#e0f2fe' : '#ffffff',
+                            border: active ? '2px solid #0284c7' : '1.5px solid #cbd5e1',
                             borderRadius: '10px',
                             padding: '10px 6px',
                             textAlign: 'center',
                             cursor: 'pointer',
                             transition: 'all 0.2s',
+                            boxShadow: active ? '0 2px 8px rgba(2, 132, 199, 0.15)' : 'none',
                           }}
                         >
                           <div style={{ fontSize: '20px', marginBottom: '4px' }}>{v.icon}</div>
-                          <div style={{ fontSize: '11.5px', fontWeight: '700', color: active ? '#38bdf8' : '#cbd5e1' }}>{v.label}</div>
+                          <div style={{ fontSize: '11.5px', fontWeight: active ? '800' : '600', color: active ? '#0284c7' : '#334155' }}>{v.label}</div>
                         </button>
                       );
                     })}
@@ -6062,10 +6064,10 @@ export default function Home() {
                 {vehicleType !== 'NONE' && (
                   <div style={{ marginBottom: '14px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <label style={{ fontSize: '12px', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '700', color: '#0f172a', display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <span>👨‍✈️</span> 3. Select Tour Guide with Vehicle &amp; Plate Number
                       </label>
-                      <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
+                      <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: '700' }}>
                         {guidesLoading ? 'Checking...' : `${filteredGuides.length} Guides Available`}
                       </span>
                     </div>
@@ -6086,17 +6088,17 @@ export default function Home() {
                         width: '100%',
                         padding: '11px 14px',
                         borderRadius: '10px',
-                        background: '#0f172a',
-                        color: '#f8fafc',
-                        border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                        background: '#ffffff',
+                        color: '#0f172a',
+                        border: '1.5px solid #0284c7',
                         fontSize: '13px',
                         fontWeight: '600',
                         outline: 'none',
                         cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
                       }}
                     >
-                      <option value="">⚡ Auto-assign Top Rated Licensed Guide &amp; Vehicle</option>
+                      <option value="">⚡ Auto-assign Top Rated Licensed Guide &amp; Vehicle ({filteredGuides.length} matching)</option>
                       {filteredGuides.map((g) => {
                         const plate = g.vehicleNumber || 'WP CAC-1234';
                         const langs = Array.isArray(g.languages) ? g.languages.join(', ') : (g.languages || 'English');
