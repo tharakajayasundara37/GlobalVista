@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 import { useRouter } from 'next/navigation';
@@ -26,6 +27,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Truck,
+  UploadCloud,
   UserCheck,
   UserX,
   Users,
@@ -97,6 +99,76 @@ export default function AdminGuidesPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [rejectingGuide, setRejectingGuide] = useState<Guide | null>(null);
   const [rejectReason, setRejectReason] = useState('');
+  const adminFrontInputRef = useRef<HTMLInputElement>(null);
+  const adminBackInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAdminUploadDoc = (side: 'front' | 'back', e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedGuide) return;
+
+    if (file.size > 8 * 1024 * 1024) {
+      setDocError('Image file must be under 8 MB');
+      return;
+    }
+
+    const token = getToken();
+    if (!token) return;
+
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = reader.result as string;
+      try {
+        if (side === 'front') setLoadingFrontDoc(true);
+        else setLoadingBackDoc(true);
+
+        const res = await fetch(`${API_URL}/admin-dashboard/guides/${selectedGuide._id}/documents/${side}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ data: dataUrl }),
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || `Failed to upload ${side} document`);
+        }
+
+        if (side === 'front') {
+          setFrontDocUrl(dataUrl);
+        } else {
+          setBackDocUrl(dataUrl);
+        }
+
+        setSuccess(`Guide ID (${side}) updated & saved to database successfully!`);
+        setSelectedGuide((prev) =>
+          prev
+            ? {
+                ...prev,
+                [side === 'front' ? 'hasIdFrontDocument' : 'hasIdBackDocument']: true,
+              }
+            : null,
+        );
+        setGuides((prev) =>
+          prev.map((g) =>
+            g._id === selectedGuide._id
+              ? {
+                  ...g,
+                  [side === 'front' ? 'hasIdFrontDocument' : 'hasIdBackDocument']: true,
+                }
+              : g,
+          ),
+        );
+      } catch (err) {
+        setDocError(err instanceof Error ? err.message : 'Upload failed');
+      } finally {
+        if (side === 'front') setLoadingFrontDoc(false);
+        else setLoadingBackDoc(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const getToken = useCallback(
     () =>
@@ -1173,10 +1245,11 @@ export default function AdminGuidesPage() {
                       )}
                     </div>
 
-                    {selectedGuide.hasIdFrontDocument && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                       <button
                         type="button"
                         className={styles.viewDocBtn}
+                        style={{ flex: 1 }}
                         disabled={loadingFrontDoc}
                         onClick={() =>
                           void handleLoadDoc(selectedGuide._id, 'front')
@@ -1185,7 +1258,26 @@ export default function AdminGuidesPage() {
                         <Eye size={14} />
                         {frontDocUrl ? 'Reload Front ID' : 'Inspect Front ID'}
                       </button>
-                    )}
+
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        style={{ display: 'none' }}
+                        ref={adminFrontInputRef}
+                        onChange={(e) => handleAdminUploadDoc('front', e)}
+                      />
+                      <button
+                        type="button"
+                        className={styles.viewDocBtn}
+                        style={{ flex: 1, background: '#eff6ff', color: '#1d4ed8', borderColor: '#bfdbfe' }}
+                        disabled={loadingFrontDoc}
+                        onClick={() => adminFrontInputRef.current?.click()}
+                        title="Upload or replace with a real NIC photo file"
+                      >
+                        <UploadCloud size={14} />
+                        Upload Front Photo
+                      </button>
+                    </div>
                   </div>
 
                   {/* Back Side (for NIC) */}
@@ -1221,10 +1313,11 @@ export default function AdminGuidesPage() {
                       )}
                     </div>
 
-                    {selectedGuide.hasIdBackDocument && (
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
                       <button
                         type="button"
                         className={styles.viewDocBtn}
+                        style={{ flex: 1 }}
                         disabled={loadingBackDoc}
                         onClick={() =>
                           void handleLoadDoc(selectedGuide._id, 'back')
@@ -1233,7 +1326,26 @@ export default function AdminGuidesPage() {
                         <Eye size={14} />
                         {backDocUrl ? 'Reload Back ID' : 'Inspect Back ID'}
                       </button>
-                    )}
+
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        style={{ display: 'none' }}
+                        ref={adminBackInputRef}
+                        onChange={(e) => handleAdminUploadDoc('back', e)}
+                      />
+                      <button
+                        type="button"
+                        className={styles.viewDocBtn}
+                        style={{ flex: 1, background: '#eff6ff', color: '#1d4ed8', borderColor: '#bfdbfe' }}
+                        disabled={loadingBackDoc}
+                        onClick={() => adminBackInputRef.current?.click()}
+                        title="Upload or replace with a real NIC photo file"
+                      >
+                        <UploadCloud size={14} />
+                        Upload Back Photo
+                      </button>
+                    </div>
                   </div>
                 </div>
 
