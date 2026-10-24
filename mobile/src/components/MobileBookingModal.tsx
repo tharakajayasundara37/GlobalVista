@@ -9,7 +9,9 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
 } from 'react-native';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { X, Calendar, Users, Check, ShieldCheck, Sparkles, Crown, Car, Globe, ChevronDown, CheckCircle } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
@@ -44,6 +46,57 @@ export const MobileBookingModal: React.FC<Props> = ({
     d.setDate(d.getDate() + 14);
     return d.toISOString().split('T')[0];
   });
+  const [selectedDateObj, setSelectedDateObj] = useState<Date>(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 14);
+    return d;
+  });
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+
+  const formatDateDisplay = (dateString: string) => {
+    if (!dateString) return 'Select Travel Date';
+    try {
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+        return d.toLocaleDateString('en-US', {
+          weekday: 'short',
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+      }
+      return dateString;
+    } catch {
+      return dateString;
+    }
+  };
+
+  const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (event.type === 'dismissed') {
+      return;
+    }
+    if (selectedDate) {
+      setSelectedDateObj(selectedDate);
+      const yyyy = selectedDate.getFullYear();
+      const mm = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const dd = String(selectedDate.getDate()).padStart(2, '0');
+      setTravelDate(`${yyyy}-${mm}-${dd}`);
+    }
+  };
+
+  const setQuickDate = (daysAhead: number) => {
+    const d = new Date();
+    d.setDate(d.getDate() + daysAhead);
+    setSelectedDateObj(d);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    setTravelDate(`${yyyy}-${mm}-${dd}`);
+  };
   const [guests, setGuests] = useState<number>(2);
   const [selectedAddOns, setSelectedAddOns] = useState<string[]>([]);
   const [plans, setPlans] = useState<ApiTravelPlan[]>([]);
@@ -288,18 +341,65 @@ export const MobileBookingModal: React.FC<Props> = ({
           </View>
 
           <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
-            {/* Travel Date */}
+            {/* Travel Date Picker */}
             <View style={styles.fieldGroup}>
               <Text style={styles.fieldLabel}>
-                <Calendar size={13} color={COLORS.accent} /> TRAVEL DATE (YYYY-MM-DD)
+                <Calendar size={13} color={COLORS.accent} /> TRAVEL DATE
               </Text>
-              <TextInput
-                style={styles.input}
-                value={travelDate}
-                onChangeText={setTravelDate}
-                placeholder="2026-11-20"
-                placeholderTextColor={COLORS.textMuted}
-              />
+              
+              <TouchableOpacity
+                style={styles.datePickerBtn}
+                onPress={() => setShowDatePicker(true)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.datePickerIconWrap}>
+                  <Calendar size={18} color={COLORS.primary} />
+                </View>
+                <View style={styles.datePickerTextWrap}>
+                  <Text style={styles.datePickerValueText}>
+                    {formatDateDisplay(travelDate)}
+                  </Text>
+                  <Text style={styles.datePickerSubtext}>
+                    {travelDate} · Tap to choose date on calendar
+                  </Text>
+                </View>
+                <ChevronDown size={18} color={COLORS.textMuted} />
+              </TouchableOpacity>
+
+              {/* Quick Select Date Pills */}
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.quickDateRow}>
+                <TouchableOpacity
+                  style={styles.quickDatePill}
+                  onPress={() => setQuickDate(7)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.quickDatePillText}>+1 Week</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.quickDatePill}
+                  onPress={() => setQuickDate(14)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.quickDatePillText}>+2 Weeks</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.quickDatePill}
+                  onPress={() => setQuickDate(30)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.quickDatePillText}>+1 Month</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.quickDatePill}
+                  onPress={() => setQuickDate(60)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.quickDatePillText}>+2 Months</Text>
+                </TouchableOpacity>
+              </ScrollView>
             </View>
 
             {/* Guests */}
@@ -657,6 +757,50 @@ export const MobileBookingModal: React.FC<Props> = ({
             <View style={{ height: 20 }} />
           </ScrollView>
 
+      {/* iOS & Android Native Calendar Modal */}
+      {Platform.OS === 'ios' ? (
+        <Modal
+          visible={showDatePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.iosDatePickerOverlay}>
+            <View style={styles.iosDatePickerContainer}>
+              <View style={styles.iosDatePickerHeader}>
+                <Text style={styles.iosDatePickerTitle}>Select Travel Date</Text>
+                <TouchableOpacity
+                  style={styles.iosDatePickerDoneBtn}
+                  onPress={() => setShowDatePicker(false)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.iosDatePickerDoneText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+
+              <DateTimePicker
+                value={selectedDateObj}
+                mode="date"
+                display="inline"
+                minimumDate={new Date()}
+                onChange={handleDateChange}
+                themeVariant="light"
+              />
+            </View>
+          </View>
+        </Modal>
+      ) : (
+        showDatePicker && (
+          <DateTimePicker
+            value={selectedDateObj}
+            mode="date"
+            display="default"
+            minimumDate={new Date()}
+            onChange={handleDateChange}
+          />
+        )
+      )}
+
           {/* Footer Total & Button */}
           <View style={styles.footer}>
             <View style={styles.totalRow}>
@@ -754,6 +898,96 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: COLORS.textPrimary,
+  },
+  datePickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  datePickerIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#e0f2fe',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  datePickerTextWrap: {
+    flex: 1,
+  },
+  datePickerValueText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: COLORS.textPrimary,
+  },
+  datePickerSubtext: {
+    fontSize: 11,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  quickDateRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 8,
+  },
+  quickDatePill: {
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  quickDatePillText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  iosDatePickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(10, 25, 47, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  iosDatePickerContainer: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 16,
+    width: '100%',
+    maxWidth: 360,
+    ...SHADOWS.large,
+  },
+  iosDatePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    marginBottom: 8,
+  },
+  iosDatePickerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: COLORS.primary,
+  },
+  iosDatePickerDoneBtn: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  iosDatePickerDoneText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#ffffff',
   },
   counterRow: {
     flexDirection: 'row',
