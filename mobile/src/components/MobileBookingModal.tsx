@@ -144,12 +144,12 @@ export const MobileBookingModal: React.FC<Props> = ({
   const handleSubmit = async () => {
     if (!token) {
       Alert.alert(
-        'Sign In Required',
-        'Please sign in or register to book your luxury escape.',
+        'Please Register and Apply',
+        'Please register or sign in as a verified traveller before applying for this booking. (Booking එක apply කිරීමට කරුණාකර පළමුව Register හෝ Sign In වන්න).',
         [
           { text: 'Cancel', style: 'cancel' },
           {
-            text: 'Sign In',
+            text: 'Sign In / Register',
             onPress: () => {
               onClose();
               if (onNavigateToAuth) onNavigateToAuth();

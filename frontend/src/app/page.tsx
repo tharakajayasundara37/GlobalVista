@@ -2039,7 +2039,7 @@ export default function Home() {
         !rawUser
       ) {
         savePendingBooking();
-        setBookingError('Traveller login required. Please sign in or register to complete your reservation.');
+        setBookingError('⚠️ Please register or sign in as a traveller to apply for this booking! (Booking එක apply කිරීමට කරුණාකර පළමුව Register හෝ Sign In වන්න). Use the Sign In / Register buttons above.');
         return;
       }
 
@@ -6462,11 +6462,11 @@ export default function Home() {
                   className="bookingConfirmButton"
                   onClick={() => {
                     savePendingBooking();
-                    router.push('/login');
+                    setBookingError('⚠️ Please register or sign in as a traveller before applying for this booking! (Booking එක apply කිරීමට කරුණාකර පළමුව Register හෝ Sign In වන්න). Click "Sign In as Traveller" or "Create Free Account" above.');
                   }}
                   style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
                 >
-                  🔑 Sign In to Complete Booking
+                  Apply for Booking (Sign In / Register Required)
                 </button>
               )}
             </div>
