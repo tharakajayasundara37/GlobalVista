@@ -449,7 +449,7 @@ export const ProfileScreen: React.FC = () => {
                 <View style={styles.brandLogoWrap}>
                   <Plane size={18} color="#38bdf8" />
                   <Text style={styles.brandLogoText}>
-                    Global<Text style={{ color: '#38bdf8' }}>Vista</Text>
+                    {'Global'}<Text style={{ color: '#38bdf8' }}>Vista</Text>
                   </Text>
                 </View>
                 <View style={styles.brandAtelierTag}>

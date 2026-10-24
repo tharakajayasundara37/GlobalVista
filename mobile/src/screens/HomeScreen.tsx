@@ -651,7 +651,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             ) : (
               <UserRound size={17} color={COLORS.primary} />
             )}
-            {token && (
+            {Boolean(token) && (
               <View
                 style={[
                   styles.circleRoleDot,
@@ -1167,7 +1167,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <Text style={styles.dealLocationText}>{featuredEscape.duration}</Text>
                 </View>
 
-                {featuredEscape.isSpecialOffer && (
+                {Boolean(featuredEscape?.isSpecialOffer) && (
                   <View style={styles.dealSpecialTag}>
                     <Text style={styles.dealSpecialText}>Limited Offer</Text>
                   </View>
@@ -1342,7 +1342,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       <Star size={11} color={COLORS.gold} fill={COLORS.gold} />
                       <Text style={styles.pkgRatingText}>{rating.toFixed(1)}</Text>
                     </View>
-                    {pkg.isSpecialOffer && (
+                    {Boolean(pkg?.isSpecialOffer) && (
                       <View style={styles.pkgOfferBadge}>
                         <Text style={styles.pkgOfferBadgeText}>SPECIAL OFFER</Text>
                       </View>
@@ -1619,7 +1619,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                     isSelected && styles.planCardSelected,
                   ]}
                 >
-                  {plan.isPopular && (
+                  {Boolean(plan?.isPopular) && (
                     <View style={styles.planPopularBadge}>
                       <Text style={styles.planPopularText}>MOST POPULAR</Text>
                     </View>

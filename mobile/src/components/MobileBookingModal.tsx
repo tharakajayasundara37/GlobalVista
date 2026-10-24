@@ -343,9 +343,10 @@ export const MobileBookingModal: React.FC<Props> = ({
           <ScrollView style={styles.body} showsVerticalScrollIndicator={false}>
             {/* Travel Date Picker */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                <Calendar size={13} color={COLORS.accent} /> TRAVEL DATE
-              </Text>
+              <View style={styles.fieldLabelRow}>
+                <Calendar size={13} color={COLORS.accent} />
+                <Text style={styles.fieldLabel}>TRAVEL DATE</Text>
+              </View>
               
               <TouchableOpacity
                 style={styles.datePickerBtn}
@@ -404,9 +405,10 @@ export const MobileBookingModal: React.FC<Props> = ({
 
             {/* Guests */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                <Users size={13} color={COLORS.accent} /> NUMBER OF TRAVELLERS
-              </Text>
+              <View style={styles.fieldLabelRow}>
+                <Users size={13} color={COLORS.accent} />
+                <Text style={styles.fieldLabel}>NUMBER OF TRAVELLERS</Text>
+              </View>
               <View style={styles.counterRow}>
                 <TouchableOpacity
                   style={[styles.counterBtn, guests <= 1 && styles.counterBtnDisabled]}
@@ -427,9 +429,10 @@ export const MobileBookingModal: React.FC<Props> = ({
 
             {/* Travel Service Tier */}
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>
-                <Crown size={13} color={COLORS.accent} /> SERVICE TIER (EXPERIENCE LEVEL)
-              </Text>
+              <View style={styles.fieldLabelRow}>
+                <Crown size={13} color={COLORS.accent} />
+                <Text style={styles.fieldLabel}>SERVICE TIER (EXPERIENCE LEVEL)</Text>
+              </View>
               {plans.map((p) => {
                 const isSelected = p._id === selectedPlanId;
                 return (
@@ -471,9 +474,10 @@ export const MobileBookingModal: React.FC<Props> = ({
             {/* Add-on Extras */}
             {pkg.addOns && pkg.addOns.length > 0 && (
               <View style={styles.fieldGroup}>
-                <Text style={styles.fieldLabel}>
-                  <Sparkles size={13} color={COLORS.accent} /> BESPOKE ADD-ONS & UPGRADES
-                </Text>
+                <View style={styles.fieldLabelRow}>
+                  <Sparkles size={13} color={COLORS.accent} />
+                  <Text style={styles.fieldLabel}>BESPOKE ADD-ONS & UPGRADES</Text>
+                </View>
                 {pkg.addOns.map((add) => {
                   const isChecked = selectedAddOns.includes(add._id);
                   return (
@@ -502,9 +506,10 @@ export const MobileBookingModal: React.FC<Props> = ({
             {/* Vehicle & Multilingual Tour Guide Section */}
             <View style={styles.fieldGroup}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <Text style={styles.fieldLabel}>
-                  <Car size={13} color={COLORS.accent} /> TRANSPORT &amp; CERTIFIED TOUR GUIDE
-                </Text>
+                <View style={styles.fieldLabelRow}>
+                  <Car size={13} color={COLORS.accent} />
+                  <Text style={styles.fieldLabel}>TRANSPORT & CERTIFIED TOUR GUIDE</Text>
+                </View>
                 {vehicleType !== 'NONE' && (
                   <View style={styles.ratePill}>
                     <Text style={styles.ratePillText}>{tripDistance} km · {formatPrice(ratePerKm)}/km</Text>
@@ -789,17 +794,15 @@ export const MobileBookingModal: React.FC<Props> = ({
             </View>
           </View>
         </Modal>
-      ) : (
-        showDatePicker && (
-          <DateTimePicker
-            value={selectedDateObj}
-            mode="date"
-            display="default"
-            minimumDate={new Date()}
-            onChange={handleDateChange}
-          />
-        )
-      )}
+      ) : showDatePicker ? (
+        <DateTimePicker
+          value={selectedDateObj}
+          mode="date"
+          display="default"
+          minimumDate={new Date()}
+          onChange={handleDateChange}
+        />
+      ) : null}
 
           {/* Footer Total & Button */}
           <View style={styles.footer}>
@@ -881,6 +884,12 @@ const styles = StyleSheet.create({
   },
   fieldGroup: {
     marginBottom: 16,
+  },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
   },
   fieldLabel: {
     fontSize: 11,
