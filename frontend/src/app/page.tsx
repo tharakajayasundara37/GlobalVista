@@ -1792,6 +1792,46 @@ export default function Home() {
       );
     };
 
+  const savePendingBooking = () => {
+    if (!selectedPackage) return;
+    const pending = {
+      packageId: selectedPackage._id,
+      travelDate,
+      numberOfPeople,
+      selectedTravelPlanId: selectedTravelPlan?._id,
+      selectedAddOnIds,
+      vehicleType,
+      selectedGuideId,
+      selectedLanguage,
+    };
+    try {
+      sessionStorage.setItem('globalvista_pending_booking', JSON.stringify(pending));
+    } catch {}
+  };
+
+  useEffect(() => {
+    try {
+      const rawPending = sessionStorage.getItem('globalvista_pending_booking');
+      if (rawPending && packages.length > 0) {
+        const pending = JSON.parse(rawPending);
+        const targetPkg = packages.find((p) => p._id === pending.packageId);
+        if (targetPkg) {
+          sessionStorage.removeItem('globalvista_pending_booking');
+          setTimeout(() => {
+            openBooking(targetPkg).then(() => {
+              if (pending.travelDate) setTravelDate(pending.travelDate);
+              if (pending.numberOfPeople) setNumberOfPeople(pending.numberOfPeople);
+              if (pending.selectedAddOnIds) setSelectedAddOnIds(pending.selectedAddOnIds);
+              if (pending.vehicleType) setVehicleType(pending.vehicleType);
+              if (pending.selectedGuideId) setSelectedGuideId(pending.selectedGuideId);
+              if (pending.selectedLanguage) setSelectedLanguage(pending.selectedLanguage);
+            });
+          }, 300);
+        }
+      }
+    } catch {}
+  }, [packages, currentUser]);
+
   const toggleAddOn =
     (
       addOnId:
@@ -1998,10 +2038,8 @@ export default function Home() {
         !token ||
         !rawUser
       ) {
-        router.push(
-          '/login',
-        );
-
+        savePendingBooking();
+        setBookingError('Traveller login required. Please sign in or register to complete your reservation.');
         return;
       }
 
@@ -2022,7 +2060,7 @@ export default function Home() {
       }
 
       if (storedUser?.role !== 'USER' && storedUser?.role !== 'ADMIN') {
-        setBookingError('Please sign in as a traveller or administrator to book.');
+        setBookingError('Only registered travellers can place bookings. If you are logged in as a Tour Guide, please sign in with a Traveller account.');
         return;
       }
 
@@ -2098,10 +2136,9 @@ export default function Home() {
             'user',
           );
 
-          router.push(
-            '/login',
-          );
-
+          setCurrentUser(null);
+          savePendingBooking();
+          setBookingError('Your login session has expired. Please sign in again to complete your reservation.');
           return;
         }
 
@@ -2130,10 +2167,13 @@ export default function Home() {
             ? data.totalPrice
             : estimatedTotal;
 
+        const bookingId = (data as any)?._id || (data as any)?.id || '';
+        if (bookingId) {
+          setCreatedBookingId(String(bookingId));
+        }
+
         setBookingSuccess(
-          `Booking created successfully. Total: $${formatMoney(
-            confirmedTotal,
-          )}`,
+          `🎉 Expedition reserved successfully! Reference: ${bookingId ? `#${String(bookingId).slice(-6).toUpperCase()}` : 'CONFIRMED'}. Total: ${formatPrice(confirmedTotal)}`,
         );
       } catch (
         error
@@ -6296,6 +6336,60 @@ export default function Home() {
                 </div>
               </div>
 
+              {/* TRAVELLER AUTHENTICATION STATUS BANNER */}
+              {currentUser && (currentUser.role === 'USER' || currentUser.role === 'ADMIN') ? (
+                <div style={{ background: '#ecfdf5', border: '1.5px solid #a7f3d0', borderRadius: '12px', padding: '12px 14px', marginBottom: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>👤</span>
+                    <div>
+                      <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#065f46' }}>
+                        Booking as: {currentUser.name}
+                      </div>
+                      <div style={{ fontSize: '11px', color: '#047857' }}>
+                        {currentUser.email} · Verified Traveller Account
+                      </div>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '10px', fontWeight: '800', color: '#059669', background: '#d1fae5', padding: '3px 8px', borderRadius: '6px' }}>
+                    VERIFIED
+                  </span>
+                </div>
+              ) : (
+                <div style={{ background: '#fffbeb', border: '1.5px solid #fde68a', borderRadius: '12px', padding: '14px 16px', marginBottom: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '18px' }}>🔐</span>
+                    <span style={{ fontSize: '13px', fontWeight: '800', color: '#92400e' }}>
+                      Traveller Account Required to Book
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '12px', color: '#b45309', margin: 0, lineHeight: 1.4 }}>
+                    To ensure legitimate bookings and secure guide dispatch, only registered travellers can book expeditions. Please sign in or create an account. Your selections will be saved.
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        savePendingBooking();
+                        router.push('/login');
+                      }}
+                      style={{ flex: 1, padding: '9px 12px', background: '#0284c7', color: '#fff', borderRadius: '8px', fontSize: '12.5px', fontWeight: '700', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+                    >
+                      Sign In as Traveller
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        savePendingBooking();
+                        router.push('/register');
+                      }}
+                      style={{ flex: 1, padding: '9px 12px', background: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '12.5px', fontWeight: '700', border: 'none', cursor: 'pointer', textAlign: 'center' }}
+                    >
+                      Create Free Account
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {bookingError && (
                 <div
                   className="bookingMessage bookingError"
@@ -6341,11 +6435,11 @@ export default function Home() {
                     closeBooking();
                     router.push('/traveller');
                   }}
-                  style={{ background: '#059669', borderColor: '#059669', color: '#fff', cursor: 'pointer' }}
+                  style={{ background: '#059669', borderColor: '#059669', color: '#fff', cursor: 'pointer', fontWeight: '700' }}
                 >
                   Go to My Trips →
                 </button>
-              ) : (
+              ) : currentUser && (currentUser.role === 'USER' || currentUser.role === 'ADMIN') ? (
                 <button
                   type="button"
                   className="bookingConfirmButton"
@@ -6356,10 +6450,23 @@ export default function Home() {
                     bookingSubmitting ||
                     !selectedTravelPlan
                   }
+                  style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
                 >
                   {bookingSubmitting
-                    ? 'Creating Booking...'
-                    : 'Confirm Booking'}
+                    ? 'Reserving Expedition...'
+                    : 'Confirm & Reserve Expedition'}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="bookingConfirmButton"
+                  onClick={() => {
+                    savePendingBooking();
+                    router.push('/login');
+                  }}
+                  style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
+                >
+                  🔑 Sign In to Complete Booking
                 </button>
               )}
             </div>
