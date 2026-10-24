@@ -480,8 +480,9 @@ export class UsersController {
   @Get('guides')
   findApprovedGuides(
     @Query('vehicleType') vehicleType?: string,
+    @Query('language') language?: string,
   ) {
-    return this.usersService.findApprovedGuides(vehicleType);
+    return this.usersService.findApprovedGuides(vehicleType, language);
   }
 
 }

@@ -262,6 +262,40 @@ export class Booking {
   })
   paymentStatus:
     string;
+
+  @Prop({
+    type: String,
+    enum: ['CAR', 'VAN', 'BUS', 'NONE'],
+    default: 'CAR',
+  })
+  vehicleType: string;
+
+  @Prop({
+    type: String,
+    trim: true,
+  })
+  vehicleNumber: string;
+
+  @Prop({
+    type: Types.ObjectId,
+    ref: 'User',
+    index: true,
+  })
+  assignedGuideId: Types.ObjectId;
+
+  @Prop({
+    type: Number,
+    min: 0,
+    default: 0,
+  })
+  distanceKm: number;
+
+  @Prop({
+    type: Number,
+    min: 0,
+    default: 0,
+  })
+  vehicleFare: number;
 }
 
 export const BookingSchema =

@@ -1081,6 +1081,7 @@ export default function Home() {
 
   
   const [vehicleType, setVehicleType] = useState<'CAR' | 'VAN' | 'BUS' | 'NONE'>('CAR');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('ALL');
   const [availableGuides, setAvailableGuides] = useState<any[]>([]);
   const [selectedGuideId, setSelectedGuideId] = useState<string>('');
   const [guidesLoading, setGuidesLoading] = useState<boolean>(false);
@@ -1637,22 +1638,19 @@ export default function Home() {
 
   
   useEffect(() => {
-    if (Boolean(selectedPackage) && vehicleType !== 'NONE') {
+    if (Boolean(selectedPackage)) {
       setGuidesLoading(true);
-      fetch(`${API_URL}/users/guides?vehicleType=${vehicleType}`)
+      fetch(`${API_URL}/users/guides`)
         .then(r => r.json())
         .then(data => {
           if (Array.isArray(data)) {
             setAvailableGuides(data);
-            if (data.length > 0 && !selectedGuideId) {
-              setSelectedGuideId(data[0]._id);
-            }
           }
         })
         .catch(() => {})
         .finally(() => setGuidesLoading(false));
     }
-  }, [Boolean(selectedPackage), vehicleType]);
+  }, [Boolean(selectedPackage)]);
 
   useEffect(() => {
     fetch(`${API_URL}/bookings/vehicle-pricing`)
@@ -1690,6 +1688,10 @@ export default function Home() {
       setSelectedAddOnIds(
         [],
       );
+
+      setVehicleType('CAR');
+      setSelectedLanguage('ALL');
+      setSelectedGuideId('');
 
       setBookingError(
         '',
@@ -1776,6 +1778,10 @@ export default function Home() {
       setSelectedAddOnIds(
         [],
       );
+
+      setVehicleType('CAR');
+      setSelectedLanguage('ALL');
+      setSelectedGuideId('');
 
       setBookingError(
         '',
@@ -1888,6 +1894,41 @@ export default function Home() {
     travelPlanTotal +
     addOnsTotal +
     vehicleFare;
+
+  const availableLanguages = useMemo(() => {
+    const set = new Set<string>();
+    availableGuides.forEach((g) => {
+      const langs = Array.isArray(g.languages) ? g.languages : (g.languages ? [g.languages] : []);
+      langs.forEach((l: string) => {
+        if (l && l.trim()) set.add(l.trim());
+      });
+    });
+    ['English', 'Sinhala', 'Tamil', 'French', 'German', 'Russian', 'Chinese', 'Italian', 'Spanish', 'Japanese', 'Arabic'].forEach((l) => set.add(l));
+    return Array.from(set).sort();
+  }, [availableGuides]);
+
+  const filteredGuides = useMemo(() => {
+    return availableGuides.filter((g) => {
+      if (selectedLanguage !== 'ALL') {
+        const langs = Array.isArray(g.languages) ? g.languages : (g.languages ? [g.languages] : []);
+        const matchesLang = langs.some((l: string) => l.toLowerCase().includes(selectedLanguage.toLowerCase()));
+        if (!matchesLang) return false;
+      }
+      if (vehicleType !== 'NONE') {
+        if (g.vehicleType && g.vehicleType.toUpperCase() !== vehicleType.toUpperCase()) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [availableGuides, selectedLanguage, vehicleType]);
+
+  const activeSelectedGuide = useMemo(() => {
+    if (selectedGuideId) {
+      return availableGuides.find((g) => g._id === selectedGuideId) || filteredGuides[0];
+    }
+    return filteredGuides[0];
+  }, [availableGuides, filteredGuides, selectedGuideId]);
 
   const createBooking =
     async () => {
@@ -5899,94 +5940,270 @@ export default function Home() {
 
               
               {/* VEHICLE & TOUR GUIDE SELECTION */}
-              <div style={{ marginTop: '20px', marginBottom: '20px', padding: '16px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0 }}>
-                    🚗 Vehicle &amp; Tour Guide Transport
+              <div style={{ marginTop: '20px', marginBottom: '20px', padding: '18px', background: 'rgba(255,255,255,0.02)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span>🚗</span> Transport &amp; Multilingual Tour Guide
                   </h4>
-                  <span style={{ fontSize: '12px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                    {tripDistance} km · {formatPrice(ratePerKm)}/km
-                  </span>
+                  {vehicleType !== 'NONE' && (
+                    <span style={{ fontSize: '12px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '3px 10px', borderRadius: '12px', fontWeight: '600' }}>
+                      {tripDistance} km · {formatPrice(ratePerKm)}/km
+                    </span>
+                  )}
                 </div>
-                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '12px', lineHeight: 1.5 }}>
-                  Choose your vehicle type. An approved licensed guide with this registered vehicle will be assigned.
+                <p style={{ fontSize: '12px', color: '#94a3b8', marginBottom: '16px', lineHeight: 1.5 }}>
+                  Select your spoken language first, then pick your vehicle type and an SLTDA-certified driver-guide.
                 </p>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginBottom: '14px' }}>
-                  {[
-                    { type: 'CAR', label: 'Car (1-4 Seats)', icon: '🚗' },
-                    { type: 'VAN', label: 'Van (5-10 Seats)', icon: '🚐' },
-                    { type: 'BUS', label: 'Bus (15+ Seats)', icon: '🚌' },
-                    { type: 'NONE', label: 'No Vehicle', icon: '🚶' },
-                  ].map((v) => {
-                    const active = vehicleType === v.type;
-                    return (
-                      <button
-                        key={v.type}
-                        type="button"
-                        onClick={() => setVehicleType(v.type as any)}
-                        style={{
-                          background: active ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.15))' : 'rgba(255,255,255,0.03)',
-                          border: active ? '1.5px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)',
-                          borderRadius: '10px',
-                          padding: '10px 6px',
-                          textAlign: 'center',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>{v.icon}</div>
-                        <div style={{ fontSize: '12px', fontWeight: '700', color: active ? '#38bdf8' : '#f1f5f9' }}>{v.label}</div>
-                      </button>
-                    );
-                  })}
+                {/* PRIORITY 1: SPOKEN LANGUAGE DROPDOWN */}
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>🗣️</span> 1. Tourist Preferred Spoken Language
+                    </label>
+                    <span style={{ fontSize: '10.5px', color: '#0ea5e9', fontWeight: '700', background: 'rgba(14, 165, 233, 0.15)', padding: '2px 8px', borderRadius: '6px' }}>
+                      PRIORITY #1
+                    </span>
+                  </div>
+                  <select
+                    value={selectedLanguage}
+                    onChange={(e) => {
+                      const newLang = e.target.value;
+                      setSelectedLanguage(newLang);
+                      const matches = availableGuides.filter((g) => {
+                        if (newLang === 'ALL') return true;
+                        const langs = Array.isArray(g.languages) ? g.languages : [g.languages || ''];
+                        return langs.some((l: string) => l.toLowerCase().includes(newLang.toLowerCase()));
+                      });
+                      if (!matches.some((g) => g._id === selectedGuideId)) {
+                        setSelectedGuideId(matches[0]?._id || '');
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      background: '#0f172a',
+                      color: '#f8fafc',
+                      border: '1.5px solid rgba(14, 165, 233, 0.4)',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <option value="ALL">🌐 All Spoken Languages (Any Guide)</option>
+                    {availableLanguages.map((lang) => (
+                      <option key={lang} value={lang}>
+                        🗣️ {lang} Fluent
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
+                {/* PRIORITY 2: VEHICLE CATEGORY SELECTOR */}
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span>🚗</span> 2. Vehicle Category
+                    </label>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                      {vehicleType !== 'NONE' ? `${vehicleType} selected` : 'Guide only'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                    {[
+                      { type: 'CAR', label: 'Car (1-4 Seats)', icon: '🚗' },
+                      { type: 'VAN', label: 'Van (5-10 Seats)', icon: '🚐' },
+                      { type: 'BUS', label: 'Bus (15+ Seats)', icon: '🚌' },
+                      { type: 'NONE', label: 'No Vehicle', icon: '🚶' },
+                    ].map((v) => {
+                      const active = vehicleType === v.type;
+                      return (
+                        <button
+                          key={v.type}
+                          type="button"
+                          onClick={() => {
+                            const newType = v.type as any;
+                            setVehicleType(newType);
+                            if (newType !== 'NONE') {
+                              const matching = availableGuides.filter((g) => {
+                                if (selectedLanguage !== 'ALL') {
+                                  const langs = Array.isArray(g.languages) ? g.languages : [g.languages || ''];
+                                  if (!langs.some((l: string) => l.toLowerCase().includes(selectedLanguage.toLowerCase()))) return false;
+                                }
+                                return g.vehicleType?.toUpperCase() === newType.toUpperCase();
+                              });
+                              if (matching.length > 0 && !matching.some((g) => g._id === selectedGuideId)) {
+                                setSelectedGuideId(matching[0]._id);
+                              }
+                            }
+                          }}
+                          style={{
+                            background: active ? 'linear-gradient(135deg, rgba(14, 165, 233, 0.25), rgba(99, 102, 241, 0.2))' : 'rgba(255,255,255,0.03)',
+                            border: active ? '1.5px solid #0ea5e9' : '1px solid rgba(255,255,255,0.08)',
+                            borderRadius: '10px',
+                            padding: '10px 6px',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          <div style={{ fontSize: '20px', marginBottom: '4px' }}>{v.icon}</div>
+                          <div style={{ fontSize: '11.5px', fontWeight: '700', color: active ? '#38bdf8' : '#cbd5e1' }}>{v.label}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* PRIORITY 3: ADMIN APPROVED TOUR GUIDE DROPDOWN WITH VEHICLE & PLATE */}
                 {vehicleType !== 'NONE' && (
-                  <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ fontSize: '12px', fontWeight: '600', color: '#cbd5e1', marginBottom: '8px' }}>
-                      Suggested Verified Guides:
+                  <div style={{ marginBottom: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '700', color: '#e2e8f0', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span>👨‍✈️</span> 3. Select Tour Guide with Vehicle &amp; Plate Number
+                      </label>
+                      <span style={{ fontSize: '11px', color: '#10b981', fontWeight: '700' }}>
+                        {guidesLoading ? 'Checking...' : `${filteredGuides.length} Guides Available`}
+                      </span>
                     </div>
-                    {guidesLoading ? (
-                      <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>Finding guides...</div>
-                    ) : availableGuides.length === 0 ? (
-                      <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>
-                        A licensed guide &amp; driver with a registered {vehicleType} will be assigned automatically.
+
+                    <select
+                      value={selectedGuideId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setSelectedGuideId(val);
+                        if (val) {
+                          const found = availableGuides.find((g) => g._id === val);
+                          if (found?.vehicleType && found.vehicleType !== 'NONE') {
+                            setVehicleType(found.vehicleType.toUpperCase() as any);
+                          }
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '11px 14px',
+                        borderRadius: '10px',
+                        background: '#0f172a',
+                        color: '#f8fafc',
+                        border: '1.5px solid rgba(56, 189, 248, 0.4)',
+                        fontSize: '13px',
+                        fontWeight: '600',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                      }}
+                    >
+                      <option value="">⚡ Auto-assign Top Rated Licensed Guide &amp; Vehicle</option>
+                      {filteredGuides.map((g) => {
+                        const plate = g.vehicleNumber || 'WP CAC-1234';
+                        const langs = Array.isArray(g.languages) ? g.languages.join(', ') : (g.languages || 'English');
+                        const exp = g.experienceYears ? `${g.experienceYears}y exp` : 'Experienced';
+                        return (
+                          <option key={g._id} value={g._id}>
+                            {g.name} — {g.vehicleType || vehicleType} (Plate: {plate}) • {langs} • {exp}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                )}
+
+                {/* PRIORITY 4: LIVE GUIDE PREVIEW & OFFICIAL SRI LANKA LICENSE PLATE BADGE */}
+                {vehicleType !== 'NONE' && activeSelectedGuide && (
+                  <div
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.85))',
+                      padding: '14px 16px',
+                      borderRadius: '12px',
+                      border: '1px solid rgba(56, 189, 248, 0.25)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div
+                          style={{
+                            width: '42px',
+                            height: '42px',
+                            borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #0284c7, #38bdf8)',
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: '800',
+                            fontSize: '16px',
+                            boxShadow: '0 2px 8px rgba(2, 132, 199, 0.4)',
+                          }}
+                        >
+                          {activeSelectedGuide.name?.charAt(0) || 'G'}
+                        </div>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '13.5px', fontWeight: '800', color: '#fff' }}>
+                              {activeSelectedGuide.name}
+                            </span>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                              ✓ SLTDA VERIFIED
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '11.5px', color: '#94a3b8' }}>
+                            {activeSelectedGuide.experienceYears || 1}+ Years Exp · {activeSelectedGuide.city || 'Colombo, Sri Lanka'}
+                          </div>
+                        </div>
                       </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {availableGuides.map(g => {
-                          const isSel = selectedGuideId === g._id;
-                          return (
-                            <div
-                              key={g._id}
-                              onClick={() => setSelectedGuideId(g._id)}
-                              style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                padding: '8px 12px',
-                                borderRadius: '8px',
-                                background: isSel ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
-                                border: isSel ? '1px solid #0ea5e9' : '1px solid rgba(255,255,255,0.05)',
-                                cursor: 'pointer',
-                              }}
-                            >
-                              <div>
-                                <div style={{ fontSize: '12.5px', fontWeight: '700', color: '#fff' }}>{g.name}</div>
-                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>
-                                  {g.experienceYears || 1} yrs exp · {g.languages?.slice(0, 2).join(', ') || 'English'}
-                                </div>
-                              </div>
-                              <div style={{ textAlign: 'right' }}>
-                                <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-                                  Plate: {g.vehicleNumber || 'WP CAC-1234'}
-                                </span>
-                              </div>
-                            </div>
-                          );
-                        })}
+
+                      {/* Authentic Sri Lanka Number Plate Badge */}
+                      <div
+                        style={{
+                          background: '#facc15',
+                          color: '#0f172a',
+                          border: '2px solid #000',
+                          borderRadius: '6px',
+                          padding: '4px 10px',
+                          fontWeight: '900',
+                          fontSize: '12px',
+                          letterSpacing: '1px',
+                          boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <span style={{ fontSize: '9px', fontWeight: '800', borderRight: '1.5px solid #000', paddingRight: '4px' }}>LK</span>
+                        <span>{activeSelectedGuide.vehicleNumber || 'WP CAC-1234'}</span>
                       </div>
-                    )}
+                    </div>
+
+                    {/* Spoken Languages & Vehicle Details */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '6px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                      <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>
+                        Languages:
+                      </span>
+                      {(Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages : [activeSelectedGuide.languages || 'English']).map((lang: string) => (
+                        <span
+                          key={lang}
+                          style={{
+                            fontSize: '11px',
+                            color: '#38bdf8',
+                            background: 'rgba(56, 189, 248, 0.12)',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            fontWeight: '600',
+                          }}
+                        >
+                          🗣️ {lang}
+                        </span>
+                      ))}
+                      <span style={{ marginLeft: 'auto', fontSize: '11.5px', color: '#10b981', fontWeight: '700' }}>
+                        {activeSelectedGuide.vehicleType || vehicleType} · AC Included
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>

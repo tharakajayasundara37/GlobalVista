@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { X, Calendar, Users, Check, ShieldCheck, Sparkles, Crown } from 'lucide-react-native';
+import { X, Calendar, Users, Check, ShieldCheck, Sparkles, Crown, Car, Globe, ChevronDown, CheckCircle } from 'lucide-react-native';
 import { COLORS, SHADOWS } from '../constants/theme';
 import { ApiPackage, ApiTravelPlan, api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -49,10 +49,11 @@ export const MobileBookingModal: React.FC<Props> = ({
   const [submitting, setSubmitting] = useState<boolean>(false);
 
   const [vehicleType, setVehicleType] = useState<'CAR' | 'VAN' | 'BUS' | 'NONE'>('CAR');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('ALL');
   const [availableGuides, setAvailableGuides] = useState<any[]>([]);
   const [selectedGuideId, setSelectedGuideId] = useState<string>('');
+  const [guideDropdownOpen, setGuideDropdownOpen] = useState<boolean>(false);
   const [vehiclePricing, setVehiclePricing] = useState<{ pricePerKm: number; carRatePerKm: number; vanRatePerKm: number; busRatePerKm: number }>({ pricePerKm: 100, carRatePerKm: 100, vanRatePerKm: 150, busRatePerKm: 250 });
-
 
   useEffect(() => {
     if (visible) {
@@ -71,25 +72,51 @@ export const MobileBookingModal: React.FC<Props> = ({
           }
         });
       });
-    }
-  }, [visible, preSelectedPlanId]);
-
-  
-  useEffect(() => {
-    if (visible && vehicleType !== 'NONE') {
-      api.getApprovedGuides(vehicleType).then((guides) => {
+      api.getApprovedGuides().then((guides) => {
         if (Array.isArray(guides)) {
           setAvailableGuides(guides);
-          if (guides.length > 0 && !selectedGuideId) {
-            setSelectedGuideId(guides[0]._id || guides[0].id);
-          }
         }
       }).catch(() => {});
       api.getVehiclePricing().then((p) => {
         if (p) setVehiclePricing(p);
       }).catch(() => {});
     }
-  }, [visible, vehicleType]);
+  }, [visible, preSelectedPlanId]);
+
+  const availableLanguages = React.useMemo(() => {
+    const set = new Set<string>();
+    availableGuides.forEach((g) => {
+      const langs = Array.isArray(g.languages) ? g.languages : (g.languages ? [g.languages] : []);
+      langs.forEach((l: string) => {
+        if (l && l.trim()) set.add(l.trim());
+      });
+    });
+    ['English', 'Sinhala', 'Tamil', 'French', 'German', 'Russian', 'Chinese', 'Italian', 'Spanish'].forEach((l) => set.add(l));
+    return Array.from(set).sort();
+  }, [availableGuides]);
+
+  const filteredGuides = React.useMemo(() => {
+    return availableGuides.filter((g) => {
+      if (selectedLanguage !== 'ALL') {
+        const langs = Array.isArray(g.languages) ? g.languages : (g.languages ? [g.languages] : []);
+        const matchesLang = langs.some((l: string) => l.toLowerCase().includes(selectedLanguage.toLowerCase()));
+        if (!matchesLang) return false;
+      }
+      if (vehicleType !== 'NONE') {
+        if (g.vehicleType && g.vehicleType.toUpperCase() !== vehicleType.toUpperCase()) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [availableGuides, selectedLanguage, vehicleType]);
+
+  const activeSelectedGuide = React.useMemo(() => {
+    if (selectedGuideId) {
+      return availableGuides.find((g) => (g._id || g.id) === selectedGuideId) || filteredGuides[0];
+    }
+    return filteredGuides[0];
+  }, [availableGuides, filteredGuides, selectedGuideId]);
 
   if (!pkg) return null;
 
@@ -110,8 +137,8 @@ export const MobileBookingModal: React.FC<Props> = ({
   const tripDistance = (pkg as any).distanceKm || 150;
   const ratePerKm = vehicleType === 'BUS' ? vehiclePricing.busRatePerKm : vehicleType === 'VAN' ? vehiclePricing.vanRatePerKm : vehiclePricing.carRatePerKm;
   const vehicleFare = vehicleType !== 'NONE' ? Math.round(tripDistance * ratePerKm) : 0;
-  const selectedGuide = availableGuides.find((g) => (g._id || g.id) === selectedGuideId);
-  const assignedPlate = selectedGuide?.vehicleNumber || 'WP CAC-1234';
+  const assignedPlate = activeSelectedGuide?.vehicleNumber || 'WP CAC-1234';
+  const effectiveGuideId = selectedGuideId || (activeSelectedGuide ? (activeSelectedGuide._id || activeSelectedGuide.id) : undefined);
   const totalCost = baseCost + planCost + addOnsCost + vehicleFare;
 
   const handleSubmit = async () => {
@@ -151,7 +178,7 @@ export const MobileBookingModal: React.FC<Props> = ({
           selectedAddOnIds: selectedAddOns,
           vehicleType: vehicleType !== 'NONE' ? vehicleType : undefined,
           vehicleNumber: vehicleType !== 'NONE' ? assignedPlate : undefined,
-          assignedGuideId: vehicleType !== 'NONE' ? selectedGuideId || undefined : undefined,
+          assignedGuideId: vehicleType !== 'NONE' ? effectiveGuideId : undefined,
           distanceKm: tripDistance,
         },
         token
@@ -302,6 +329,224 @@ export const MobileBookingModal: React.FC<Props> = ({
                 })}
               </View>
             )}
+
+            {/* Vehicle & Multilingual Tour Guide Section */}
+            <View style={styles.fieldGroup}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={styles.fieldLabel}>
+                  <Car size={13} color={COLORS.accent} /> TRANSPORT &amp; CERTIFIED TOUR GUIDE
+                </Text>
+                {vehicleType !== 'NONE' && (
+                  <View style={styles.ratePill}>
+                    <Text style={styles.ratePillText}>{tripDistance} km · {formatPrice(ratePerKm)}/km</Text>
+                  </View>
+                )}
+              </View>
+
+              {/* Priority 1: Tourist Spoken Language */}
+              <View style={{ marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <Text style={styles.subFieldLabel}>1. Tourist Preferred Spoken Language</Text>
+                  <View style={styles.priorityBadge}>
+                    <Text style={styles.priorityBadgeText}>PRIORITY #1</Text>
+                  </View>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingVertical: 2 }}>
+                  <TouchableOpacity
+                    style={[styles.langChip, selectedLanguage === 'ALL' && styles.langChipActive]}
+                    onPress={() => setSelectedLanguage('ALL')}
+                    activeOpacity={0.8}
+                  >
+                    <Globe size={11} color={selectedLanguage === 'ALL' ? '#ffffff' : COLORS.textSecondary} />
+                    <Text style={[styles.langChipText, selectedLanguage === 'ALL' && styles.langChipTextActive]}>
+                      All Languages
+                    </Text>
+                  </TouchableOpacity>
+                  {availableLanguages.map((lang) => {
+                    const isSel = selectedLanguage === lang;
+                    return (
+                      <TouchableOpacity
+                        key={lang}
+                        style={[styles.langChip, isSel && styles.langChipActive]}
+                        onPress={() => setSelectedLanguage(lang)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={[styles.langChipText, isSel && styles.langChipTextActive]}>
+                          🗣️ {lang}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+
+              {/* Priority 2: Vehicle Type */}
+              <View style={{ marginBottom: 12 }}>
+                <Text style={styles.subFieldLabel}>2. Vehicle Category</Text>
+                <View style={styles.vehicleGrid}>
+                  {[
+                    { type: 'CAR', label: 'Car', seats: '1-4 Seats', icon: '🚗' },
+                    { type: 'VAN', label: 'Van', seats: '5-10 Seats', icon: '🚐' },
+                    { type: 'BUS', label: 'Bus', seats: '15+ Seats', icon: '🚌' },
+                    { type: 'NONE', label: 'None', seats: 'Guide only', icon: '🚶' },
+                  ].map((v) => {
+                    const isSel = vehicleType === v.type;
+                    return (
+                      <TouchableOpacity
+                        key={v.type}
+                        style={[styles.vehicleBtn, isSel && styles.vehicleBtnActive]}
+                        onPress={() => {
+                          const newType = v.type as any;
+                          setVehicleType(newType);
+                          if (newType !== 'NONE') {
+                            const matching = availableGuides.filter((g) => {
+                              if (selectedLanguage !== 'ALL') {
+                                const langs = Array.isArray(g.languages) ? g.languages : [g.languages || ''];
+                                if (!langs.some((l: string) => l.toLowerCase().includes(selectedLanguage.toLowerCase()))) return false;
+                              }
+                              return g.vehicleType?.toUpperCase() === newType.toUpperCase();
+                            });
+                            if (matching.length > 0 && !matching.some((g) => (g._id || g.id) === selectedGuideId)) {
+                              setSelectedGuideId(matching[0]._id || matching[0].id);
+                            }
+                          }
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={{ fontSize: 18, marginBottom: 2 }}>{v.icon}</Text>
+                        <Text style={[styles.vehicleBtnLabel, isSel && styles.vehicleBtnLabelActive]}>{v.label}</Text>
+                        <Text style={styles.vehicleBtnSeats}>{v.seats}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+
+              {/* Priority 3: Tour Guide Dropdown / Selector */}
+              {vehicleType !== 'NONE' && (
+                <View style={{ marginBottom: 12 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={styles.subFieldLabel}>3. Tour Guide (with Vehicle &amp; Plate)</Text>
+                    <Text style={styles.guideCountText}>{filteredGuides.length} certified guides</Text>
+                  </View>
+
+                  <TouchableOpacity
+                    style={styles.guideDropdownTrigger}
+                    onPress={() => setGuideDropdownOpen(!guideDropdownOpen)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={{ flex: 1, paddingRight: 6 }}>
+                      <Text style={styles.guideDropdownSelectedName} numberOfLines={1}>
+                        {selectedGuideId && activeSelectedGuide
+                          ? `${activeSelectedGuide.name} — ${activeSelectedGuide.vehicleType || vehicleType} (${activeSelectedGuide.vehicleNumber || 'WP CAC-1234'})`
+                          : '⚡ Auto-assign Top Licensed Guide & Vehicle'}
+                      </Text>
+                      <Text style={styles.guideDropdownSelectedSub} numberOfLines={1}>
+                        {selectedGuideId && activeSelectedGuide
+                          ? `${Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages.join(', ') : 'English'} · ${activeSelectedGuide.experienceYears || 1}y exp`
+                          : 'GlobalVista Concierge automatically matches best certified guide'}
+                      </Text>
+                    </View>
+                    <ChevronDown size={18} color={COLORS.textSecondary} />
+                  </TouchableOpacity>
+
+                  {/* Guide Options list when open */}
+                  {guideDropdownOpen && (
+                    <View style={styles.guideOptionsList}>
+                      <TouchableOpacity
+                        style={[styles.guideOptionItem, !selectedGuideId && styles.guideOptionItemActive]}
+                        onPress={() => {
+                          setSelectedGuideId('');
+                          setGuideDropdownOpen(false);
+                        }}
+                      >
+                        <Text style={[styles.guideOptionTitle, !selectedGuideId && styles.guideOptionTitleActive]}>
+                          ⚡ Auto-assign Top Rated Licensed Guide
+                        </Text>
+                        <Text style={styles.guideOptionSub}>
+                          System automatically assigns an approved driver with {vehicleType}
+                        </Text>
+                      </TouchableOpacity>
+
+                      {filteredGuides.map((g) => {
+                        const gId = g._id || g.id;
+                        const isChosen = selectedGuideId === gId;
+                        const plate = g.vehicleNumber || 'WP CAC-1234';
+                        const langs = Array.isArray(g.languages) ? g.languages.join(', ') : (g.languages || 'English');
+                        return (
+                          <TouchableOpacity
+                            key={gId}
+                            style={[styles.guideOptionItem, isChosen && styles.guideOptionItemActive]}
+                            onPress={() => {
+                              setSelectedGuideId(gId);
+                              if (g.vehicleType && g.vehicleType !== 'NONE') {
+                                setVehicleType(g.vehicleType.toUpperCase());
+                              }
+                              setGuideDropdownOpen(false);
+                            }}
+                          >
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Text style={[styles.guideOptionTitle, isChosen && styles.guideOptionTitleActive]}>
+                                {g.name}
+                              </Text>
+                              <View style={styles.miniPlate}>
+                                <Text style={styles.miniPlateText}>{plate}</Text>
+                              </View>
+                            </View>
+                            <Text style={styles.guideOptionSub}>
+                              {g.vehicleType || vehicleType} · {langs} · {g.experienceYears || 1}y exp
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+                  )}
+                </View>
+              )}
+
+              {/* Priority 4: Verified Guide Badge Preview */}
+              {vehicleType !== 'NONE' && activeSelectedGuide && (
+                <View style={styles.guidePreviewCard}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={styles.guideAvatar}>
+                        <Text style={styles.guideAvatarText}>
+                          {activeSelectedGuide.name?.charAt(0) || 'G'}
+                        </Text>
+                      </View>
+                      <View>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                          <Text style={styles.guideCardName}>{activeSelectedGuide.name}</Text>
+                          <View style={styles.verifiedTag}>
+                            <Text style={styles.verifiedTagText}>✓ VERIFIED</Text>
+                          </View>
+                        </View>
+                        <Text style={styles.guideCardSub}>
+                          {activeSelectedGuide.experienceYears || 1}+ Yrs Exp · {activeSelectedGuide.city || 'Sri Lanka'}
+                        </Text>
+                      </View>
+                    </View>
+
+                    {/* Sri Lanka Number Plate Badge */}
+                    <View style={styles.slPlateBadge}>
+                      <Text style={styles.slPlateCountry}>LK</Text>
+                      <Text style={styles.slPlateNumber}>
+                        {activeSelectedGuide.vehicleNumber || 'WP CAC-1234'}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.guideCardBottom}>
+                    <Text style={styles.guideCardLangs}>
+                      🗣️ {Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages.join(', ') : (activeSelectedGuide.languages || 'English')}
+                    </Text>
+                    <Text style={styles.guideCardFare}>
+                      +{formatPrice(vehicleFare)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+            </View>
 
             {/* Trust badge */}
             <View style={styles.trustBadge}>
@@ -552,6 +797,244 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: COLORS.primary,
+  },
+  subFieldLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textSecondary,
+    marginBottom: 4,
+  },
+  priorityBadge: {
+    backgroundColor: 'rgba(14, 165, 233, 0.12)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  priorityBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: COLORS.accent,
+  },
+  ratePill: {
+    backgroundColor: 'rgba(56, 189, 248, 0.12)',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  ratePillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.accentDark,
+  },
+  langChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  langChipActive: {
+    backgroundColor: COLORS.accent,
+    borderColor: COLORS.accent,
+  },
+  langChipText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: COLORS.textPrimary,
+  },
+  langChipTextActive: {
+    color: '#ffffff',
+    fontWeight: '700',
+  },
+  vehicleGrid: {
+    flexDirection: 'row',
+    gap: 6,
+  },
+  vehicleBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: '#f8fafc',
+  },
+  vehicleBtnActive: {
+    backgroundColor: '#f0f9ff',
+    borderColor: COLORS.accent,
+    borderWidth: 1.5,
+  },
+  vehicleBtnLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  vehicleBtnLabelActive: {
+    color: COLORS.accentDark,
+  },
+  vehicleBtnSeats: {
+    fontSize: 9,
+    color: COLORS.textMuted,
+  },
+  guideCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: COLORS.success,
+  },
+  guideDropdownTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  guideDropdownSelectedName: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  guideDropdownSelectedSub: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  guideOptionsList: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: COLORS.borderLight,
+    borderRadius: 10,
+    marginTop: 4,
+    ...SHADOWS.medium,
+    overflow: 'hidden',
+  },
+  guideOptionItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.borderLight,
+  },
+  guideOptionItemActive: {
+    backgroundColor: '#f0f9ff',
+  },
+  guideOptionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  guideOptionTitleActive: {
+    color: COLORS.accentDark,
+  },
+  guideOptionSub: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+    marginTop: 2,
+  },
+  miniPlate: {
+    backgroundColor: '#fef08a',
+    borderWidth: 1,
+    borderColor: '#000000',
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 1,
+  },
+  miniPlateText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#000000',
+    letterSpacing: 0.5,
+  },
+  guidePreviewCard: {
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: 'rgba(14, 165, 233, 0.3)',
+    borderRadius: 12,
+    padding: 12,
+    gap: 8,
+  },
+  guideAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: COLORS.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  guideAvatarText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#ffffff',
+  },
+  guideCardName: {
+    fontSize: 12.5,
+    fontWeight: '700',
+    color: COLORS.textPrimary,
+  },
+  verifiedTag: {
+    backgroundColor: '#dcfce7',
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  verifiedTagText: {
+    fontSize: 8.5,
+    fontWeight: '800',
+    color: '#15803d',
+  },
+  guideCardSub: {
+    fontSize: 10,
+    color: COLORS.textMuted,
+  },
+  slPlateBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#facc15',
+    borderWidth: 1.5,
+    borderColor: '#000000',
+    borderRadius: 5,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    gap: 4,
+  },
+  slPlateCountry: {
+    fontSize: 8,
+    fontWeight: '800',
+    color: '#000000',
+    borderRightWidth: 1,
+    borderRightColor: '#000000',
+    paddingRight: 3,
+  },
+  slPlateNumber: {
+    fontSize: 10.5,
+    fontWeight: '900',
+    color: '#000000',
+    letterSpacing: 0.5,
+  },
+  guideCardBottom: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderLight,
+    paddingTop: 6,
+  },
+  guideCardLangs: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    color: COLORS.accentDark,
+    flex: 1,
+  },
+  guideCardFare: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: COLORS.success,
   },
   trustBadge: {
     flexDirection: 'row',

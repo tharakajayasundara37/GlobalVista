@@ -992,13 +992,27 @@ export class UsersService {
      PUBLIC: APPROVED GUIDES FILTERED BY VEHICLE
   ========================================== */
 
-  async findApprovedGuides(vehicleType?: string) {
+  async findApprovedGuides(vehicleType?: string, language?: string) {
     const filter: Record<string, any> = {
       role: Role.GUIDE,
       guideStatus: GuideStatus.APPROVED,
     };
-    if (vehicleType && typeof vehicleType === 'string' && vehicleType.trim()) {
+    if (
+      vehicleType &&
+      typeof vehicleType === 'string' &&
+      vehicleType.trim() &&
+      vehicleType.toUpperCase() !== 'ALL' &&
+      vehicleType.toUpperCase() !== 'NONE'
+    ) {
       filter.vehicleType = vehicleType.trim().toUpperCase();
+    }
+    if (
+      language &&
+      typeof language === 'string' &&
+      language.trim() &&
+      language.toUpperCase() !== 'ALL'
+    ) {
+      filter.languages = { $regex: new RegExp(language.trim(), 'i') };
     }
     return this.userModel
       .find(filter)

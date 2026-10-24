@@ -457,13 +457,44 @@ export class BookingsService {
     }
 
     /* =========================
+       VEHICLE & GUIDE TRANSPORT
+    ========================= */
+    const vehicleType =
+      data.vehicleType && ['CAR', 'VAN', 'BUS'].includes(String(data.vehicleType).toUpperCase())
+        ? String(data.vehicleType).toUpperCase()
+        : 'NONE';
+
+    const vehiclePricing = await this.getVehiclePricingSetting();
+    const ratePerKm =
+      vehicleType === 'BUS'
+        ? vehiclePricing.busRatePerKm
+        : vehicleType === 'VAN'
+        ? vehiclePricing.vanRatePerKm
+        : vehiclePricing.carRatePerKm;
+
+    const distanceKm =
+      typeof data.distanceKm === 'number' && data.distanceKm > 0
+        ? data.distanceKm
+        : (travelPackage as any).distanceKm || 150;
+
+    const vehicleFare =
+      vehicleType !== 'NONE' ? Math.round(distanceKm * ratePerKm) : 0;
+
+    let assignedGuideId: Types.ObjectId | undefined = undefined;
+    if (data.assignedGuideId && Types.ObjectId.isValid(data.assignedGuideId)) {
+      assignedGuideId = new Types.ObjectId(data.assignedGuideId);
+    }
+    const vehicleNumber = data.vehicleNumber ? String(data.vehicleNumber).trim() : undefined;
+
+    /* =========================
        FINAL TOTAL
     ========================= */
 
     const totalPrice =
       baseTotal +
       travelPlanTotal +
-      addOnsTotal;
+      addOnsTotal +
+      vehicleFare;
 
     const booking =
       new this.bookingModel({
@@ -493,6 +524,16 @@ export class BookingsService {
         selectedAddOns,
 
         addOnsTotal,
+
+        vehicleType,
+
+        vehicleNumber,
+
+        assignedGuideId,
+
+        distanceKm,
+
+        vehicleFare,
 
         totalPrice,
 
@@ -528,6 +569,10 @@ export class BookingsService {
       .populate(
         'travelPlanId',
         'name price priceSuffix features isPopular isActive',
+      )
+      .populate(
+        'assignedGuideId',
+        'name email mobile vehicleType vehicleNumber languages experienceYears profileImage',
       );
   }
 
@@ -603,6 +648,13 @@ export class BookingsService {
         select:
           'name price priceSuffix features isPopular isActive',
       },
+      {
+        path:
+          'assignedGuideId',
+
+        select:
+          'name email mobile vehicleType vehicleNumber languages experienceYears profileImage',
+      },
     ]);
 
     return booking;
@@ -660,6 +712,10 @@ export class BookingsService {
       .populate(
         'travelPlanId',
         'name price priceSuffix features isPopular isActive',
+      )
+      .populate(
+        'assignedGuideId',
+        'name email mobile vehicleType vehicleNumber languages experienceYears profileImage',
       );
   }
 

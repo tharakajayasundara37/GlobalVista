@@ -950,9 +950,16 @@ export const api = {
     return await res.json();
   },
 
-  async getApprovedGuides(vehicleType?: string): Promise<ApiUser[]> {
-    const q = vehicleType && vehicleType !== 'NONE' ? `?vehicleType=${encodeURIComponent(vehicleType)}` : '';
-    const res = await fetch(`${API_BASE_URL}/users/guides${q}`);
+  async getApprovedGuides(vehicleType?: string, language?: string): Promise<ApiUser[]> {
+    const params = new URLSearchParams();
+    if (vehicleType && vehicleType !== 'NONE' && vehicleType !== 'ALL') {
+      params.append('vehicleType', vehicleType);
+    }
+    if (language && language !== 'ALL') {
+      params.append('language', language);
+    }
+    const qs = params.toString() ? `?${params.toString()}` : '';
+    const res = await fetch(`${API_BASE_URL}/users/guides${qs}`);
     if (!res.ok) return [];
     return res.json();
   },
