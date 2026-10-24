@@ -12,6 +12,7 @@ import {
   Linking,
   Dimensions,
   Modal,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { SafeVideoPlayer } from '../components/SafeVideoPlayer';
@@ -462,7 +463,102 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
 
   const COUNTRY_OPTIONS = ['ALL', 'Maldives', 'Switzerland', 'Japan', 'Sri Lanka', 'Bali', 'Thailand'];
 
-  const featuredEscape = packages.find((p) => p.isSpecialOffer) || packages[0];
+  // Auto-rotating Featured Packages Carousel for Mobile (5-second interval)
+  const heroPackagesList: ApiPackage[] = useMemo(() => {
+    const active = packages.filter((pkg) => pkg && pkg.availability !== false);
+    if (active.length > 0) return active;
+    return [
+      {
+        _id: 'featured-deal-1',
+        title: 'Maldives Overwater Lagoon Sanctuary',
+        destination: 'South Ari Atoll',
+        country: 'Maldives',
+        duration: '7 Days / 6 Nights',
+        price: 3400,
+        category: 'Private Island Sanctuary',
+        description: 'Awaken above crystal turquoise lagoons with dedicated butler service, infinity plunge pool, and reef safari.',
+        images: ['/images/maldives-package-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-2',
+        title: 'Swiss Alpine Glacier & Chalet Odyssey',
+        destination: 'Zermatt & St. Moritz',
+        country: 'Switzerland',
+        duration: '8 Days / 7 Nights',
+        price: 4200,
+        category: 'Alpine Luxury',
+        description: 'Panoramic glacier express journeys, private ski chalets, and Michelin-star alpine dining.',
+        images: ['/images/switzerland-tour-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-3',
+        title: 'Sigiriya Citadel & Safari Pavilions',
+        destination: 'Cultural Triangle & Yala',
+        country: 'Sri Lanka',
+        duration: '6 Days / 5 Nights',
+        price: 1850,
+        category: 'Royal Heritage & Wildlife',
+        description: 'Ascend the fifth-century royal rock fortress in the sky, encounter free-roaming leopards, and unwind in colonial tea bungalows.',
+        images: ['/images/sri-lanka-tour-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-4',
+        title: 'Kyoto Zen Heritage & Bamboo Groves',
+        destination: 'Kyoto & Arashiyama',
+        country: 'Japan',
+        duration: '7 Days / 6 Nights',
+        price: 3100,
+        category: 'Cultural Immersion',
+        description: 'Ancient tea ceremonies, golden pavilions, and private ryokan retreats nestled amidst bamboo forests.',
+        images: ['/images/japan-tour-1.jpg'],
+        availability: true,
+      },
+      {
+        _id: 'featured-deal-5',
+        title: 'Thailand Paradise & Phi Phi Odyssey',
+        destination: 'Phuket & Krabi',
+        country: 'Thailand',
+        duration: '6 Days / 5 Nights',
+        price: 2800,
+        category: 'Tropical Sanctuary',
+        description: 'Private longtail boat expeditions, limestone cliffs, and vibrant Andaman sunsets.',
+        images: ['/images/thailand-tour.jpg'],
+        availability: true,
+      },
+    ] as ApiPackage[];
+  }, [packages]);
+
+  const [heroPackageIndex, setHeroPackageIndex] = useState(0);
+  const [isHeroCardPaused, setIsHeroCardPaused] = useState(false);
+  const heroProgressAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (heroPackagesList.length <= 1) return;
+
+    heroProgressAnim.setValue(0);
+    if (isHeroCardPaused) return;
+
+    const progressAnimation = Animated.timing(heroProgressAnim, {
+      toValue: 1,
+      duration: 5000,
+      useNativeDriver: false,
+    });
+    progressAnimation.start();
+
+    const timer = setInterval(() => {
+      setHeroPackageIndex((prev) => (prev + 1) % heroPackagesList.length);
+    }, 5000);
+
+    return () => {
+      clearInterval(timer);
+      progressAnimation.stop();
+    };
+  }, [heroPackagesList.length, heroPackageIndex, isHeroCardPaused]);
+
+  const featuredEscape = heroPackagesList[heroPackageIndex % heroPackagesList.length] || heroPackagesList[0];
 
   // Filter destinations based on destCountryFilter
   const filteredDestinations = destinations.filter((dest) => {
@@ -993,15 +1089,63 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
             ======================================================== */}
         {featuredEscape && (
           <View style={styles.featuredDealContainer}>
-            <View style={styles.featuredDealCard}>
+            <View
+              style={styles.featuredDealCard}
+              onTouchStart={() => setIsHeroCardPaused(true)}
+              onTouchEnd={() => setIsHeroCardPaused(false)}
+            >
               <View style={styles.dealTopBar}>
                 <View style={styles.dealBadge}>
                   <Sparkles size={12} color="#ffffff" />
                   <Text style={styles.dealBadgeText}>{t.featuredEscape || 'FEATURED ESCAPE'}</Text>
                 </View>
-                <View style={styles.dealLimitedTag}>
-                  <Text style={styles.dealLimitedText}>Limited Offer</Text>
+
+                <View style={styles.dealTopControls}>
+                  <View style={styles.dealCounterBadge}>
+                    <Text style={styles.dealCounterText}>
+                      {String((heroPackageIndex % heroPackagesList.length) + 1).padStart(2, '0')} / {String(heroPackagesList.length).padStart(2, '0')}
+                    </Text>
+                  </View>
+
+                  <View style={styles.dealNavArrows}>
+                    <TouchableOpacity
+                      style={styles.dealNavArrowBtn}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setHeroPackageIndex((prev) => (prev - 1 + heroPackagesList.length) % heroPackagesList.length);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <ChevronLeft size={13} color="#0f172a" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.dealNavArrowBtn}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        setHeroPackageIndex((prev) => (prev + 1) % heroPackagesList.length);
+                      }}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <ChevronRight size={13} color="#0f172a" />
+                    </TouchableOpacity>
+                  </View>
                 </View>
+              </View>
+
+              {/* 5-second animated progress bar */}
+              <View style={styles.dealProgressTrack}>
+                <Animated.View
+                  style={[
+                    styles.dealProgressBar,
+                    {
+                      width: heroProgressAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: ['0%', '100%'],
+                      }),
+                    },
+                  ]}
+                />
               </View>
 
               <View style={styles.dealMediaWrap}>
@@ -1020,13 +1164,19 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                   <Clock size={11} color="#ffffff" />
                   <Text style={styles.dealLocationText}>{featuredEscape.duration}</Text>
                 </View>
+
+                {featuredEscape.isSpecialOffer && (
+                  <View style={styles.dealSpecialTag}>
+                    <Text style={styles.dealSpecialText}>Limited Offer</Text>
+                  </View>
+                )}
               </View>
 
               <View style={styles.dealBody}>
                 <Text style={styles.dealTitle} numberOfLines={2}>{featuredEscape.title}</Text>
 
                 <View style={styles.dealBottomRow}>
-                  <View>
+                  <View style={styles.dealPriceCol}>
                     <Text style={styles.dealFromLabel}>{t.startingFrom || 'Starting from'}</Text>
                     <Text style={styles.dealPriceVal}>{formatPrice(featuredEscape.price)}</Text>
                   </View>
@@ -1047,6 +1197,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
                       activeOpacity={0.85}
                     >
                       <Text style={styles.dealBookBtnText}>{t.bookNow || 'Book Now'}</Text>
+                      <ArrowRight size={13} color="#ffffff" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -2340,16 +2491,61 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     letterSpacing: 0.6,
   },
-  dealLimitedTag: {
+  dealTopControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  dealCounterBadge: {
+    backgroundColor: '#e2e8f0',
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  dealCounterText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#334155',
+  },
+  dealNavArrows: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  dealNavArrowBtn: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#e2e8f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dealProgressTrack: {
+    width: '100%',
+    height: 3,
+    backgroundColor: '#e2e8f0',
+    overflow: 'hidden',
+  },
+  dealProgressBar: {
+    height: '100%',
+    backgroundColor: '#0284c7',
+  },
+  dealSpecialTag: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
     backgroundColor: '#fef3c7',
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 12,
   },
-  dealLimitedText: {
+  dealSpecialText: {
     fontSize: 9,
     fontWeight: '800',
     color: '#b45309',
+  },
+  dealPriceCol: {
+    justifyContent: 'center',
   },
   dealMediaWrap: {
     height: 160,
@@ -2437,9 +2633,12 @@ const styles = StyleSheet.create({
   },
   dealBookBtn: {
     backgroundColor: COLORS.primary,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
   dealBookBtnText: {
     fontSize: 11,
