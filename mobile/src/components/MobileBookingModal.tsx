@@ -52,8 +52,45 @@ export const MobileBookingModal: React.FC<Props> = ({
   const [selectedLanguage, setSelectedLanguage] = useState<string>('ALL');
   const [availableGuides, setAvailableGuides] = useState<any[]>([]);
   const [selectedGuideId, setSelectedGuideId] = useState<string>('');
+  const [busyGuideIds, setBusyGuideIds] = useState<string[]>([]);
+  const [busyGuideDetails, setBusyGuideDetails] = useState<Record<string, { startDate: string; endDate: string; packageTitle?: string }>>({});
   const [guideDropdownOpen, setGuideDropdownOpen] = useState<boolean>(false);
   const [vehiclePricing, setVehiclePricing] = useState<{ pricePerKm: number; carRatePerKm: number; vanRatePerKm: number; busRatePerKm: number }>({ pricePerKm: 100, carRatePerKm: 100, vanRatePerKm: 150, busRatePerKm: 250 });
+
+  useEffect(() => {
+    if (visible && travelDate && pkg) {
+      const pkgId = pkg._id;
+      api.getBusyGuides(travelDate, pkgId)
+        .then((res) => {
+          if (res && Array.isArray(res.busyGuideIds)) {
+            setBusyGuideIds(res.busyGuideIds);
+            const map: Record<string, { startDate: string; endDate: string; packageTitle?: string }> = {};
+            if (Array.isArray(res.busyGuides)) {
+              res.busyGuides.forEach((b) => {
+                if (b.guideId && !map[b.guideId]) {
+                  map[b.guideId] = {
+                    startDate: b.startDate,
+                    endDate: b.endDate,
+                    packageTitle: b.packageTitle,
+                  };
+                }
+              });
+            }
+            setBusyGuideDetails(map);
+          } else {
+            setBusyGuideIds([]);
+            setBusyGuideDetails({});
+          }
+        })
+        .catch(() => {
+          setBusyGuideIds([]);
+          setBusyGuideDetails({});
+        });
+    } else {
+      setBusyGuideIds([]);
+      setBusyGuideDetails({});
+    }
+  }, [visible, travelDate, pkg]);
 
   useEffect(() => {
     if (visible) {
@@ -111,12 +148,19 @@ export const MobileBookingModal: React.FC<Props> = ({
     });
   }, [availableGuides, selectedLanguage, vehicleType]);
 
+  useEffect(() => {
+    if (selectedGuideId && busyGuideIds.includes(selectedGuideId)) {
+      const freeGuide = filteredGuides.find((g) => !busyGuideIds.includes(g._id || g.id));
+      setSelectedGuideId(freeGuide ? (freeGuide._id || freeGuide.id) : '');
+    }
+  }, [busyGuideIds, selectedGuideId, filteredGuides]);
+
   const activeSelectedGuide = React.useMemo(() => {
     if (selectedGuideId) {
       return availableGuides.find((g) => (g._id || g.id) === selectedGuideId) || filteredGuides[0];
     }
-    return filteredGuides[0];
-  }, [availableGuides, filteredGuides, selectedGuideId]);
+    return filteredGuides.find((g) => !busyGuideIds.includes(g._id || g.id)) || filteredGuides[0];
+  }, [availableGuides, filteredGuides, selectedGuideId, busyGuideIds]);
 
   if (!pkg) return null;
 
@@ -138,7 +182,10 @@ export const MobileBookingModal: React.FC<Props> = ({
   const ratePerKm = vehicleType === 'BUS' ? vehiclePricing.busRatePerKm : vehicleType === 'VAN' ? vehiclePricing.vanRatePerKm : vehiclePricing.carRatePerKm;
   const vehicleFare = vehicleType !== 'NONE' ? Math.round(tripDistance * ratePerKm) : 0;
   const assignedPlate = activeSelectedGuide?.vehicleNumber || 'WP CAC-1234';
-  const effectiveGuideId = selectedGuideId || (activeSelectedGuide ? (activeSelectedGuide._id || activeSelectedGuide.id) : undefined);
+  const availableFilteredGuide = filteredGuides.find((g) => !busyGuideIds.includes(g._id || g.id));
+  const effectiveGuideId = selectedGuideId
+    ? (!busyGuideIds.includes(selectedGuideId) ? selectedGuideId : undefined)
+    : (availableFilteredGuide ? (availableFilteredGuide._id || availableFilteredGuide.id) : undefined);
   const totalCost = baseCost + planCost + addOnsCost + vehicleFare;
 
   const handleSubmit = async () => {
@@ -162,6 +209,14 @@ export const MobileBookingModal: React.FC<Props> = ({
 
     if (!travelDate.trim()) {
       Alert.alert('Required', 'Please enter a valid travel date.');
+      return;
+    }
+
+    if (selectedGuideId && busyGuideIds.includes(selectedGuideId)) {
+      Alert.alert(
+        'Guide Unavailable',
+        'The selected tour guide is already booked for another tour on these travel dates. Please choose an available guide or select different travel dates.'
+      );
       return;
     }
 
@@ -423,129 +478,160 @@ export const MobileBookingModal: React.FC<Props> = ({
               </View>
 
               {/* Priority 3: Tour Guide Dropdown / Selector */}
-              {vehicleType !== 'NONE' && (
-                <View style={{ marginBottom: 12 }}>
-                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                    <Text style={styles.subFieldLabel}>3. Tour Guide (with Vehicle &amp; Plate)</Text>
-                    <Text style={styles.guideCountText}>{filteredGuides.length} certified guides</Text>
-                  </View>
-
-                  <TouchableOpacity
-                    style={styles.guideDropdownTrigger}
-                    onPress={() => setGuideDropdownOpen(!guideDropdownOpen)}
-                    activeOpacity={0.8}
-                  >
-                    <View style={{ flex: 1, paddingRight: 6 }}>
-                      <Text style={styles.guideDropdownSelectedName} numberOfLines={1}>
-                        {selectedGuideId && activeSelectedGuide
-                          ? `${activeSelectedGuide.name} — ${activeSelectedGuide.vehicleType || vehicleType} (${activeSelectedGuide.vehicleNumber || 'WP CAC-1234'})`
-                          : '⚡ Auto-assign Top Licensed Guide & Vehicle'}
-                      </Text>
-                      <Text style={styles.guideDropdownSelectedSub} numberOfLines={1}>
-                        {selectedGuideId && activeSelectedGuide
-                          ? `${Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages.join(', ') : 'English'} · ${activeSelectedGuide.experienceYears || 1}y exp`
-                          : 'GlobalVista Concierge automatically matches best certified guide'}
+              {vehicleType !== 'NONE' && (() => {
+                const availableCount = filteredGuides.filter((g) => !busyGuideIds.includes(g._id || g.id)).length;
+                const busyCount = filteredGuides.filter((g) => busyGuideIds.includes(g._id || g.id)).length;
+                return (
+                  <View style={{ marginBottom: 12 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <Text style={styles.subFieldLabel}>3. Tour Guide (with Vehicle &amp; Plate)</Text>
+                      <Text style={[styles.guideCountText, { color: availableCount > 0 ? '#16a34a' : '#dc2626' }]}>
+                        {availableCount} available{busyCount > 0 ? ` (${busyCount} booked)` : ''}
                       </Text>
                     </View>
-                    <ChevronDown size={18} color={COLORS.textSecondary} />
-                  </TouchableOpacity>
 
-                  {/* Guide Options list when open */}
-                  {guideDropdownOpen && (
-                    <View style={styles.guideOptionsList}>
-                      <TouchableOpacity
-                        style={[styles.guideOptionItem, !selectedGuideId && styles.guideOptionItemActive]}
-                        onPress={() => {
-                          setSelectedGuideId('');
-                          setGuideDropdownOpen(false);
-                        }}
-                      >
-                        <Text style={[styles.guideOptionTitle, !selectedGuideId && styles.guideOptionTitleActive]}>
-                          ⚡ Auto-assign Top Rated Licensed Guide
+                    <TouchableOpacity
+                      style={styles.guideDropdownTrigger}
+                      onPress={() => setGuideDropdownOpen(!guideDropdownOpen)}
+                      activeOpacity={0.8}
+                    >
+                      <View style={{ flex: 1, paddingRight: 6 }}>
+                        <Text style={styles.guideDropdownSelectedName} numberOfLines={1}>
+                          {selectedGuideId && activeSelectedGuide
+                            ? `${activeSelectedGuide.name} — ${activeSelectedGuide.vehicleType || vehicleType} (${activeSelectedGuide.vehicleNumber || 'WP CAC-1234'})`
+                            : `⚡ Auto-assign Free Guide (${availableCount} available)`}
                         </Text>
-                        <Text style={styles.guideOptionSub}>
-                          System automatically assigns an approved driver with {vehicleType}
+                        <Text style={styles.guideDropdownSelectedSub} numberOfLines={1}>
+                          {selectedGuideId && activeSelectedGuide
+                            ? `${Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages.join(', ') : 'English'} · ${activeSelectedGuide.experienceYears || 1}y exp`
+                            : 'GlobalVista Concierge automatically matches best certified free guide'}
                         </Text>
-                      </TouchableOpacity>
+                      </View>
+                      <ChevronDown size={18} color={COLORS.textSecondary} />
+                    </TouchableOpacity>
 
-                      {filteredGuides.map((g) => {
-                        const gId = g._id || g.id;
-                        const isChosen = selectedGuideId === gId;
-                        const plate = g.vehicleNumber || 'WP CAC-1234';
-                        const langs = Array.isArray(g.languages) ? g.languages.join(', ') : (g.languages || 'English');
-                        return (
-                          <TouchableOpacity
-                            key={gId}
-                            style={[styles.guideOptionItem, isChosen && styles.guideOptionItemActive]}
-                            onPress={() => {
-                              setSelectedGuideId(gId);
-                              if (g.vehicleType && g.vehicleType !== 'NONE') {
-                                setVehicleType(g.vehicleType.toUpperCase());
-                              }
-                              setGuideDropdownOpen(false);
-                            }}
-                          >
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Text style={[styles.guideOptionTitle, isChosen && styles.guideOptionTitleActive]}>
-                                {g.name}
-                              </Text>
-                              <View style={styles.miniPlate}>
-                                <Text style={styles.miniPlateText}>{plate}</Text>
+                    {/* Guide Options list when open */}
+                    {guideDropdownOpen && (
+                      <View style={styles.guideOptionsList}>
+                        <TouchableOpacity
+                          style={[styles.guideOptionItem, !selectedGuideId && styles.guideOptionItemActive]}
+                          onPress={() => {
+                            setSelectedGuideId('');
+                            setGuideDropdownOpen(false);
+                          }}
+                        >
+                          <Text style={[styles.guideOptionTitle, !selectedGuideId && styles.guideOptionTitleActive]}>
+                            ⚡ Auto-assign Free Top Licensed Guide
+                          </Text>
+                          <Text style={styles.guideOptionSub}>
+                            System automatically assigns an available verified driver with {vehicleType}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {filteredGuides.map((g) => {
+                          const gId = g._id || g.id;
+                          const isChosen = selectedGuideId === gId;
+                          const isBusy = busyGuideIds.includes(gId);
+                          const plate = g.vehicleNumber || 'WP CAC-1234';
+                          const langs = Array.isArray(g.languages) ? g.languages.join(', ') : (g.languages || 'English');
+                          const busyInfo = busyGuideDetails[gId];
+                          return (
+                            <TouchableOpacity
+                              key={gId}
+                              disabled={isBusy}
+                              style={[
+                                styles.guideOptionItem,
+                                isChosen && styles.guideOptionItemActive,
+                                isBusy && { opacity: 0.5, backgroundColor: '#f1f5f9' },
+                              ]}
+                              onPress={() => {
+                                if (isBusy) return;
+                                setSelectedGuideId(gId);
+                                if (g.vehicleType && g.vehicleType !== 'NONE') {
+                                  setVehicleType(g.vehicleType.toUpperCase());
+                                }
+                                setGuideDropdownOpen(false);
+                              }}
+                            >
+                              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <Text style={[styles.guideOptionTitle, isChosen && styles.guideOptionTitleActive, isBusy && { color: '#94a3b8' }]}>
+                                  {isBusy ? '❌ ' : ''}{g.name}
+                                </Text>
+                                {isBusy ? (
+                                  <View style={[styles.miniPlate, { backgroundColor: '#fee2e2', borderColor: '#ef4444' }]}>
+                                    <Text style={[styles.miniPlateText, { color: '#dc2626' }]}>BOOKED</Text>
+                                  </View>
+                                ) : (
+                                  <View style={styles.miniPlate}>
+                                    <Text style={styles.miniPlateText}>{plate}</Text>
+                                  </View>
+                                )}
                               </View>
-                            </View>
-                            <Text style={styles.guideOptionSub}>
-                              {g.vehicleType || vehicleType} · {langs} · {g.experienceYears || 1}y exp
-                            </Text>
-                          </TouchableOpacity>
-                        );
-                      })}
-                    </View>
-                  )}
-                </View>
-              )}
+                              <Text style={styles.guideOptionSub}>
+                                {isBusy && busyInfo
+                                  ? `Booked: ${busyInfo.startDate} to ${busyInfo.endDate}`
+                                  : `${g.vehicleType || vehicleType} · ${langs} · ${g.experienceYears || 1}y exp`}
+                              </Text>
+                            </TouchableOpacity>
+                          );
+                        })}
+                      </View>
+                    )}
+                  </View>
+                );
+              })()}
 
               {/* Priority 4: Verified Guide Badge Preview */}
-              {vehicleType !== 'NONE' && activeSelectedGuide && (
-                <View style={styles.guidePreviewCard}>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-                      <View style={styles.guideAvatar}>
-                        <Text style={styles.guideAvatarText}>
-                          {activeSelectedGuide.name?.charAt(0) || 'G'}
-                        </Text>
-                      </View>
-                      <View>
-                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text style={styles.guideCardName}>{activeSelectedGuide.name}</Text>
-                          <View style={styles.verifiedTag}>
-                            <Text style={styles.verifiedTagText}>✓ VERIFIED</Text>
-                          </View>
+              {vehicleType !== 'NONE' && activeSelectedGuide && (() => {
+                const isGuideBusy = busyGuideIds.includes(activeSelectedGuide._id || activeSelectedGuide.id);
+                return (
+                  <View style={[styles.guidePreviewCard, isGuideBusy && { borderColor: '#ef4444', backgroundColor: '#fff1f2' }]}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <View style={[styles.guideAvatar, isGuideBusy && { backgroundColor: '#ef4444' }]}>
+                          <Text style={styles.guideAvatarText}>
+                            {activeSelectedGuide.name?.charAt(0) || 'G'}
+                          </Text>
                         </View>
-                        <Text style={styles.guideCardSub}>
-                          {activeSelectedGuide.experienceYears || 1}+ Yrs Exp · {activeSelectedGuide.city || 'Sri Lanka'}
+                        <View>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                            <Text style={styles.guideCardName}>{activeSelectedGuide.name}</Text>
+                            {isGuideBusy ? (
+                              <View style={[styles.verifiedTag, { backgroundColor: '#fee2e2', borderColor: '#f87171' }]}>
+                                <Text style={[styles.verifiedTagText, { color: '#dc2626' }]}>❌ BOOKED</Text>
+                              </View>
+                            ) : (
+                              <View style={styles.verifiedTag}>
+                                <Text style={styles.verifiedTagText}>✓ VERIFIED</Text>
+                              </View>
+                            )}
+                          </View>
+                          <Text style={styles.guideCardSub}>
+                            {activeSelectedGuide.experienceYears || 1}+ Yrs Exp · {activeSelectedGuide.city || 'Sri Lanka'}
+                          </Text>
+                        </View>
+                      </View>
+
+                      {/* Sri Lanka Number Plate Badge */}
+                      <View style={styles.slPlateBadge}>
+                        <Text style={styles.slPlateCountry}>LK</Text>
+                        <Text style={styles.slPlateNumber}>
+                          {activeSelectedGuide.vehicleNumber || 'WP CAC-1234'}
                         </Text>
                       </View>
                     </View>
 
-                    {/* Sri Lanka Number Plate Badge */}
-                    <View style={styles.slPlateBadge}>
-                      <Text style={styles.slPlateCountry}>LK</Text>
-                      <Text style={styles.slPlateNumber}>
-                        {activeSelectedGuide.vehicleNumber || 'WP CAC-1234'}
+                    <View style={styles.guideCardBottom}>
+                      <Text style={styles.guideCardLangs}>
+                        🗣️ {Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages.join(', ') : (activeSelectedGuide.languages || 'English')}
+                      </Text>
+                      <Text style={styles.guideCardFare}>
+                        +{formatPrice(vehicleFare)}
                       </Text>
                     </View>
                   </View>
-
-                  <View style={styles.guideCardBottom}>
-                    <Text style={styles.guideCardLangs}>
-                      🗣️ {Array.isArray(activeSelectedGuide.languages) ? activeSelectedGuide.languages.join(', ') : (activeSelectedGuide.languages || 'English')}
-                    </Text>
-                    <Text style={styles.guideCardFare}>
-                      +{formatPrice(vehicleFare)}
-                    </Text>
-                  </View>
-                </View>
-              )}
+                );
+              })()}
             </View>
 
             {/* Trust badge */}

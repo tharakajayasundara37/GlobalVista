@@ -1,4 +1,4 @@
-import { User, UserDocument } from '../users/schemas/user.schema';
+import { User, UserDocument, Role, GuideStatus } from '../users/schemas/user.schema';
 import { SystemSetting, SystemSettingDocument } from '../admin-dashboard/schemas/system-setting.schema';
 import {
   BadRequestException,
@@ -162,6 +162,125 @@ export class BookingsService {
         'Travel date cannot be in the past',
       );
     }
+  }
+
+  /* =========================
+     DATE & DURATION HELPERS
+  ========================= */
+
+  public extractDurationDays(durationStr: string | number | undefined): number {
+    if (typeof durationStr === 'number' && durationStr > 0) return durationStr;
+    if (!durationStr || typeof durationStr !== 'string') return 1;
+    const match = durationStr.match(/(\d+)\s*Days?/i);
+    if (match) {
+      const parsed = parseInt(match[1], 10);
+      return isNaN(parsed) || parsed <= 0 ? 1 : parsed;
+    }
+    return 1;
+  }
+
+  public calculateDateRange(
+    startDateStr: string,
+    durationStrOrDays: string | number | undefined,
+  ): { start: string; end: string; durationDays: number } {
+    const cleanStart = String(startDateStr || '').trim().split('T')[0];
+    const durationDays = this.extractDurationDays(durationStrOrDays);
+    const [y, m, d] = cleanStart.split('-').map(Number);
+    const startDate = new Date(Date.UTC(y, m - 1, d));
+    const endDate = new Date(startDate.getTime());
+    endDate.setUTCDate(endDate.getUTCDate() + Math.max(0, durationDays - 1));
+    return {
+      start: cleanStart,
+      end: endDate.toISOString().split('T')[0],
+      durationDays,
+    };
+  }
+
+  public areDateRangesOverlapping(
+    startA: string,
+    endA: string,
+    startB: string,
+    endB: string,
+  ): boolean {
+    if (!startA || !endA || !startB || !endB) return false;
+    return startA <= endB && startB <= endA;
+  }
+
+  /* =========================
+     FIND BUSY GUIDES ON DATES
+     Checks active bookings for date overlap
+  ========================= */
+
+  async findBusyGuides(
+    travelDate: string,
+    durationDaysOrString?: string | number,
+    packageId?: string,
+  ) {
+    if (!travelDate) {
+      return {
+        requestedRange: null,
+        busyGuideIds: [],
+        busyGuides: [],
+      };
+    }
+
+    let duration: string | number = durationDaysOrString || 1;
+    if (!durationDaysOrString && packageId && Types.ObjectId.isValid(packageId)) {
+      const pkg = await this.packageModel.findById(packageId).select('duration').lean();
+      if (pkg?.duration) {
+        duration = pkg.duration;
+      }
+    }
+
+    const requestedRange = this.calculateDateRange(travelDate, duration);
+
+    const activeBookings = await this.bookingModel
+      .find({
+        assignedGuideId: { $ne: null },
+        status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+      })
+      .populate('packageId', 'title duration')
+      .lean();
+
+    const busyGuideIdsSet = new Set<string>();
+    const busyGuides: Array<{
+      guideId: string;
+      bookingId: string;
+      startDate: string;
+      endDate: string;
+      packageTitle: string;
+    }> = [];
+
+    for (const booking of activeBookings) {
+      if (!booking.travelDate || !booking.assignedGuideId) continue;
+      const bDuration = (booking.packageId as any)?.duration || 1;
+      const bRange = this.calculateDateRange(booking.travelDate, bDuration);
+
+      if (
+        this.areDateRangesOverlapping(
+          requestedRange.start,
+          requestedRange.end,
+          bRange.start,
+          bRange.end,
+        )
+      ) {
+        const guideIdStr = String(booking.assignedGuideId);
+        busyGuideIdsSet.add(guideIdStr);
+        busyGuides.push({
+          guideId: guideIdStr,
+          bookingId: String(booking._id),
+          startDate: bRange.start,
+          endDate: bRange.end,
+          packageTitle: (booking.packageId as any)?.title || 'Tour',
+        });
+      }
+    }
+
+    return {
+      requestedRange,
+      busyGuideIds: Array.from(busyGuideIdsSet),
+      busyGuides,
+    };
   }
 
   /* =========================
@@ -481,10 +600,103 @@ export class BookingsService {
       vehicleType !== 'NONE' ? Math.round(distanceKm * ratePerKm) : 0;
 
     let assignedGuideId: Types.ObjectId | undefined = undefined;
+    let vehicleNumber = data.vehicleNumber ? String(data.vehicleNumber).trim() : undefined;
+
+    const requestedRange = this.calculateDateRange(data.travelDate, travelPackage.duration);
+
     if (data.assignedGuideId && Types.ObjectId.isValid(data.assignedGuideId)) {
       assignedGuideId = new Types.ObjectId(data.assignedGuideId);
+
+      // Verify that this guide does NOT already have an overlapping active booking
+      const activeGuideBookings = await this.bookingModel
+        .find({
+          assignedGuideId,
+          status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+        })
+        .populate('packageId', 'title duration')
+        .lean();
+
+      for (const existing of activeGuideBookings) {
+        if (!existing.travelDate) continue;
+        const existingDuration = (existing.packageId as any)?.duration || 1;
+        const existingRange = this.calculateDateRange(existing.travelDate, existingDuration);
+
+        if (
+          this.areDateRangesOverlapping(
+            requestedRange.start,
+            requestedRange.end,
+            existingRange.start,
+            existingRange.end,
+          )
+        ) {
+          const guideUser = await this.userModel.findById(assignedGuideId).select('name').lean();
+          const guideName = guideUser?.name || 'The selected tour guide';
+          const tourTitle = (existing.packageId as any)?.title || 'another tour';
+          throw new BadRequestException(
+            `Guide "${guideName}" is already booked for "${tourTitle}" from ${existingRange.start} to ${existingRange.end}. Please choose another available guide or select different travel dates.`,
+          );
+        }
+      }
+    } else if (vehicleType !== 'NONE') {
+      // Auto-assign: pick a guide with this vehicleType who has NO date collision
+      const candidateGuides = await this.userModel
+        .find({
+          role: Role.GUIDE,
+          guideStatus: GuideStatus.APPROVED,
+          $or: [
+            { vehicleType: vehicleType },
+            { vehicleType: { $exists: false } },
+            { vehicleType: null },
+          ],
+        } as any)
+        .select('_id name vehicleNumber vehicleType')
+        .lean();
+
+      for (const candidate of candidateGuides) {
+        const candidateBookings = await this.bookingModel
+          .find({
+            assignedGuideId: candidate._id,
+            status: { $in: [BookingStatus.PENDING, BookingStatus.CONFIRMED] },
+          })
+          .populate('packageId', 'duration')
+          .lean();
+
+        let hasConflict = false;
+        for (const existing of candidateBookings) {
+          if (!existing.travelDate) continue;
+          const existingRange = this.calculateDateRange(
+            existing.travelDate,
+            (existing.packageId as any)?.duration || 1,
+          );
+          if (
+            this.areDateRangesOverlapping(
+              requestedRange.start,
+              requestedRange.end,
+              existingRange.start,
+              existingRange.end,
+            )
+          ) {
+            hasConflict = true;
+            break;
+          }
+        }
+
+        if (!hasConflict) {
+          assignedGuideId = candidate._id as Types.ObjectId;
+          if (candidate.vehicleNumber && !vehicleNumber) {
+            vehicleNumber = candidate.vehicleNumber;
+          }
+          break;
+        }
+      }
     }
-    const vehicleNumber = data.vehicleNumber ? String(data.vehicleNumber).trim() : undefined;
+
+    if (assignedGuideId && !vehicleNumber) {
+      const guideUser = await this.userModel.findById(assignedGuideId).select('vehicleNumber').lean();
+      if (guideUser?.vehicleNumber) {
+        vehicleNumber = guideUser.vehicleNumber;
+      }
+    }
 
     /* =========================
        FINAL TOTAL

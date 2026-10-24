@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -51,16 +52,16 @@ export class BookingsController {
     req: any,
 
     @Body()
-    body: CreateBookingDto,
+    dto: CreateBookingDto,
   ) {
     return this.bookingsService.create(
       req.user,
-      body,
+      dto,
     );
   }
 
   /* =========================
-     GET ALL BOOKINGS
+     ALL BOOKINGS
      Admin only
   ========================= */
 
@@ -74,24 +75,28 @@ export class BookingsController {
   }
 
   /* =========================
-     USER BOOKING HISTORY
-
-     Traveller:
-     only own bookings
-
-     Admin:
-     can view any user
-  ========================= */
-
-  /* =========================
      CURRENT USER BOOKINGS
+     Traveller
   ========================= */
 
   @Get('my')
-  @UseGuards(JwtGuard)
-  findMyBookings(@Req() req: any) {
-    return this.bookingsService.findUserBookings(req.user, req.user.id);
+  @UseGuards(
+    JwtGuard,
+  )
+  findMyBookings(
+    @Req()
+    req: any,
+  ) {
+    return this.bookingsService.findUserBookings(
+      req.user,
+      req.user.id,
+    );
   }
+
+  /* =========================
+     TRAVELLER BOOKINGS
+     Admin or owner
+  ========================= */
 
   @Get('user/:userId')
   @UseGuards(
@@ -110,6 +115,45 @@ export class BookingsController {
       req.user,
       userId,
     );
+  }
+
+  /* =========================
+     PUBLIC BUSY GUIDES SCHEDULE
+     Must be before :id to prevent route masking
+  ========================= */
+
+  @Get('busy-guides')
+  findBusyGuides(
+    @Query('travelDate') travelDate: string,
+    @Query('durationDays') durationDays?: string,
+    @Query('packageId') packageId?: string,
+  ) {
+    return this.bookingsService.findBusyGuides(
+      travelDate,
+      durationDays,
+      packageId,
+    );
+  }
+
+  /* =========================
+     PUBLIC VEHICLE PRICING
+     Must be before :id to prevent route masking
+  ========================= */
+
+  @Get('vehicle-pricing')
+  findVehiclePricing() {
+    return this.bookingsService.getVehiclePricingSetting();
+  }
+
+  /* =========================
+     GUIDE ASSIGNED TOURS
+     Must be before :id to prevent route masking
+  ========================= */
+
+  @Get('my-guide-tours')
+  @UseGuards(JwtGuard)
+  findMyGuideTours(@Req() req: any) {
+    return this.bookingsService.findGuideBookings(req.user);
   }
 
   /* =========================
@@ -188,24 +232,4 @@ export class BookingsController {
       id,
     );
   }
-
-  /* =========================
-     PUBLIC VEHICLE PRICING
-  ========================= */
-
-  @Get('vehicle-pricing')
-  findVehiclePricing() {
-    return this.bookingsService.getVehiclePricingSetting();
-  }
-
-  /* =========================
-     GUIDE ASSIGNED TOURS
-  ========================= */
-
-  @Get('my-guide-tours')
-  @UseGuards(JwtGuard)
-  findMyGuideTours(@Req() req: any) {
-    return this.bookingsService.findGuideBookings(req.user);
-  }
-
 }

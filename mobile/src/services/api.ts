@@ -964,6 +964,35 @@ export const api = {
     return res.json();
   },
 
+  async getBusyGuides(
+    travelDate: string,
+    packageId?: string,
+    durationDays?: string | number,
+  ): Promise<{
+    requestedRange: { start: string; end: string; durationDays: number } | null;
+    busyGuideIds: string[];
+    busyGuides: Array<{
+      guideId: string;
+      bookingId: string;
+      startDate: string;
+      endDate: string;
+      packageTitle: string;
+    }>;
+  }> {
+    try {
+      const params = new URLSearchParams();
+      if (travelDate) params.append('travelDate', travelDate);
+      if (packageId) params.append('packageId', packageId);
+      if (durationDays) params.append('durationDays', String(durationDays));
+      const qs = params.toString() ? `?${params.toString()}` : '';
+      const res = await fetch(`${API_BASE_URL}/bookings/busy-guides${qs}`);
+      if (!res.ok) return { requestedRange: null, busyGuideIds: [], busyGuides: [] };
+      return res.json();
+    } catch {
+      return { requestedRange: null, busyGuideIds: [], busyGuides: [] };
+    }
+  },
+
   async getVehiclePricing(): Promise<{ pricePerKm: number; carRatePerKm: number; vanRatePerKm: number; busRatePerKm: number }> {
     const res = await fetch(`${API_BASE_URL}/bookings/vehicle-pricing`);
     if (!res.ok) return { pricePerKm: 100, carRatePerKm: 100, vanRatePerKm: 150, busRatePerKm: 250 };
