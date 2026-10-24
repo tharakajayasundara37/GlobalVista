@@ -6402,11 +6402,37 @@ export default function Home() {
 
               {bookingSuccess && (
                 <div
-                  className="bookingMessage bookingSuccess"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 95, 70, 0.05))',
+                    border: '1.5px solid #10b981',
+                    borderRadius: '12px',
+                    padding: '16px 18px',
+                    marginTop: '12px',
+                    marginBottom: '6px',
+                  }}
                 >
-                  {
-                    bookingSuccess
-                  }
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '20px' }}>🎉</span>
+                      <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#065f46' }}>
+                        Expedition Reserved Successfully!
+                      </span>
+                    </div>
+                    {createdBookingId && (
+                      <span style={{ fontSize: '11px', fontWeight: '800', color: '#047857', background: '#d1fae5', padding: '3px 8px', borderRadius: '6px', border: '1px solid #a7f3d0' }}>
+                        REF: #{createdBookingId.slice(-6).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <p style={{ fontSize: '12.5px', color: '#047857', margin: '0 0 12px', lineHeight: 1.5 }}>
+                    {bookingSuccess}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#ffffff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
+                    <span style={{ fontSize: '12px', color: '#64748b', fontWeight: '600' }}>Amount to Pay:</span>
+                    <strong style={{ fontSize: '16px', color: '#0f172a', fontWeight: '800' }}>
+                      {formatPrice(estimatedTotal)}
+                    </strong>
+                  </div>
                 </div>
               )}
             </div>
@@ -6414,60 +6440,104 @@ export default function Home() {
             <div
               className="bookingModalFooter"
             >
-              <button
-                type="button"
-                className="bookingCancelButton"
-                onClick={
-                  closeBooking
-                }
-                disabled={
-                  bookingSubmitting
-                }
-              >
-                Cancel
-              </button>
-
               {bookingSuccess ? (
-                <button
-                  type="button"
-                  className="bookingConfirmButton"
-                  onClick={() => {
-                    closeBooking();
-                    router.push('/traveller');
-                  }}
-                  style={{ background: '#059669', borderColor: '#059669', color: '#fff', cursor: 'pointer', fontWeight: '700' }}
-                >
-                  Go to My Trips →
-                </button>
-              ) : currentUser && (currentUser.role === 'USER' || currentUser.role === 'ADMIN') ? (
-                <button
-                  type="button"
-                  className="bookingConfirmButton"
-                  onClick={() =>
-                    void createBooking()
-                  }
-                  disabled={
-                    bookingSubmitting ||
-                    !selectedTravelPlan
-                  }
-                  style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
-                >
-                  {bookingSubmitting
-                    ? 'Reserving Expedition...'
-                    : 'Confirm & Reserve Expedition'}
-                </button>
+                <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'flex-end', alignItems: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeBooking();
+                      router.push('/traveller');
+                    }}
+                    style={{
+                      padding: '11px 20px',
+                      borderRadius: '10px',
+                      background: '#ffffff',
+                      color: '#334155',
+                      border: '1.5px solid #cbd5e1',
+                      fontSize: '13px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.05)',
+                    }}
+                  >
+                    <span>🕒</span> Pay Later
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const bId = createdBookingId;
+                      closeBooking();
+                      router.push(bId ? `/traveller/payments?bookingId=${bId}` : '/traveller/payments');
+                    }}
+                    style={{
+                      padding: '11px 24px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #059669, #10b981)',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '13.5px',
+                      fontWeight: '800',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '0 3px 12px rgba(16, 185, 129, 0.35)',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <span>💳</span> Pay Now ({formatPrice(estimatedTotal)}) →
+                  </button>
+                </div>
               ) : (
-                <button
-                  type="button"
-                  className="bookingConfirmButton"
-                  onClick={() => {
-                    savePendingBooking();
-                    setBookingError('⚠️ Please register or sign in as a traveller before applying for this booking! (Booking එක apply කිරීමට කරුණාකර පළමුව Register හෝ Sign In වන්න). Click "Sign In as Traveller" or "Create Free Account" above.');
-                  }}
-                  style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
-                >
-                  Apply for Booking (Sign In / Register Required)
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="bookingCancelButton"
+                    onClick={
+                      closeBooking
+                    }
+                    disabled={
+                      bookingSubmitting
+                    }
+                  >
+                    Cancel
+                  </button>
+
+                  {currentUser && (currentUser.role === 'USER' || currentUser.role === 'ADMIN') ? (
+                    <button
+                      type="button"
+                      className="bookingConfirmButton"
+                      onClick={() =>
+                        void createBooking()
+                      }
+                      disabled={
+                        bookingSubmitting ||
+                        !selectedTravelPlan
+                      }
+                      style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
+                    >
+                      {bookingSubmitting
+                        ? 'Reserving Expedition...'
+                        : 'Confirm & Reserve Expedition'}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="bookingConfirmButton"
+                      onClick={() => {
+                        savePendingBooking();
+                        setBookingError('⚠️ Please register or sign in as a traveller before applying for this booking! (Booking එක apply කිරීමට කරුණාකර පළමුව Register හෝ Sign In වන්න). Click "Sign In as Traveller" or "Create Free Account" above.');
+                      }}
+                      style={{ background: 'linear-gradient(135deg, #0284c7, #0369a1)', color: '#ffffff', cursor: 'pointer', fontWeight: '700' }}
+                    >
+                      Apply for Booking (Sign In / Register Required)
+                    </button>
+                  )}
+                </>
               )}
             </div>
           </section>
