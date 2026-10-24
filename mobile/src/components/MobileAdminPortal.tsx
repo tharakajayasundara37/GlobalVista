@@ -854,7 +854,7 @@ export const MobileAdminPortal: React.FC<Props> = ({ visible, onClose }) => {
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
+      <StatusBar barStyle="dark-content" />
       <View style={[styles.container, { paddingBottom: bottomSafeArea }]}>
         {/* ========================================================
             TOP BAR (Safe Inset Padded - Well Clear of Status Bar Icons)

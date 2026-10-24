@@ -257,7 +257,7 @@ export const HomeScreen: React.FC<Props> = ({ navigation }) => {
   const { language, setLanguage, t } = useLanguage();
   const { user, token } = useAuth();
 
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<any>(null);
 
   const [packages, setPackages] = useState<ApiPackage[]>([]);
   const [destinations, setDestinations] = useState<ApiDestination[]>([]);
