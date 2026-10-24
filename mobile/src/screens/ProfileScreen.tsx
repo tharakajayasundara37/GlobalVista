@@ -447,9 +447,9 @@ export const ProfileScreen: React.FC = () => {
             <View style={styles.brandHero}>
               <View style={styles.brandTopRow}>
                 <View style={styles.brandLogoWrap}>
-                  <Plane size={18} color="#38bdf8" />
+                  <Plane size={18} color="#ffd153" />
                   <Text style={styles.brandLogoText}>
-                    {'Global'}<Text style={{ color: '#38bdf8' }}>Vista</Text>
+                    {'Global'}<Text style={{ color: '#ffd153' }}>Vista</Text>
                   </Text>
                 </View>
                 <View style={styles.brandAtelierTag}>
@@ -472,15 +472,15 @@ export const ProfileScreen: React.FC = () => {
 
               <View style={styles.brandFeaturesRow}>
                 <View style={styles.brandFeaturePill}>
-                  <Sparkles size={11} color="#38bdf8" />
+                  <Sparkles size={11} color="#ffd153" />
                   <Text style={styles.brandFeatureText}>Bespoke Tours</Text>
                 </View>
                 <View style={styles.brandFeaturePill}>
-                  <ShieldCheck size={11} color="#38bdf8" />
+                  <ShieldCheck size={11} color="#10b981" />
                   <Text style={styles.brandFeatureText}>Verified Guides</Text>
                 </View>
                 <View style={styles.brandFeaturePill}>
-                  <Globe2 size={11} color="#38bdf8" />
+                  <Globe2 size={11} color="#ffd153" />
                   <Text style={styles.brandFeatureText}>24/7 Concierge</Text>
                 </View>
               </View>
@@ -495,7 +495,7 @@ export const ProfileScreen: React.FC = () => {
                   onPress={() => setAuthTab('LOGIN')}
                   activeOpacity={0.8}
                 >
-                  <Lock size={15} color={authTab === 'LOGIN' ? '#ffffff' : 'rgba(255, 255, 255, 0.65)'} />
+                  <Lock size={15} color={authTab === 'LOGIN' ? '#ffffff' : '#64748b'} />
                   <Text style={[styles.authTabText, authTab === 'LOGIN' && styles.authTabTextActive]}>
                     Sign In
                   </Text>
@@ -506,7 +506,7 @@ export const ProfileScreen: React.FC = () => {
                   onPress={() => setAuthTab('REGISTER')}
                   activeOpacity={0.8}
                 >
-                  <Sparkles size={15} color={authTab === 'REGISTER' ? '#ffffff' : 'rgba(255, 255, 255, 0.65)'} />
+                  <Sparkles size={15} color={authTab === 'REGISTER' ? '#ffffff' : '#64748b'} />
                   <Text style={[styles.authTabText, authTab === 'REGISTER' && styles.authTabTextActive]}>
                     Create Account
                   </Text>
@@ -521,7 +521,7 @@ export const ProfileScreen: React.FC = () => {
                   <>
                     <View style={styles.loginWelcomeHeader}>
                       <View style={styles.loginWelcomeBadge}>
-                        <Plane size={13} color="#0284c7" />
+                        <Plane size={13} color="#0f172a" />
                         <Text style={styles.loginWelcomeBadgeText}>WELCOME BACK</Text>
                       </View>
                       <Text style={styles.loginTitle}>Sign in to GlobalVista</Text>
@@ -532,7 +532,7 @@ export const ProfileScreen: React.FC = () => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>EMAIL ADDRESS</Text>
                       <View style={styles.inputWrap}>
-                        <Mail size={16} color="#38bdf8" />
+                        <Mail size={16} color="#64748b" />
                         <TextInput
                           style={styles.textInput}
                           placeholder="you@example.com"
@@ -561,7 +561,7 @@ export const ProfileScreen: React.FC = () => {
                         </TouchableOpacity>
                       </View>
                       <View style={styles.inputWrap}>
-                        <Lock size={16} color="#38bdf8" />
+                        <Lock size={16} color="#64748b" />
                         <TextInput
                           style={styles.textInput}
                           placeholder="Enter your password"
@@ -571,7 +571,7 @@ export const ProfileScreen: React.FC = () => {
                           onChangeText={setPassword}
                         />
                         <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={{ padding: 4 }}>
-                          {showPassword ? <EyeOff size={16} color="#7dd3fc" /> : <Eye size={16} color="#7dd3fc" />}
+                          {showPassword ? <EyeOff size={16} color="#94a3b8" /> : <Eye size={16} color="#94a3b8" />}
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -649,7 +649,7 @@ export const ProfileScreen: React.FC = () => {
                         >
                           <UserRound
                             size={18}
-                            color={registerRole === 'USER' ? '#ffffff' : COLORS.textMuted}
+                            color={registerRole === 'USER' ? '#0f172a' : '#64748b'}
                           />
                         </View>
                         <View style={{ flex: 1 }}>
@@ -681,7 +681,7 @@ export const ProfileScreen: React.FC = () => {
                         >
                           <Compass
                             size={18}
-                            color={registerRole === 'GUIDE' ? '#ffffff' : COLORS.textMuted}
+                            color={registerRole === 'GUIDE' ? '#0f172a' : '#64748b'}
                           />
                         </View>
                         <View style={{ flex: 1 }}>
@@ -721,7 +721,7 @@ export const ProfileScreen: React.FC = () => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>FULL NAME *</Text>
                       <View style={styles.inputWrap}>
-                        <UserRound size={16} color="#38bdf8" />
+                        <UserRound size={16} color="#64748b" />
                         <TextInput
                           style={styles.textInput}
                           placeholder="e.g. Alexander Wright"
@@ -736,7 +736,7 @@ export const ProfileScreen: React.FC = () => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>COUNTRY *</Text>
                       <View style={styles.inputWrap}>
-                        <Globe2 size={16} color="#38bdf8" />
+                        <Globe2 size={16} color="#64748b" />
                         <TextInput
                           style={styles.textInput}
                           placeholder="e.g. Sri Lanka / Germany"
@@ -754,7 +754,7 @@ export const ProfileScreen: React.FC = () => {
                           <View style={[styles.inputGroup, { flex: 1.5 }]}>
                             <Text style={styles.inputLabel}>OPERATING CITY *</Text>
                             <View style={styles.inputWrap}>
-                              <MapPin size={16} color="#38bdf8" />
+                              <MapPin size={16} color="#64748b" />
                               <TextInput
                                 style={styles.textInput}
                                 placeholder="e.g. Kandy / Colombo"
@@ -862,7 +862,7 @@ export const ProfileScreen: React.FC = () => {
                         <View style={styles.inputGroup}>
                           <Text style={styles.inputLabel}>GOVERNMENT ID NUMBER *</Text>
                           <View style={styles.inputWrap}>
-                            <IdCard size={16} color="#38bdf8" />
+                            <IdCard size={16} color="#64748b" />
                             <TextInput
                               style={styles.textInput}
                               placeholder={governmentIdType === 'NIC' ? 'e.g. 199512345678 or 951234567V' : 'e.g. N12345678'}
@@ -934,7 +934,7 @@ export const ProfileScreen: React.FC = () => {
                     <View style={styles.inputGroup}>
                       <Text style={styles.inputLabel}>MOBILE PHONE NUMBER *</Text>
                       <View style={styles.inputWrap}>
-                        <Phone size={16} color="#38bdf8" />
+                        <Phone size={16} color="#64748b" />
                         <TextInput
                           style={styles.textInput}
                           placeholder="+94 77 123 4567"
@@ -1091,7 +1091,7 @@ export const ProfileScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#030c17', // Deep luxury nocturnal sapphire
+    backgroundColor: '#f8fafc', // Clean, premium slate/white matching the entire mobile app
   },
   scroll: {
     padding: 16,
@@ -1100,30 +1100,37 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: 'center',
     paddingVertical: 24,
-    backgroundColor: 'rgba(8, 26, 46, 0.88)',
+    backgroundColor: '#ffffff',
     borderRadius: 22,
-    borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.35)',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     marginBottom: 16,
-    ...SHADOWS.medium,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 3,
   },
   avatar: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#0284c7',
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#0f172a',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
     overflow: 'hidden',
     borderWidth: 2.5,
-    borderColor: '#38bdf8',
-    ...SHADOWS.medium,
+    borderColor: '#ffd153', // Gold luxury atelier accent
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
   },
   avatarImg: {
     width: '100%',
     height: '100%',
-    borderRadius: 35,
   },
   avatarText: {
     fontSize: 26,
@@ -1131,113 +1138,121 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   userName: {
-    fontSize: 20,
+    fontSize: 19,
     fontWeight: '800',
-    color: '#ffffff',
+    color: '#0f172a',
+    marginBottom: 3,
+    letterSpacing: -0.2,
   },
   userEmail: {
-    fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 2,
+    fontSize: 13,
+    color: '#64748b',
+    marginBottom: 10,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 10,
-    backgroundColor: 'rgba(255, 209, 83, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 209, 83, 0.4)',
+    gap: 6,
+    backgroundColor: '#ecfdf5',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 14,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
   },
   roleText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#ffd153',
+    color: '#059669',
     letterSpacing: 0.8,
   },
   adminBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(6, 78, 59, 0.4)',
-    borderRadius: 18,
+    backgroundColor: '#0f172a',
     padding: 16,
-    marginBottom: 20,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 1,
     borderColor: '#10b981',
-    ...SHADOWS.medium,
+    marginBottom: 16,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   adminBannerIcon: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: 12,
-    backgroundColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#10b981',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
   },
   adminBannerTitle: {
     fontSize: 13,
-    fontWeight: '900',
-    color: '#6ee7b7',
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.4,
   },
   adminBannerSub: {
     fontSize: 11,
-    color: '#a7f3d0',
+    color: '#94a3b8',
     marginTop: 2,
   },
   guideBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    backgroundColor: 'rgba(8, 47, 73, 0.5)',
-    borderRadius: 18,
+    backgroundColor: '#0f172a',
     padding: 16,
-    marginBottom: 20,
-    borderWidth: 1.5,
-    borderColor: '#38bdf8',
-    ...SHADOWS.medium,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    marginBottom: 16,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 5,
   },
   guideBannerIcon: {
-    width: 44,
-    height: 44,
+    width: 42,
+    height: 42,
     borderRadius: 12,
-    backgroundColor: '#0284c7',
+    backgroundColor: 'rgba(245, 158, 11, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   guideBannerTitle: {
     fontSize: 13,
-    fontWeight: '900',
-    color: '#7dd3fc',
-    letterSpacing: 0.5,
+    fontWeight: '800',
+    color: '#ffffff',
+    letterSpacing: 0.4,
   },
   guideBannerSub: {
     fontSize: 11,
-    color: '#bae6fd',
+    color: '#94a3b8',
     marginTop: 2,
   },
   brandHero: {
-    backgroundColor: 'rgba(7, 24, 42, 0.9)',
+    backgroundColor: '#0f172a', // Rich obsidian/slate card, no electric blue
     borderRadius: 24,
     padding: 22,
     marginBottom: 16,
-    borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.35)',
-    ...SHADOWS.medium,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.18,
+    shadowRadius: 20,
+    elevation: 6,
   },
   brandTopRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   brandLogoWrap: {
     flexDirection: 'row',
@@ -1245,10 +1260,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   brandLogoText: {
-    fontSize: 19,
+    fontSize: 18,
     fontWeight: '900',
     color: '#ffffff',
-    letterSpacing: 0.5,
+    letterSpacing: -0.5,
   },
   brandAtelierTag: {
     backgroundColor: 'rgba(255, 209, 83, 0.15)',
@@ -1256,12 +1271,12 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(255, 209, 83, 0.45)',
+    borderColor: 'rgba(255, 209, 83, 0.35)',
   },
   brandAtelierText: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#ffd153',
+    color: '#ffd153', // Gold
     letterSpacing: 0.8,
   },
   brandDivider: {
@@ -1271,230 +1286,239 @@ const styles = StyleSheet.create({
   },
   brandEyebrow: {
     fontSize: 10,
-    fontWeight: '900',
-    color: '#ffd153',
+    fontWeight: '800',
+    color: '#ffd153', // Gold
     letterSpacing: 1.2,
     marginBottom: 6,
   },
   brandHeading: {
-    fontSize: 26,
-    fontWeight: '900',
+    fontSize: 24,
+    fontWeight: '800',
     color: '#ffffff',
-    lineHeight: 32,
-    letterSpacing: -0.3,
+    lineHeight: 30,
+    letterSpacing: -0.5,
+    marginBottom: 8,
   },
   brandHeadingItalic: {
     fontStyle: 'italic',
-    color: '#38bdf8',
+    fontWeight: '400',
+    color: '#ffd153', // Gold
   },
   brandSub: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#cbd5e1',
     lineHeight: 18,
-    marginTop: 8,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   brandFeaturesRow: {
     flexDirection: 'row',
-    gap: 8,
     flexWrap: 'wrap',
+    gap: 8,
   },
   brandFeaturePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
+    gap: 6,
     backgroundColor: 'rgba(255, 255, 255, 0.08)',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.28)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   brandFeatureText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#e2e8f0',
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#f8fafc',
   },
   authCard: {
-    backgroundColor: 'rgba(8, 25, 44, 0.92)',
-    borderRadius: 24,
-    borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.35)',
+    backgroundColor: '#ffffff', // Crisp pure white luxury card
+    borderRadius: 22,
     padding: 20,
-    marginBottom: 24,
-    ...SHADOWS.large,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
   authTabs: {
     flexDirection: 'row',
-    backgroundColor: 'rgba(4, 16, 28, 0.85)',
+    backgroundColor: '#f1f5f9',
     borderRadius: 14,
     padding: 4,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
   authTab: {
     flex: 1,
     flexDirection: 'row',
-    gap: 6,
-    paddingVertical: 11,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 11,
+    backgroundColor: 'transparent',
   },
   authTabActive: {
-    backgroundColor: '#0284c7',
-    shadowColor: '#38bdf8',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: '#0f172a', // Sleek obsidian active tab, zero blue
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   authTabText: {
     fontSize: 13,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.65)',
+    fontWeight: '600',
+    color: '#64748b',
   },
   authTabTextActive: {
     color: '#ffffff',
-    fontWeight: '800',
+    fontWeight: '700',
+  },
+  form: {
+    gap: 14,
   },
   loginWelcomeHeader: {
-    marginBottom: 10,
+    marginBottom: 6,
   },
   loginWelcomeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    backgroundColor: '#f8fafc',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(56, 189, 248, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.35)',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     marginBottom: 8,
   },
   loginWelcomeBadgeText: {
     fontSize: 10,
     fontWeight: '800',
-    color: '#38bdf8',
+    color: '#0f172a',
     letterSpacing: 0.8,
   },
   loginTitle: {
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0f172a',
+    letterSpacing: -0.3,
   },
   loginSub: {
     fontSize: 12,
-    color: '#94a3b8',
-    marginTop: 3,
-    lineHeight: 17,
-  },
-  forgotPasswordText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#ffd153',
-  },
-  securityTrustCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    backgroundColor: 'rgba(16, 185, 129, 0.12)',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(16, 185, 129, 0.35)',
-    marginTop: 4,
-  },
-  securityTrustText: {
-    flex: 1,
-    fontSize: 11,
-    color: '#6ee7b7',
-    lineHeight: 16,
-  },
-  guestFooter: {
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  guestFooterBrand: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: 'rgba(255, 255, 255, 0.6)',
-    letterSpacing: 1,
-  },
-  guestFooterSub: {
-    fontSize: 9,
-    color: 'rgba(255, 255, 255, 0.4)',
-    marginTop: 3,
-  },
-  form: {
-    gap: 14,
+    color: '#64748b',
+    marginTop: 2,
   },
   inputGroup: {
     gap: 6,
   },
   inputLabel: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#7dd3fc',
-    letterSpacing: 0.6,
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#334155',
+    letterSpacing: 0.5,
+  },
+  forgotPasswordText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#d97706', // Luxury warm amber / gold
   },
   inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.28)',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    backgroundColor: 'rgba(11, 33, 56, 0.75)',
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 48,
   },
   textInput: {
     flex: 1,
-    paddingVertical: 12,
-    fontSize: 14,
-    color: '#ffffff',
+    fontSize: 13,
+    color: '#0f172a',
+  },
+  securityTrustCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#ecfdf5',
+    borderWidth: 1,
+    borderColor: '#a7f3d0',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 4,
+  },
+  securityTrustText: {
+    flex: 1,
+    fontSize: 11,
+    lineHeight: 16,
+    color: '#065f46',
+    fontWeight: '500',
+  },
+  authSwitchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  authSwitchLabel: {
+    fontSize: 12,
+    color: '#64748b',
+  },
+  authSwitchLink: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#d97706', // Luxury warm amber / gold
   },
   roleSwitcherContainer: {
     flexDirection: 'row',
-    gap: 10,
-    marginBottom: 8,
+    gap: 8,
+    backgroundColor: '#f8fafc',
+    padding: 4,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   roleSwitcherBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    padding: 12,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
-    backgroundColor: 'rgba(11, 33, 56, 0.65)',
+    padding: 10,
+    borderRadius: 10,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   roleSwitcherBtnActive: {
-    borderColor: '#38bdf8',
-    backgroundColor: 'rgba(2, 132, 199, 0.22)',
+    backgroundColor: '#0f172a', // Obsidian active, zero blue
+    borderColor: '#0f172a',
   },
   roleIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    width: 34,
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   roleIconWrapActive: {
-    backgroundColor: '#0284c7',
+    backgroundColor: '#ffd153', // Gold
   },
   roleBtnTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#334155',
   },
   roleBtnTitleActive: {
-    color: '#38bdf8',
+    color: '#ffffff',
   },
   roleBtnSub: {
     fontSize: 10,
@@ -1502,30 +1526,30 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   formSectionBanner: {
-    backgroundColor: 'rgba(11, 33, 56, 0.75)',
+    backgroundColor: '#f8fafc',
     padding: 12,
     borderRadius: 12,
-    borderLeftWidth: 3,
-    borderLeftColor: '#38bdf8',
-    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+    borderLeftWidth: 4,
+    borderLeftColor: '#d97706',
   },
   formSectionBadge: {
     fontSize: 9,
     fontWeight: '800',
-    color: '#38bdf8',
+    color: '#d97706',
     letterSpacing: 0.6,
-    marginBottom: 2,
   },
   formSectionTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#ffffff',
-    marginBottom: 2,
+    color: '#0f172a',
+    marginTop: 2,
   },
   formSectionSub: {
     fontSize: 11,
-    color: '#94a3b8',
-    lineHeight: 15,
+    color: '#64748b',
+    marginTop: 2,
   },
   languagesContainer: {
     flexDirection: 'row',
@@ -1537,21 +1561,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    backgroundColor: '#f1f5f9',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: 'rgba(11, 33, 56, 0.75)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.25)',
   },
   langPillActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#38bdf8',
+    backgroundColor: '#0f172a',
+    borderColor: '#0f172a',
   },
   langPillText: {
     fontSize: 11,
+    color: '#475569',
     fontWeight: '600',
-    color: '#e2e8f0',
   },
   langPillTextActive: {
     color: '#ffffff',
@@ -1567,114 +1591,64 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
     paddingVertical: 10,
-    paddingHorizontal: 12,
     borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255, 255, 255, 0.14)',
-    backgroundColor: 'rgba(11, 33, 56, 0.7)',
   },
   idTypeBtnActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#38bdf8',
+    backgroundColor: '#0f172a',
+    borderColor: '#0f172a',
   },
   idTypeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#94a3b8',
+    fontSize: 11,
+    color: '#475569',
+    fontWeight: '600',
   },
   idTypeTextActive: {
     color: '#ffffff',
+    fontWeight: '700',
   },
   guideTermsRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 10,
-    paddingVertical: 4,
-  },
-  guideTermsText: {
-    flex: 1,
-    fontSize: 11,
-    color: '#94a3b8',
-    lineHeight: 16,
-  },
-  authSwitchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    marginTop: 10,
-  },
-  authSwitchLabel: {
-    fontSize: 12,
-    color: '#94a3b8',
-  },
-  authSwitchLink: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#38bdf8',
-  },
-  guideToggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingVertical: 6,
+    marginTop: 4,
   },
   guideCheckbox: {
     width: 20,
     height: 20,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: 'rgba(56, 189, 248, 0.4)',
+    borderColor: '#cbd5e1',
+    backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
   guideCheckboxActive: {
-    backgroundColor: '#0284c7',
-    borderColor: '#38bdf8',
+    backgroundColor: '#0f172a',
+    borderColor: '#0f172a',
   },
-  guideToggleText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  guideFieldsCard: {
-    backgroundColor: 'rgba(8, 24, 40, 0.85)',
-    borderRadius: 14,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.28)',
-    gap: 10,
-  },
-  guideSectionTitle: {
-    fontSize: 10,
-    fontWeight: '800',
-    color: '#38bdf8',
-    letterSpacing: 0.5,
-    marginBottom: 4,
-  },
-  guideInput: {
-    backgroundColor: 'rgba(12, 34, 56, 0.8)',
-    borderWidth: 1,
-    borderColor: 'rgba(56, 189, 248, 0.28)',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    fontSize: 13,
-    color: '#ffffff',
+  guideTermsText: {
+    flex: 1,
+    fontSize: 11,
+    color: '#64748b',
+    lineHeight: 16,
   },
   submitBtn: {
-    backgroundColor: '#0284c7',
+    backgroundColor: '#0f172a', // Premium sleek obsidian/charcoal button
     paddingVertical: 14,
     borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 6,
-    shadowColor: '#38bdf8',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.45,
-    shadowRadius: 15,
-    elevation: 7,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 10,
+    elevation: 4,
   },
   submitBtnText: {
     fontSize: 15,
@@ -1689,102 +1663,123 @@ const styles = StyleSheet.create({
     gap: 6,
     marginTop: 14,
     paddingVertical: 10,
-    backgroundColor: 'rgba(225, 29, 72, 0.16)',
+    backgroundColor: '#fff1f2',
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: 'rgba(225, 29, 72, 0.4)',
+    borderColor: '#fecdd3',
   },
   adminQuickLoginText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#fb7185',
+    color: '#e11d48',
     letterSpacing: 0.4,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionHeading: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '800',
-    color: '#38bdf8',
+    color: '#64748b',
     letterSpacing: 0.8,
-    marginBottom: 10,
+    marginBottom: 8,
     paddingHorizontal: 4,
   },
   menuRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(8, 26, 44, 0.82)',
+    backgroundColor: '#ffffff',
     padding: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
+    borderColor: '#e2e8f0',
     marginBottom: 8,
   },
   menuLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    flex: 1,
   },
   menuIconWrap: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: 'rgba(2, 132, 199, 0.2)',
+    backgroundColor: '#f1f5f9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   menuTitle: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#0f172a',
   },
   menuSubtitle: {
     fontSize: 11,
-    color: '#94a3b8',
+    color: '#64748b',
     marginTop: 1,
   },
   badgeWrap: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
   badgeText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#7dd3fc',
+    color: '#334155',
   },
   logoutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    backgroundColor: '#fef2f2',
     paddingVertical: 14,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.35)',
+    borderColor: '#fecaca',
     marginBottom: 20,
   },
   logoutText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#f87171',
+    color: '#ef4444',
   },
   footerInfo: {
     alignItems: 'center',
-    paddingTop: 10,
+    marginTop: 10,
   },
   footerCopy: {
     fontSize: 11,
     fontWeight: '700',
-    color: '#94a3b8',
+    color: '#64748b',
   },
   footerSub: {
     fontSize: 10,
-    color: '#64748b',
+    color: '#94a3b8',
     marginTop: 2,
+  },
+  guestFooter: {
+    alignItems: 'center',
+    marginTop: 24,
+    paddingVertical: 12,
+  },
+  guestFooterBrand: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748b',
+    letterSpacing: 1,
+  },
+  guestFooterSub: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginTop: 3,
   },
 });
