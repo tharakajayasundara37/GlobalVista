@@ -297,6 +297,7 @@ export class PaymentsService {
   ========================= */
 
   async findOne(
+    user: any,
     id: string,
   ) {
 
@@ -334,6 +335,10 @@ export class PaymentsService {
     }
 
 
+    if (user?.role !== 'ADMIN' && String((payment.userId as any)?._id || payment.userId) !== String(user?.id)) {
+      throw new ForbiddenException('Access denied');
+    }
+
     return payment;
   }
 
@@ -343,6 +348,7 @@ export class PaymentsService {
   ========================= */
 
   async findByBooking(
+    user: any,
     bookingId: string,
   ) {
 
@@ -352,6 +358,14 @@ export class PaymentsService {
         'booking ID',
       );
 
+    const booking = await this.bookingModel.findById(cleanBookingId);
+    if (!booking) {
+      throw new NotFoundException('Booking not found');
+    }
+
+    if (user?.role !== 'ADMIN' && String(booking.userId) !== String(user?.id)) {
+      throw new ForbiddenException('Access denied');
+    }
 
     return this.paymentModel
 

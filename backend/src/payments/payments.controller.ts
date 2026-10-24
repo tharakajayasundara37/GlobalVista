@@ -74,10 +74,12 @@ export class PaymentsController {
   @Get('booking/:bookingId')
   @UseGuards(JwtGuard)
   findByBooking(
+    @Req() req: any,
     @Param('bookingId')
     bookingId: string,
   ) {
     return this.paymentsService.findByBooking(
+      req.user,
       bookingId,
     );
   }
@@ -90,10 +92,12 @@ export class PaymentsController {
   @Get(':id')
   @UseGuards(JwtGuard)
   findOne(
+    @Req() req: any,
     @Param('id')
     id: string,
   ) {
     return this.paymentsService.findOne(
+      req.user,
       id,
     );
   }
