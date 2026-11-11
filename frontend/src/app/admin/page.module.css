@@ -882,7 +882,7 @@
 
   color: #1d2834;
 
-  font-size: 24px;
+  font-size: 32px;
 
   font-weight: 850;
 
@@ -900,6 +900,8 @@
   color: #35404a;
 
   font-size: 9px;
+
+  text-align: center;
 }
 
 .summarySubtitle {
@@ -910,6 +912,8 @@
   color: #9aa3ac;
 
   font-size: 7px;
+
+  text-align: center;
 }
 
 /* =========================
@@ -2006,7 +2010,7 @@
   }
 
   .summaryValue {
-    font-size: 20px;
+    font-size: 25px;
   }
 
   .tableHeader {
