@@ -134,42 +134,41 @@ img {
   justify-content: space-between;
   gap: 24px;
 
-  background: rgba(255, 255, 255, 0.76);
-  -webkit-backdrop-filter: blur(24px) saturate(165%);
-  backdrop-filter: blur(24px) saturate(165%);
+  color: #ffffff;
+  background: rgba(10, 30, 48, 0.55);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 22px;
 
-  box-shadow:
-    0 18px 50px rgba(2, 18, 28, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
 
   transition:
-    background 0.25s ease,
-    box-shadow 0.25s ease,
-    border-color 0.25s ease;
+    background 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .navbar:hover {
-  background: rgba(255, 255, 255, 0.83);
-  border-color: rgba(255, 255, 255, 0.92);
+  background: rgba(10, 30, 48, 0.62);
+  border-color: rgba(130, 232, 255, 0.6);
   box-shadow:
-    0 20px 56px rgba(2, 18, 28, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+    0 30px 70px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(24, 184, 231, 0.2);
 }
 
 .logo {
   flex-shrink: 0;
-  color: #071923;
+  color: #ffffff;
   font-size: 28px;
   font-weight: 900;
   letter-spacing: -1px;
-  text-shadow: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
 }
 
 .logo span {
-  color: #18b8e7;
+  color: #82e8ff;
 }
 
 .navLinks {
@@ -181,11 +180,11 @@ img {
 
 .navLinks a {
   position: relative;
-  color: #34434a;
+  color: #ffffff;
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.01em;
-  text-shadow: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
   transition:
     color 0.2s ease,
     transform 0.2s ease;
@@ -199,13 +198,13 @@ img {
   width: 0;
   height: 2px;
   border-radius: 999px;
-  background: #16b7e5;
+  background: #82e8ff;
   transform: translateX(-50%);
   transition: width 0.2s ease;
 }
 
 .navLinks a:hover {
-  color: #079cc9;
+  color: #82e8ff;
   transform: translateY(-1px);
 }
 
@@ -225,7 +224,7 @@ img {
 .language,
 .profileNav {
   border: 0;
-  color: #132a33;
+  color: #ffffff;
   background: transparent;
   font: inherit;
   cursor: pointer;
@@ -244,8 +243,8 @@ img {
 }
 
 .navIcon:hover {
-  color: #078fb8;
-  background: rgba(7, 25, 35, 0.06);
+  color: #82e8ff;
+  background: rgba(130, 232, 255, 0.18);
   transform: translateY(-1px);
 }
 
@@ -264,8 +263,8 @@ img {
 }
 
 .language:hover {
-  color: #078fb8;
-  background: rgba(7, 25, 35, 0.05);
+  color: #82e8ff;
+  background: rgba(130, 232, 255, 0.16);
 }
 
 .profileNav {
@@ -281,7 +280,7 @@ img {
 }
 
 .profileNav:hover {
-  background: rgba(7, 25, 35, 0.055);
+  background: rgba(255, 255, 255, 0.12);
   transform: translateY(-1px);
 }
 
@@ -316,14 +315,14 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  color: #34434a;
+  color: rgba(255, 255, 255, 0.88);
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
 }
 
 .profileGreeting strong {
-  color: #10262e;
+  color: #ffffff;
   font-weight: 800;
 }
 
@@ -5711,10 +5710,9 @@ footer {
 
 
 /* ============================================================
-   GLOBALVISTA - REFERENCE NAVBAR DESIGN (NAVBAR ONLY)
-   Screenshot match: frosted blue-white pill, icon navigation,
-   selected Destinations chip, dividers and cyan-blue login.
-   This section overrides the older navbar rules above.
+   GLOBALVISTA - FEATURED ESCAPE CARD GLASS NAVBAR DESIGN
+   Matches .heroDealCard dark sapphire-navy glassmorphism,
+   border, blur, shadow, cyan accents, and crisp white text.
    Everything outside the navbar is intentionally untouched.
    ============================================================ */
 
@@ -5733,36 +5731,23 @@ footer {
   justify-content: space-between;
   gap: 12px;
 
-  border: 1.5px solid rgba(255, 255, 255, 0.88);
-  border-radius: 999px;
-  background: linear-gradient(
-    105deg,
-    rgba(224, 244, 255, 0.88) 0%,
-    rgba(250, 253, 255, 0.92) 50%,
-    rgba(224, 244, 255, 0.88) 100%
-  );
-  -webkit-backdrop-filter: blur(24px) saturate(160%);
-  backdrop-filter: blur(24px) saturate(160%);
-  box-shadow:
-    0 12px 36px rgba(0, 25, 48, 0.14),
-    inset 0 1px 2px rgba(255, 255, 255, 0.95),
-    0 0 0 1px rgba(115, 206, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 22px;
+  background: rgba(10, 30, 48, 0.55);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
 
-  transition: box-shadow 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+  transition: box-shadow 0.3s ease, background 0.3s ease, border-color 0.3s ease;
 }
 
 .hero > .navbar:hover {
-  background: linear-gradient(
-    105deg,
-    rgba(230, 247, 255, 0.93) 0%,
-    rgba(255, 255, 255, 0.96) 50%,
-    rgba(230, 247, 255, 0.93) 100%
-  );
-  border-color: rgba(255, 255, 255, 0.98);
+  background: rgba(10, 30, 48, 0.62);
+  border-color: rgba(130, 232, 255, 0.6);
   box-shadow:
-    0 16px 42px rgba(0, 25, 48, 0.18),
-    inset 0 1px 2px rgba(255, 255, 255, 0.98),
-    0 0 0 1px rgba(115, 206, 255, 0.25);
+    0 30px 70px rgba(0, 0, 0, 0.4),
+    0 0 30px rgba(24, 184, 231, 0.2);
 }
 
 /* 1. Left Zone: Brand Logo */
@@ -5771,23 +5756,24 @@ footer {
   display: inline-flex;
   align-items: center;
   gap: 0;
-  color: #071b2b;
+  color: #ffffff;
   font-size: 26px;
   font-weight: 900;
   letter-spacing: -1.2px;
   white-space: nowrap;
   line-height: 1;
   text-decoration: none;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .hero > .navbar .logo:hover {
-  opacity: 0.9;
+  opacity: 0.92;
   transform: translateY(-0.5px);
 }
 
 .hero > .navbar .logo span {
-  color: #0ea5e9;
+  color: #82e8ff;
 }
 
 /* 2. Center Zone: Navigation Links (Dead Center) */
@@ -5811,45 +5797,52 @@ footer {
   padding: 0 15px;
   border: 1px solid transparent;
   border-radius: 999px;
-  color: #173248;
+  color: #ffffff;
   background: transparent;
   font-size: 13.5px;
   font-weight: 700;
   letter-spacing: -0.15px;
   white-space: nowrap;
   text-decoration: none;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
   line-height: 1;
   transition: all 0.2s ease;
 }
 
+.hero > .navbar .navLinks .navItem::after {
+  display: none;
+}
+
 .hero > .navbar .navLinks .navItem svg {
   flex-shrink: 0;
-  color: #0284c7;
-  opacity: 0.85;
-  transition: transform 0.2s ease, opacity 0.2s ease;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.9;
+  transition: transform 0.2s ease, opacity 0.2s ease, color 0.2s ease;
 }
 
 .hero > .navbar .navLinks .navItem:hover {
-  color: #0284c7;
-  background: rgba(203, 239, 255, 0.65);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(130, 232, 255, 0.45);
 }
 
 .hero > .navbar .navLinks .navItem:hover svg {
+  color: #82e8ff;
   opacity: 1;
   transform: translateY(-1px);
 }
 
 .hero > .navbar .navLinks .navItemActive,
 .hero > .navbar .navLinks .navItemActive:hover {
-  color: #0369a1;
-  border-color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 3px 12px rgba(2, 132, 199, 0.12), inset 0 1px 0 #fff;
+  color: #ffffff;
+  border-color: rgba(130, 232, 255, 0.58);
+  background: rgba(130, 232, 255, 0.18);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .hero > .navbar .navLinks .navItemActive svg {
   opacity: 1;
-  color: #0284c7;
+  color: #82e8ff;
 }
 
 /* Hide mobile search helper in desktop nav links */
@@ -5871,26 +5864,26 @@ footer {
   width: 1px;
   height: 26px;
   margin: 0 4px;
-  background: rgba(37, 84, 119, 0.18);
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .hero > .navbar .navIcon {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   display: grid;
   place-items: center;
-  color: #12314a;
-  background: transparent;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .hero > .navbar .navIcon:hover {
-  color: #0284c7;
-  background: rgba(186, 230, 253, 0.45);
-  border-color: rgba(255, 255, 255, 0.6);
+  color: #82e8ff;
+  background: rgba(130, 232, 255, 0.24);
+  border-color: #82e8ff;
   transform: translateY(-1px);
 }
 
@@ -5907,28 +5900,59 @@ footer {
   gap: 7px;
   height: 40px;
   padding: 0 12px;
-  border: 1.5px solid rgba(18, 49, 74, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 999px;
-  color: #12314a;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   font-size: 13px;
   font-weight: 750;
   white-space: nowrap;
   cursor: pointer;
   line-height: 1;
-  box-shadow: 0 2px 8px rgba(18, 49, 74, 0.05);
+  box-shadow: none;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero > .navbar .currencyCodeLabel {
+  color: #ffffff;
+}
+
+.hero > .navbar .currencySymbolBadge {
+  background: rgba(130, 232, 255, 0.2);
+  border: 1px solid rgba(130, 232, 255, 0.35);
+  color: #ffffff;
+}
+
+.hero > .navbar .currChevron {
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .hero > .navbar .currencySelectorBtn:hover,
 .hero > .navbar .currencySelectorBtn.currencySelectorActive {
-  color: #0284c7;
-  background: rgba(186, 230, 253, 0.65);
-  border-color: rgba(2, 132, 199, 0.45);
-  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.18);
+  color: #ffffff;
+  background: rgba(130, 232, 255, 0.24);
+  border-color: rgba(130, 232, 255, 0.7);
+  box-shadow: 0 4px 14px rgba(24, 184, 231, 0.22);
   transform: translateY(-1px);
+}
+
+.hero > .navbar .currencySelectorBtn:hover .currencyCodeLabel,
+.hero > .navbar .currencySelectorBtn.currencySelectorActive .currencyCodeLabel {
+  color: #ffffff;
+}
+
+.hero > .navbar .currencySelectorBtn:hover .currencySymbolBadge,
+.hero > .navbar .currencySelectorBtn.currencySelectorActive .currencySymbolBadge {
+  background: #18b8e7;
+  border-color: #82e8ff;
+  color: #ffffff;
+}
+
+.hero > .navbar .currencySelectorBtn:hover .currChevron,
+.hero > .navbar .currencySelectorBtn.currencySelectorActive .currChevron {
+  color: #82e8ff;
 }
 
 .hero > .navbar .languageSelectorWrapper {
@@ -5944,10 +5968,10 @@ footer {
   gap: 6px;
   height: 40px;
   padding: 0 12px;
-  border: 1px solid transparent;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: 999px;
-  color: #12314a;
-  background: transparent;
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
   font-size: 13px;
   font-weight: 750;
   white-space: nowrap;
@@ -5958,9 +5982,9 @@ footer {
 
 .hero > .navbar .language:hover,
 .hero > .navbar .languageActive {
-  color: #0284c7;
-  background: rgba(186, 230, 253, 0.45);
-  border-color: rgba(255, 255, 255, 0.6);
+  color: #ffffff;
+  background: rgba(130, 232, 255, 0.24);
+  border-color: rgba(130, 232, 255, 0.7);
 }
 
 .hero > .navbar .navCta {
@@ -5970,11 +5994,11 @@ footer {
   gap: 7px;
   height: 42px;
   padding: 0 16px;
-  border: 1.5px solid rgba(238, 254, 255, 0.95);
+  border: 1px solid rgba(130, 232, 255, 0.65);
   border-radius: 999px;
   color: #ffffff;
   background: linear-gradient(112deg, #14c8f1 0%, #079be8 52%, #0762d9 100%);
-  box-shadow: 0 8px 20px rgba(11, 151, 230, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 24px rgba(24, 184, 231, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   font-size: 13px;
   font-weight: 750;
   white-space: nowrap;
@@ -5987,7 +6011,8 @@ footer {
 .hero > .navbar .navCta:hover {
   color: #ffffff;
   background: linear-gradient(112deg, #1ed3f7 0%, #0aa8ef 52%, #0569e1 100%);
-  box-shadow: 0 12px 26px rgba(11, 151, 230, 0.33), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  border-color: #82e8ff;
+  box-shadow: 0 12px 28px rgba(24, 184, 231, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.45);
   transform: translateY(-1px);
 }
 
@@ -5999,6 +6024,7 @@ footer {
   padding: 0 8px 0 2px;
   border: 1px solid transparent;
   border-radius: 999px;
+  color: #ffffff;
   background: transparent;
   cursor: pointer;
   flex-shrink: 0;
@@ -6006,8 +6032,8 @@ footer {
 }
 
 .hero > .navbar .profileNav:hover {
-  background: rgba(186, 230, 253, 0.45);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(130, 232, 255, 0.5);
 }
 
 .hero > .navbar .profileAvatar {
@@ -6022,8 +6048,12 @@ footer {
 
 .hero > .navbar .profileGreeting {
   font-size: 13px;
-  color: #12314a;
+  color: rgba(255, 255, 255, 0.88);
   white-space: nowrap;
+}
+
+.hero > .navbar .profileGreeting strong {
+  color: #ffffff;
 }
 
 .hero > .navbar .navMobileToggle {
@@ -6032,17 +6062,98 @@ footer {
   justify-content: center;
   width: 40px;
   height: 40px;
-  border: 0;
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 50%;
-  color: #12314a;
-  background: rgba(179, 231, 250, 0.5);
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .hero > .navbar .navMobileToggle:hover {
-  background: rgba(179, 231, 250, 0.8);
-  color: #0284c7;
+  background: rgba(130, 232, 255, 0.24);
+  border-color: rgba(130, 232, 255, 0.7);
+  color: #ffffff;
+}
+
+/* Card-matched dark glass dropdown popovers inside navbar */
+.hero > .navbar .navbarLanguageDropdown,
+.hero > .navbar .navbarCurrencyDropdown {
+  background: rgba(10, 30, 48, 0.96);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.48);
+  color: #ffffff;
+}
+
+.hero > .navbar .languageDropdownHeader,
+.hero > .navbar .currencyDropdownHeader {
+  border-bottom-color: rgba(255, 255, 255, 0.14);
+}
+
+.hero > .navbar .languageDropdownHeader,
+.hero > .navbar .currencyDropdownHeader span {
+  color: #8cecff;
+}
+
+.hero > .navbar .currencyDropdownHeader small {
+  color: #6ee7b7;
+  background: rgba(16, 185, 129, 0.22);
+}
+
+.hero > .navbar .languageItem,
+.hero > .navbar .currencyDropdownItem {
+  color: #ffffff;
+}
+
+.hero > .navbar .languageItem:hover,
+.hero > .navbar .languageItemActive,
+.hero > .navbar .currencyDropdownItem:hover,
+.hero > .navbar .currencyDropdownItem.currencyItemActive {
+  background: rgba(130, 232, 255, 0.18);
+  color: #ffffff;
+}
+
+.hero > .navbar .currencyNames strong {
+  color: #ffffff;
+}
+
+.hero > .navbar .currencyDropdownItem:hover .currencyNames strong,
+.hero > .navbar .currencyDropdownItem.currencyItemActive .currencyNames strong {
+  color: #82e8ff;
+}
+
+.hero > .navbar .languageItemLeft small,
+.hero > .navbar .currencyNames small {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.hero > .navbar .languageCodeBadge,
+.hero > .navbar .currencyRateBadge {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.hero > .navbar .languageCheckIcon,
+.hero > .navbar .currencyCheckIcon {
+  color: #82e8ff;
+}
+
+.hero > .navbar .currencyDropdownFooter {
+  border-top-color: rgba(255, 255, 255, 0.14);
+}
+
+.hero > .navbar .openFullCalculatorBtn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+}
+
+.hero > .navbar .openFullCalculatorBtn:hover {
+  background: rgba(130, 232, 255, 0.24);
+  border-color: #82e8ff;
+  color: #ffffff;
 }
 
 /* ============================================================
@@ -6106,24 +6217,30 @@ footer {
     align-items: stretch;
     gap: 4px;
     padding: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.35);
     border-radius: 22px;
-    background: rgba(246, 252, 255, 0.98);
-    -webkit-backdrop-filter: blur(24px);
-    backdrop-filter: blur(24px);
-    box-shadow: 0 20px 48px rgba(0, 24, 48, 0.25);
+    background: rgba(10, 30, 48, 0.96);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
   }
   .hero > .navbar .navLinksOpen .navItem {
     justify-content: flex-start;
     height: 46px;
     padding: 0 18px;
     font-size: 14px;
+    color: #ffffff;
   }
   .hero > .navbar .navLinksOpen .mobileNavDrawerExtras {
     display: block;
     margin-top: 10px;
     padding-top: 10px;
-    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.14);
+  }
+  .hero > .navbar .navLinksOpen .mobileDrawerSearchBtn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #ffffff;
   }
   .hero > .navbar .navLinksOpen .mobileDrawerCurrencyWrap {
     margin-top: 8px;
@@ -6137,9 +6254,10 @@ footer {
     justify-content: space-between;
     height: 44px;
     padding: 0 16px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(18, 49, 74, 0.16);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.26);
     border-radius: 12px;
+    color: #ffffff;
   }
 }
 
@@ -6154,6 +6272,7 @@ footer {
     margin: 0 auto;
     padding: 0 10px 0 16px;
     gap: 8px;
+    background: rgba(8, 26, 42, 0.75);
   }
   .hero > .navbar .logo {
     font-size: 23px;
@@ -6192,6 +6311,12 @@ footer {
   }
   .hero > .navbar .profileGreeting {
     display: none;
+  }
+}
+
+@media (max-width: 500px) {
+  .hero > .navbar {
+    border-radius: 18px;
   }
 }
 
